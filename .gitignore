@@ -40,3 +40,16 @@ testem.log
 # System files
 .DS_Store
 Thumbs.db
+
+# TrueNAS deployment data
+data/
+logs/
+*.log
+
+# Certificates SSL
+certs/
+*.pem
+
+# AWS SAM build artifacts (contains secrets)
+.aws-sam/
+samconfig.toml

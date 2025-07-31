@@ -8,12 +8,23 @@ import { Task } from '../models/task.model';
   providedIn: 'root'
 })
 export class ApiService {
-  private readonly API_BASE_URL = '/api'; // URL relative puisque tout est servi depuis le même serveur
+  // URL AWS Lambda en production, local en développement
+  private readonly API_BASE_URL = this.getApiBaseUrl();
   private connectionStatus = new BehaviorSubject<boolean>(false);
   private serverStatus = new BehaviorSubject<any>(null);
 
   constructor(private http: HttpClient) {
     this.checkServerStatus();
+  }
+
+  // Déterminer l'URL de l'API selon l'environnement
+  private getApiBaseUrl(): string {
+    // En production (Amplify), utiliser Lambda
+    if (window.location.hostname.includes('amplifyapp.com')) {
+      return 'https://4cj8nou7ce.execute-api.eu-west-1.amazonaws.com/prod/api';
+    }
+    // En local, utiliser l'API relative
+    return '/api';
   }
 
   // Vérifier le statut du serveur
