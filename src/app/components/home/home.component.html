@@ -1,0 +1,67 @@
+<div class="min-h-screen bg-gray-50">
+  <!-- En-tête -->
+  <header class="bg-white shadow-sm border-b">
+    <div class="container mx-auto px-4 py-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+          <div class="text-3xl">🏠</div>
+          <h1 class="text-2xl font-bold text-gray-800">Tâches Ménagères</h1>
+        </div>
+        
+        <div class="flex items-center space-x-4">
+          <button
+            (click)="showAddTaskForm()"
+            class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
+          >
+            <span>+</span>
+            <span>Nouvelle tâche</span>
+          </button>
+          
+          <div class="flex space-x-2">
+            <a 
+              routerLink="/notifications"
+              class="px-3 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-md transition-colors"
+              title="Configuration des notifications"
+            >
+              🔔
+            </a>
+            <a 
+              routerLink="/settings"
+              class="px-3 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-md transition-colors"
+              title="Paramètres"
+            >
+              ⚙️
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Contenu principal -->
+  <main class="container mx-auto px-4 py-6">
+    <!-- Formulaire de tâche (modal) -->
+    <div *ngIf="showTaskForm" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div class="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <app-task-form
+          [task]="editingTask"
+          (taskSaved)="onTaskSaved($event)"
+          (cancelled)="onTaskFormCancelled()"
+        ></app-task-form>
+      </div>
+    </div>
+
+    <!-- Liste des tâches -->
+    <app-task-list></app-task-list>
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-white border-t mt-12">
+    <div class="container mx-auto px-4 py-6">
+      <div class="text-center text-gray-600">
+        <p>Application PWA de gestion des tâches ménagères</p>
+        <p class="text-sm mt-1">Avec notifications push et configuration complète</p>
+      </div>
+    </div>
+  </footer>
+</div>

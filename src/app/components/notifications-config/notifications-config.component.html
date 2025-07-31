@@ -1,0 +1,102 @@
+<div class="bg-white rounded-lg shadow-lg p-6 max-w-2xl mx-auto">
+  <div class="mb-6">
+    <h2 class="text-2xl font-bold text-gray-800 mb-2">Configuration des Notifications</h2>
+    <p class="text-gray-600">Configurez vos préférences de notifications pour les tâches ménagères</p>
+  </div>
+
+  <!-- Statut des permissions -->
+  <div class="bg-gray-50 rounded-lg p-4 mb-6">
+    <h3 class="text-lg font-semibold text-gray-800 mb-2">Permissions du navigateur</h3>
+    <div class="flex items-center justify-between">
+      <div>
+        <p class="text-sm text-gray-600">Statut actuel :</p>
+        <p class="font-medium" [ngClass]="permissionStatusClass">{{ permissionStatusText }}</p>
+      </div>
+      <button
+        (click)="requestPermission()"
+        class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+        [disabled]="notificationPermission === 'granted'"
+      >
+        {{ notificationPermission === 'granted' ? 'Autorisées' : 'Demander l\'autorisation' }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Formulaire de configuration -->
+  <form [formGroup]="configForm" (ngSubmit)="onSave()" class="space-y-6">
+    <!-- Activer/désactiver les notifications -->
+    <div>
+      <label class="flex items-center">
+        <input
+          type="checkbox"
+          formControlName="enabled"
+          class="mr-3 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+        >
+        <span class="text-sm font-medium text-gray-700">Activer les notifications</span>
+      </label>
+      <p class="text-xs text-gray-500 mt-1">Désactivez cette option pour arrêter toutes les notifications</p>
+    </div>
+
+    <!-- Heure de rappel -->
+    <div>
+      <label for="reminderTime" class="block text-sm font-medium text-gray-700 mb-1">
+        Heure de rappel quotidien
+      </label>
+      <input
+        id="reminderTime"
+        type="time"
+        formControlName="reminderTime"
+        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+        [ngClass]="{'border-red-500': configForm.get('reminderTime')?.invalid && configForm.get('reminderTime')?.touched}"
+      >
+      <p class="text-xs text-gray-500 mt-1">Heure à laquelle vous recevrez les rappels pour les tâches du jour</p>
+    </div>
+
+    <!-- Délai d'avance -->
+    <div>
+      <label for="advanceNotice" class="block text-sm font-medium text-gray-700 mb-1">
+        Délai d'avance (heures)
+      </label>
+      <input
+        id="advanceNotice"
+        type="number"
+        formControlName="advanceNotice"
+        min="0"
+        max="24"
+        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+        [ngClass]="{'border-red-500': configForm.get('advanceNotice')?.invalid && configForm.get('advanceNotice')?.touched}"
+      >
+      <p class="text-xs text-gray-500 mt-1">Nombre d'heures avant l'échéance pour recevoir le rappel</p>
+    </div>
+
+    <!-- Boutons d'action -->
+    <div class="flex gap-4 pt-4">
+      <button
+        type="submit"
+        [disabled]="!configForm.valid"
+        class="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+      >
+        Sauvegarder la configuration
+      </button>
+      
+      <button
+        type="button"
+        (click)="testNotification()"
+        class="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
+      >
+        Tester la notification
+      </button>
+    </div>
+  </form>
+
+  <!-- Informations supplémentaires -->
+  <div class="mt-8 bg-blue-50 rounded-lg p-4">
+    <h4 class="font-medium text-blue-800 mb-2">💡 Conseils</h4>
+    <ul class="text-sm text-blue-700 space-y-1">
+      <li>• Les notifications fonctionnent même quand l'application est fermée</li>
+      <li>• Vous pouvez cliquer sur les notifications pour ouvrir l'application</li>
+      <li>• Les notifications incluent des actions rapides (terminer, rappeler plus tard)</li>
+      <li>• Configurez une heure de rappel qui vous convient (ex: 9h00 le matin)</li>
+    </ul>
+  </div>
+</div>
