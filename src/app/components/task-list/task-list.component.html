@@ -16,8 +16,8 @@
       <!-- Recherche principale -->
       <div>
         <label class="block text-sm font-medium text-gray-700 mb-2">🔍 Rechercher</label>
-        <input 
-          type="text" 
+        <input
+          type="text"
           [ngModel]="searchTerm()"
           (ngModelChange)="searchTerm.set($event)"
           (input)="onFilterChange()"
@@ -28,7 +28,7 @@
 
       <!-- Filtres rapides en ligne -->
       <div class="flex flex-wrap gap-2">
-        <select 
+        <select
           [ngModel]="selectedCategory()"
           (ngModelChange)="selectedCategory.set($event)"
           (change)="onFilterChange()"
@@ -40,7 +40,7 @@
           }
         </select>
 
-        <select 
+        <select
           [ngModel]="selectedPriority()"
           (ngModelChange)="selectedPriority.set($event)"
           (change)="onFilterChange()"
@@ -56,7 +56,7 @@
       <!-- Toggle terminées -->
       <div class="flex items-center justify-center">
         <label class="flex items-center cursor-pointer bg-gray-50 px-4 py-2 rounded-lg">
-          <input 
+          <input
             type="checkbox"
             [ngModel]="showCompleted()"
             (ngModelChange)="showCompleted.set($event)"
@@ -73,8 +73,8 @@
       <!-- Recherche -->
       <div class="lg:col-span-2">
         <label class="block text-sm font-medium text-gray-700 mb-1">Rechercher</label>
-        <input 
-          type="text" 
+        <input
+          type="text"
           [ngModel]="searchTerm()"
           (ngModelChange)="searchTerm.set($event)"
           (input)="onFilterChange()"
@@ -86,7 +86,7 @@
       <!-- Catégorie -->
       <div>
         <label class="block text-sm font-medium text-gray-700 mb-1">Catégorie</label>
-        <select 
+        <select
           [ngModel]="selectedCategory()"
           (ngModelChange)="selectedCategory.set($event)"
           (change)="onFilterChange()"
@@ -102,7 +102,7 @@
       <!-- Priorité -->
       <div>
         <label class="block text-sm font-medium text-gray-700 mb-1">Priorité</label>
-        <select 
+        <select
           [ngModel]="selectedPriority()"
           (ngModelChange)="selectedPriority.set($event)"
           (change)="onFilterChange()"
@@ -118,8 +118,8 @@
       <!-- Afficher terminées -->
       <div class="flex items-end">
         <label class="flex items-center">
-          <input 
-            type="checkbox" 
+          <input
+            type="checkbox"
             [ngModel]="showCompleted()"
             (ngModelChange)="showCompleted.set($event)"
             (change)="onFilterChange()"
@@ -133,16 +133,8 @@
 
   <!-- Liste des tâches -->
   <div class="space-y-4">
-    @if (filteredTasks().length === 0) {
-      <div class="text-center py-12">
-        <div class="text-gray-400 text-6xl mb-4">📝</div>
-        <h3 class="text-lg font-medium text-gray-600 mb-2">Aucune tâche trouvée</h3>
-        <p class="text-gray-500">Ajoutez votre première tâche ménagère pour commencer !</p>
-      </div>
-    }
-
     @for (task of filteredTasks(); track task.id) {
-      <div 
+      <div
         class="bg-white rounded-lg shadow-sm border p-3 sm:p-4 transition-all duration-200 hover:shadow-md"
         [ngClass]="getStatusClass(task)"
       >
@@ -153,7 +145,7 @@
             <div class="flex-1 min-w-0">
               <h3 class="text-lg font-semibold text-gray-800 truncate">{{ task.name }}</h3>
               <div class="flex flex-wrap gap-1 mt-1">
-                <span 
+                <span
                   class="px-2 py-1 text-xs font-medium rounded-full"
                   [ngClass]="getPriorityColor(task.priority)"
                 >
@@ -166,7 +158,7 @@
                 }
               </div>
             </div>
-            
+
             <!-- Statut rapide -->
             <div class="text-right text-xs">
               <div class="font-medium" [ngClass]="getDueDateClass(task)">
@@ -183,7 +175,7 @@
           <!-- Info compacte mobile -->
           <div class="text-xs text-gray-500 mb-4 space-y-1">
             <div>
-              📅 
+              📅
               @switch (task.frequency) {
                 @case ('custom') {
                   <span>{{ task.customDays }} jours</span>
@@ -202,6 +194,9 @@
             @if (task.lastCompleted) {
               <div>🕐 Dernière: {{ formatDate(task.lastCompleted) }}</div>
             }
+            @if (task.assignee) {
+              <div>👤 {{ task.assignee }}</div>
+            }
           </div>
 
           <!-- Actions mobiles horizontales -->
@@ -211,9 +206,9 @@
               class="flex-1 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
               [disabled]="!task.isActive"
             >
-              ✅ Terminer
+              ✅
             </button>
-            
+
             <button
               (click)="editTask(task)"
               class="px-4 py-3 border border-blue-300 text-blue-600 rounded-lg hover:bg-blue-50 transition-colors text-sm"
@@ -221,14 +216,14 @@
             >
               ✏️
             </button>
-            
+
             <button
               (click)="toggleTaskActive(task)"
               class="px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm"
             >
               {{ task.isActive ? '⏸️' : '▶️' }}
             </button>
-            
+
             <button
               (click)="deleteTask(task.id)"
               class="px-4 py-3 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition-colors text-sm"
@@ -244,7 +239,7 @@
             <!-- En-tête desktop -->
             <div class="flex items-center gap-3 mb-2">
               <h3 class="text-lg font-semibold text-gray-800">{{ task.name }}</h3>
-              <span 
+              <span
                 class="px-2 py-1 text-xs font-medium rounded-full"
                 [ngClass]="getPriorityColor(task.priority)"
               >
@@ -265,7 +260,7 @@
             <!-- Informations desktop -->
             <div class="flex flex-wrap gap-4 text-sm text-gray-500 mb-3">
               <span>
-                <strong>Fréquence:</strong> 
+                <strong>Fréquence: </strong>
                 @switch (task.frequency) {
                   @case ('custom') {
                     <span>{{ task.customDays }} jours</span>
@@ -282,7 +277,7 @@
                 }
               </span>
               <span>
-                <strong>Prochaine échéance:</strong> 
+                <strong>Prochaine échéance:</strong>
                 <span class="font-medium" [ngClass]="getDueDateClass(task)">
                   {{ getDueDateText(task) }}
                 </span>
@@ -291,6 +286,14 @@
                 <span>
                   <strong>Dernière fois:</strong> {{ formatDate(task.lastCompleted) }}
                 </span>
+              }
+              @if (task.assignee) {
+                <span>
+                <strong>Assigné :</strong>
+                <span class="font-medium">
+                  {{ task.assignee }}
+                </span>
+              </span>
               }
             </div>
           </div>
@@ -304,21 +307,21 @@
             >
               ✓ Terminer
             </button>
-            
+
             <button
               (click)="editTask(task)"
               class="px-4 py-2 border border-blue-300 text-blue-600 rounded-md hover:bg-blue-50 transition-colors text-sm"
             >
               ✏️ Éditer
             </button>
-            
+
             <button
               (click)="toggleTaskActive(task)"
               class="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors text-sm"
             >
               {{ task.isActive ? '⏸️ Pause' : '▶️ Activer' }}
             </button>
-            
+
             <button
               (click)="deleteTask(task.id)"
               class="px-4 py-2 border border-red-300 text-red-600 rounded-md hover:bg-red-50 transition-colors text-sm"
@@ -327,6 +330,12 @@
             </button>
           </div>
         </div>
+      </div>
+    } @empty {
+      <div class="text-center py-12">
+        <div class="text-gray-400 text-6xl mb-4">📝</div>
+        <h3 class="text-lg font-medium text-gray-600 mb-2">Aucune tâche trouvée</h3>
+        <p class="text-gray-500">Ajoutez votre première tâche ménagère pour commencer !</p>
       </div>
     }
   </div>
