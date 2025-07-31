@@ -1,0 +1,32 @@
+version: 1
+applications:
+  - frontend:
+      phases:
+        preBuild:
+          commands:
+            - npm ci
+        build:
+          commands:
+            - npm run build
+      artifacts:
+        baseDirectory: dist/gestion-maison/browser
+        files:
+          - '**/*'
+      cache:
+        paths:
+          - node_modules/**/*
+    backend:
+      phases:
+        preBuild:
+          commands:
+            - cd server
+            - npm ci
+        build:
+          commands:
+            - echo "Backend build completed"
+      artifacts:
+        baseDirectory: server
+        files:
+          - '**/*'
+        name: backend
+    appRoot: .

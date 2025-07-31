@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "taches-menageres": {
+    "gestion-maison": {
       "projectType": "application",
       "schematics": {},
       "root": "",
@@ -19,6 +19,11 @@
             ],
             "tsConfig": "tsconfig.app.json",
             "assets": [
+              {
+                "glob": "manifest.webmanifest",
+                "input": "src",
+                "output": "/"
+              },
               {
                 "glob": "**/*",
                 "input": "public"
@@ -60,10 +65,10 @@
           "builder": "@angular/build:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "taches-menageres:build:production"
+              "buildTarget": "gestion-maison:build:production"
             },
             "development": {
-              "buildTarget": "taches-menageres:build:development"
+              "buildTarget": "gestion-maison:build:development"
             }
           },
           "defaultConfiguration": "development"

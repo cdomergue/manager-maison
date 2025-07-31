@@ -3,10 +3,12 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const fs = require('fs-extra');
 const path = require('path');
+const https = require('https');
 const config = require('./config');
 
 const app = express();
-const PORT = process.env.PORT || config.port;
+const PORT = config.port;
+const HTTPS_PORT = 3443; // Port HTTPS
 const DB_PATH = path.join(__dirname, config.database.path);
 
 // Chemin vers les fichiers statiques de l'application Angular
@@ -53,6 +55,21 @@ function writeDatabase(data) {
 }
 
 // Routes API
+
+// GET /api/status - Statut du serveur
+app.get('/api/status', (req, res) => {
+  try {
+    const db = readDatabase();
+    res.json({
+      status: 'online',
+      totalTasks: db.tasks.length,
+      lastUpdated: db.lastUpdated,
+      serverTime: new Date().toISOString()
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Erreur lors de la récupération du statut' });
+  }
+});
 
 // GET /api/tasks - Récupérer toutes les tâches
 app.get('/api/tasks', (req, res) => {
@@ -101,6 +118,7 @@ app.put('/api/tasks/:id', (req, res) => {
     const updatedTask = {
       ...db.tasks[taskIndex],
       ...req.body,
+      id: req.params.id,
       nextDueDate: req.body.nextDueDate ? new Date(req.body.nextDueDate).toISOString() : db.tasks[taskIndex].nextDueDate,
       lastCompleted: req.body.lastCompleted ? new Date(req.body.lastCompleted).toISOString() : db.tasks[taskIndex].lastCompleted
     };
@@ -151,7 +169,7 @@ app.post('/api/tasks/:id/complete', (req, res) => {
     
     const task = db.tasks[taskIndex];
     task.lastCompleted = new Date().toISOString();
-    task.nextDueDate = calculateNextDueDate(task);
+    task.nextDueDate = calculateNextDueDate(task).toISOString();
     
     if (writeDatabase(db)) {
       res.json(task);
@@ -163,103 +181,51 @@ app.post('/api/tasks/:id/complete', (req, res) => {
   }
 });
 
-// GET /api/tasks/overdue - Récupérer les tâches en retard
-app.get('/api/tasks/overdue', (req, res) => {
-  try {
-    const db = readDatabase();
-    const now = new Date();
-    const overdueTasks = db.tasks.filter(task => 
-      task.isActive && new Date(task.nextDueDate) < now
-    );
-    res.json(overdueTasks);
-  } catch (error) {
-    res.status(500).json({ error: 'Erreur lors de la récupération des tâches en retard' });
-  }
-});
-
-// GET /api/tasks/category/:category - Récupérer les tâches par catégorie
-app.get('/api/tasks/category/:category', (req, res) => {
-  try {
-    const db = readDatabase();
-    const filteredTasks = db.tasks.filter(task => task.category === req.params.category);
-    res.json(filteredTasks);
-  } catch (error) {
-    res.status(500).json({ error: 'Erreur lors de la récupération des tâches par catégorie' });
-  }
-});
-
-// GET /api/status - Statut du serveur
-app.get('/api/status', (req, res) => {
-  try {
-    const db = readDatabase();
-    res.json({
-      status: 'OK',
-      totalTasks: db.tasks.length,
-      lastUpdated: db.lastUpdated,
-      serverTime: new Date().toISOString(),
-      staticFiles: fs.existsSync(STATIC_PATH) ? 'Disponibles' : 'Non trouvés'
-    });
-  } catch (error) {
-    res.status(500).json({ error: 'Erreur lors de la récupération du statut' });
-  }
-});
-
-
-
 // Route pour servir l'application Angular (SPA)
 app.get('*', (req, res) => {
-  // Ne pas intercepter les routes API
-  if (req.path.startsWith('/api/')) {
-    return res.status(404).json({ error: 'Route API non trouvée' });
-  }
-  
-  // Servir index.html pour toutes les autres routes (SPA)
-  const indexPath = path.join(STATIC_PATH, 'index.html');
-  if (fs.existsSync(indexPath)) {
-    res.sendFile(indexPath);
-  } else {
-    res.status(404).send(`
-      <html>
-        <head><title>Application non trouvée</title></head>
-        <body>
-          <h1>Application Angular non trouvée</h1>
-          <p>Veuillez d'abord construire l'application :</p>
-          <pre>npm run build</pre>
-          <p>Puis redémarrer le serveur.</p>
-        </body>
-      </html>
-    `);
-  }
+  res.sendFile(path.join(STATIC_PATH, 'index.html'));
 });
 
 // Fonction pour calculer la prochaine date d'échéance
 function calculateNextDueDate(task) {
-  const now = new Date();
-  const nextDate = new Date(now);
+  const lastCompleted = new Date(task.lastCompleted);
+  let nextDue = new Date(lastCompleted);
   
   switch (task.frequency) {
     case 'daily':
-      nextDate.setDate(nextDate.getDate() + 1);
+      nextDue.setDate(nextDue.getDate() + 1);
       break;
     case 'weekly':
-      nextDate.setDate(nextDate.getDate() + 7);
+      nextDue.setDate(nextDue.getDate() + 7);
       break;
     case 'monthly':
-      nextDate.setMonth(nextDate.getMonth() + 1);
+      nextDue.setMonth(nextDue.getMonth() + 1);
       break;
     case 'custom':
-      nextDate.setDate(nextDate.getDate() + (task.customDays || 1));
+      nextDue.setDate(nextDue.getDate() + (task.customDays || 7));
       break;
+    default:
+      nextDue.setDate(nextDue.getDate() + 7);
   }
   
-  return nextDate.toISOString();
+  return nextDue;
 }
 
-// Démarrage du serveur
-app.listen(PORT, () => {
-  console.log(`🚀 Serveur démarré sur le port ${PORT}`);
-  console.log(`📁 Base de données: ${DB_PATH}`);
-  console.log(`🌐 API disponible sur: http://localhost:${PORT}/api`);
+// Certificats auto-signés pour le développement
+const httpsOptions = {
+  key: fs.readFileSync(path.join(__dirname, 'certs', 'key.pem')),
+  cert: fs.readFileSync(path.join(__dirname, 'certs', 'cert.pem'))
+};
+
+// Démarrer le serveur HTTPS
+https.createServer(httpsOptions, app).listen(HTTPS_PORT, () => {
+  console.log(`🚀 Serveur HTTPS démarré sur le port ${HTTPS_PORT}`);
+  console.log(`📱 Application accessible sur: https://localhost:${HTTPS_PORT}`);
+  console.log(`🔒 HTTPS activé pour les notifications push`);
 });
 
-module.exports = app; 
+// Démarrer aussi le serveur HTTP pour la compatibilité
+app.listen(PORT, () => {
+  console.log(`🌐 Serveur HTTP démarré sur le port ${PORT}`);
+  console.log(`📱 Application accessible sur: http://localhost:${PORT}`);
+}); 

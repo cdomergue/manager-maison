@@ -1,0 +1,30 @@
+<svg width="400" height="800" viewBox="0 0 400 800" xmlns="http://www.w3.org/2000/svg">
+  <rect width="400" height="800" fill="#f9fafb"/>
+  <rect x="0" y="0" width="400" height="60" fill="#3b82f6"/>
+  <text x="20" y="35" font-family="Arial, sans-serif" font-size="16" fill="white" font-weight="bold">🏠 Maison</text>
+  
+  <!-- Interface mobile -->
+  <rect x="20" y="80" width="360" height="500" fill="white" stroke="#e5e7eb" stroke-width="2" rx="8"/>
+  <text x="40" y="110" font-family="Arial, sans-serif" font-size="14" fill="#374151">📋 Tâches</text>
+  
+  <!-- Tâches mobiles -->
+  <rect x="40" y="130" width="320" height="80" fill="#f3f4f6" rx="4"/>
+  <text x="60" y="150" font-family="Arial, sans-serif" font-size="12" fill="#374151">🧹 Aspirateur</text>
+  <text x="60" y="170" font-family="Arial, sans-serif" font-size="10" fill="#6b7280">Aujourd'hui</text>
+  <circle cx="320" cy="160" r="15" fill="#10b981"/>
+  <text x="315" y="165" font-family="Arial, sans-serif" font-size="10" fill="white">✓</text>
+  
+  <rect x="40" y="220" width="320" height="80" fill="#f3f4f6" rx="4"/>
+  <text x="60" y="240" font-family="Arial, sans-serif" font-size="12" fill="#374151">🍽️ Vaisselle</text>
+  <text x="60" y="260" font-family="Arial, sans-serif" font-size="10" fill="#6b7280">Demain</text>
+  <circle cx="320" cy="250" r="15" fill="#6b7280"/>
+  
+  <rect x="40" y="310" width="320" height="80" fill="#f3f4f6" rx="4"/>
+  <text x="60" y="330" font-family="Arial, sans-serif" font-size="12" fill="#374151">🛏️ Draps</text>
+  <text x="60" y="350" font-family="Arial, sans-serif" font-size="10" fill="#6b7280">3 jours</text>
+  <circle cx="320" cy="340" r="15" fill="#6b7280"/>
+  
+  <!-- Bouton d'ajout -->
+  <circle cx="340" cy="720" r="30" fill="#3b82f6"/>
+  <text x="330" y="730" font-family="Arial, sans-serif" font-size="24" fill="white">+</text>
+</svg>
