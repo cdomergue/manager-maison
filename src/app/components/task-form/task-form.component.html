@@ -53,9 +53,11 @@
         class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
       >
         <option value="">Aucune catégorie</option>
-        <option *ngFor="let category of categories" [value]="category">
-          {{ category }}
-        </option>
+        @for (category of categories; track category) {
+          <option [value]="category">
+            {{ category }}
+          </option>
+        }
       </select>
     </div>
 
@@ -69,9 +71,11 @@
         formControlName="frequency"
         class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
       >
-        <option *ngFor="let freq of frequencies" [value]="freq.value">
-          {{ freq.label }}
-        </option>
+        @for (freq of frequencies; track freq.value) {
+          <option [value]="freq.value">
+            {{ freq.label }}
+          </option>
+        }
       </select>
     </div>
 
@@ -100,9 +104,11 @@
         formControlName="priority"
         class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
       >
-        <option *ngFor="let priority of priorities" [value]="priority.value">
-          {{ priority.label }}
-        </option>
+        @for (priority of priorities; track priority.value) {
+          <option [value]="priority.value">
+            {{ priority.label }}
+          </option>
+        }
       </select>
     </div>
 

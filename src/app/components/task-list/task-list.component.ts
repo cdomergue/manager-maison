@@ -8,7 +8,6 @@ import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-task-list',
-  standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './task-list.component.html',
   styleUrls: ['./task-list.component.css']

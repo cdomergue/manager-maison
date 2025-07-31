@@ -6,7 +6,6 @@ import { NotificationService } from '../../services/notification.service';
 
 @Component({
   selector: 'app-notifications-config',
-  standalone: true,
   imports: [CommonModule, FormsModule, ReactiveFormsModule],
   templateUrl: './notifications-config.component.html',
   styleUrls: ['./notifications-config.component.css']

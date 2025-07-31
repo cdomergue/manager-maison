@@ -33,7 +33,9 @@
           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           <option value="all">Toutes</option>
-          <option *ngFor="let category of categories" [value]="category">{{ category }}</option>
+          @for (category of categories; track category) {
+            <option [value]="category">{{ category }}</option>
+          }
         </select>
       </div>
 
@@ -69,85 +71,103 @@
 
   <!-- Liste des tâches -->
   <div class="space-y-4">
-    <div *ngIf="filteredTasks.length === 0" class="text-center py-12">
-      <div class="text-gray-400 text-6xl mb-4">📝</div>
-      <h3 class="text-lg font-medium text-gray-600 mb-2">Aucune tâche trouvée</h3>
-      <p class="text-gray-500">Ajoutez votre première tâche ménagère pour commencer !</p>
-    </div>
+    @if (filteredTasks.length === 0) {
+      <div class="text-center py-12">
+        <div class="text-gray-400 text-6xl mb-4">📝</div>
+        <h3 class="text-lg font-medium text-gray-600 mb-2">Aucune tâche trouvée</h3>
+        <p class="text-gray-500">Ajoutez votre première tâche ménagère pour commencer !</p>
+      </div>
+    }
 
-    <div 
-      *ngFor="let task of filteredTasks" 
-      class="bg-white rounded-lg shadow-sm border p-4 transition-all duration-200 hover:shadow-md"
-      [ngClass]="getStatusClass(task)"
-    >
-      <div class="flex items-start justify-between">
-        <div class="flex-1">
-          <!-- En-tête de la tâche -->
-          <div class="flex items-center gap-3 mb-2">
-            <h3 class="text-lg font-semibold text-gray-800">{{ task.name }}</h3>
-            <span 
-              class="px-2 py-1 text-xs font-medium rounded-full"
-              [ngClass]="getPriorityColor(task.priority)"
-            >
-              {{ getPriorityLabel(task.priority) }}
-            </span>
-            <span 
-              *ngIf="task.category"
-              class="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full"
-            >
-              {{ task.category }}
-            </span>
-          </div>
-
-          <!-- Description -->
-          <p *ngIf="task.description" class="text-gray-600 mb-3">{{ task.description }}</p>
-
-          <!-- Informations de fréquence et dates -->
-          <div class="flex flex-wrap gap-4 text-sm text-gray-500 mb-3">
-            <span>
-              <strong>Fréquence:</strong> 
-              <span *ngIf="task.frequency === 'custom'">{{ task.customDays }} jours</span>
-              <span *ngIf="task.frequency === 'daily'">Quotidienne</span>
-              <span *ngIf="task.frequency === 'weekly'">Hebdomadaire</span>
-              <span *ngIf="task.frequency === 'monthly'">Mensuelle</span>
-            </span>
-            <span>
-              <strong>Prochaine échéance:</strong> 
-              <span class="font-medium" [ngClass]="getDueDateClass(task)">
-                {{ getDueDateText(task) }}
+    @for (task of filteredTasks; track task.id) {
+      <div 
+        class="bg-white rounded-lg shadow-sm border p-4 transition-all duration-200 hover:shadow-md"
+        [ngClass]="getStatusClass(task)"
+      >
+        <div class="flex items-start justify-between">
+          <div class="flex-1">
+            <!-- En-tête de la tâche -->
+            <div class="flex items-center gap-3 mb-2">
+              <h3 class="text-lg font-semibold text-gray-800">{{ task.name }}</h3>
+              <span 
+                class="px-2 py-1 text-xs font-medium rounded-full"
+                [ngClass]="getPriorityColor(task.priority)"
+              >
+                {{ getPriorityLabel(task.priority) }}
               </span>
-            </span>
-            <span *ngIf="task.lastCompleted">
-              <strong>Dernière fois:</strong> {{ formatDate(task.lastCompleted) }}
-            </span>
-          </div>
-        </div>
+              @if (task.category) {
+                <span 
+                  class="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full"
+                >
+                  {{ task.category }}
+                </span>
+              }
+            </div>
 
-        <!-- Actions -->
-        <div class="flex flex-col gap-2 ml-4">
-          <button
-            (click)="completeTask(task.id)"
-            class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors text-sm"
-            [disabled]="!task.isActive"
-          >
-            ✓ Terminer
-          </button>
-          
-          <button
-            (click)="toggleTaskActive(task)"
-            class="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors text-sm"
-          >
-            {{ task.isActive ? '⏸️ Pause' : '▶️ Activer' }}
-          </button>
-          
-          <button
-            (click)="deleteTask(task.id)"
-            class="px-4 py-2 border border-red-300 text-red-600 rounded-md hover:bg-red-50 transition-colors text-sm"
-          >
-            🗑️ Supprimer
-          </button>
+            <!-- Description -->
+            @if (task.description) {
+              <p class="text-gray-600 mb-3">{{ task.description }}</p>
+            }
+
+            <!-- Informations de fréquence et dates -->
+            <div class="flex flex-wrap gap-4 text-sm text-gray-500 mb-3">
+              <span>
+                <strong>Fréquence:</strong> 
+                @switch (task.frequency) {
+                  @case ('custom') {
+                    <span>{{ task.customDays }} jours</span>
+                  }
+                  @case ('daily') {
+                    <span>Quotidienne</span>
+                  }
+                  @case ('weekly') {
+                    <span>Hebdomadaire</span>
+                  }
+                  @case ('monthly') {
+                    <span>Mensuelle</span>
+                  }
+                }
+              </span>
+              <span>
+                <strong>Prochaine échéance:</strong> 
+                <span class="font-medium" [ngClass]="getDueDateClass(task)">
+                  {{ getDueDateText(task) }}
+                </span>
+              </span>
+              @if (task.lastCompleted) {
+                <span>
+                  <strong>Dernière fois:</strong> {{ formatDate(task.lastCompleted) }}
+                </span>
+              }
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="flex flex-col gap-2 ml-4">
+            <button
+              (click)="completeTask(task.id)"
+              class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors text-sm"
+              [disabled]="!task.isActive"
+            >
+              ✓ Terminer
+            </button>
+            
+            <button
+              (click)="toggleTaskActive(task)"
+              class="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors text-sm"
+            >
+              {{ task.isActive ? '⏸️ Pause' : '▶️ Activer' }}
+            </button>
+            
+            <button
+              (click)="deleteTask(task.id)"
+              class="px-4 py-2 border border-red-300 text-red-600 rounded-md hover:bg-red-50 transition-colors text-sm"
+            >
+              🗑️ Supprimer
+            </button>
+          </div>
         </div>
       </div>
-    </div>
+    }
   </div>
 </div>

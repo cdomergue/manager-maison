@@ -9,7 +9,6 @@ import { NotificationService } from '../../services/notification.service';
 
 @Component({
   selector: 'app-home',
-  standalone: true,
   imports: [CommonModule, RouterModule, TaskListComponent, TaskFormComponent],
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.css']
