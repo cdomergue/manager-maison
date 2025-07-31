@@ -1,8 +1,58 @@
 <div class="min-h-screen bg-gray-50">
   <!-- En-tête -->
   <header class="bg-white shadow-sm border-b">
-    <div class="container mx-auto px-4 py-4">
-      <div class="flex items-center justify-between">
+    <div class="container mx-auto px-3 sm:px-4 py-3 sm:py-4">
+      <!-- Version Mobile (stacked) -->
+      <div class="sm:hidden">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center space-x-2">
+            <div class="text-2xl">🏠</div>
+            <h1 class="text-lg font-bold text-gray-800">Gestion de la Maison</h1>
+          </div>
+          <div class="flex items-center space-x-1">
+            <a 
+              routerLink="/notifications"
+              class="p-3 text-gray-600 hover:text-blue-600 transition-colors rounded-lg"
+              title="Configuration des notifications"
+            >
+              🔔
+            </a>
+            <a 
+              routerLink="/settings"
+              class="p-3 text-gray-600 hover:text-blue-600 transition-colors rounded-lg"
+              title="Paramètres"
+            >
+              ⚙️
+            </a>
+          </div>
+        </div>
+        
+        <div class="flex flex-col space-y-2">
+          <div class="flex items-center space-x-2 text-xs text-gray-500">
+            <div class="flex items-center space-x-1">
+              <div class="w-2 h-2 rounded-full" 
+                   [class]="isCheckingBackground() ? 'bg-yellow-400 animate-pulse' : 'bg-green-400'"
+                   [title]="isCheckingBackground() ? 'Vérification en cours...' : 'Connecté'">
+              </div>
+              <span>{{ isCheckingBackground() ? 'Vérification...' : 'En ligne' }}</span>
+            </div>
+            @if (lastBackgroundCheck()) {
+              <span>• {{ lastBackgroundCheck() | date:'HH:mm' }}</span>
+            }
+          </div>
+          
+          <button
+            (click)="showAddTaskForm()"
+            class="w-full bg-blue-600 text-white px-4 py-3 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2 text-base font-medium"
+          >
+            <span class="text-lg">+</span>
+            <span>Nouvelle tâche</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Version Desktop (horizontal) -->
+      <div class="hidden sm:flex items-center justify-between">
         <div class="flex items-center space-x-3">
           <div class="text-3xl">🏠</div>
           <div>
