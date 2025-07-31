@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal, computed, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Task, TaskCategory } from '../../models/task.model';
@@ -13,12 +13,36 @@ import { Subscription } from 'rxjs';
   styleUrls: ['./task-list.component.css']
 })
 export class TaskListComponent implements OnInit, OnDestroy {
-  tasks: Task[] = [];
-  filteredTasks: Task[] = [];
-  selectedCategory: string = 'all';
-  selectedPriority: string = 'all';
-  showCompleted: boolean = false;
-  searchTerm: string = '';
+  // Signaux pour les filtres
+  selectedCategory = signal<string>('all');
+  selectedPriority = signal<string>('all');
+  showCompleted = signal<boolean>(false);
+  searchTerm = signal<string>('');
+  
+  // Signaux calculés pour les tâches filtrées
+  filteredTasks = computed(() => {
+    const tasks = this.taskService.tasks();
+    const category = this.selectedCategory();
+    const priority = this.selectedPriority();
+    const search = this.searchTerm();
+    const showCompleted = this.showCompleted();
+
+    return tasks.filter(task => {
+      const matchesCategory = category === 'all' || (task.category && task.category === category);
+      const matchesPriority = priority === 'all' || task.priority === priority;
+      const matchesSearch = !search || 
+        task.name.toLowerCase().includes(search.toLowerCase()) ||
+        (task.description && task.description.toLowerCase().includes(search.toLowerCase()));
+      const matchesCompleted = showCompleted || !task.lastCompleted;
+      
+      return matchesCategory && matchesPriority && matchesSearch && matchesCompleted;
+    });
+  });
+
+  // Signaux calculés pour les statistiques
+  totalTasks = computed(() => this.taskService.tasks().length);
+  activeTasksCount = computed(() => this.taskService.activeTasks().length);
+  overdueTasksCount = computed(() => this.taskService.overdueTasks().length);
   
   categories = Object.values(TaskCategory);
   priorities = [
@@ -35,34 +59,19 @@ export class TaskListComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    this.subscription.add(
-      this.taskService.getTasks().subscribe(tasks => {
-        this.tasks = tasks;
-        this.filterTasks();
-      })
-    );
-
     // Écouter les événements de notification
     window.addEventListener('taskCompleted', ((event: CustomEvent) => {
       this.completeTask(event.detail.taskId);
     }) as EventListener);
+
+    // Forcer le rechargement après un délai pour s'assurer que l'API est connectée
+    setTimeout(() => {
+      this.taskService.refreshTasks();
+    }, 2000);
   }
 
   ngOnDestroy(): void {
     this.subscription.unsubscribe();
-  }
-
-  filterTasks(): void {
-    this.filteredTasks = this.tasks.filter(task => {
-      const matchesCategory = this.selectedCategory === 'all' || task.category === this.selectedCategory;
-      const matchesPriority = this.selectedPriority === 'all' || task.priority === this.selectedPriority;
-      const matchesSearch = !this.searchTerm || 
-        task.name.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-        (task.description && task.description.toLowerCase().includes(this.searchTerm.toLowerCase()));
-      const matchesCompleted = this.showCompleted || !task.lastCompleted;
-      
-      return matchesCategory && matchesPriority && matchesSearch && matchesCompleted;
-    });
   }
 
   completeTask(taskId: string): void {
@@ -127,16 +136,7 @@ export class TaskListComponent implements OnInit, OnDestroy {
   }
 
   onFilterChange(): void {
-    this.filterTasks();
-  }
-
-  getActiveTasksCount(): number {
-    return this.tasks.filter(t => t.isActive).length;
-  }
-
-  getOverdueTasksCount(): number {
-    const now = new Date();
-    return this.tasks.filter(t => t.isActive && new Date(t.nextDueDate) < now).length;
+    // Les signaux se mettent à jour automatiquement
   }
 
   getDueDateClass(task: Task): string {

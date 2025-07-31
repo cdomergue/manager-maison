@@ -3,9 +3,9 @@
   <div class="mb-6">
     <h1 class="text-3xl font-bold text-gray-800 mb-2">Mes Tâches Ménagères</h1>
     <div class="flex flex-wrap gap-4 text-sm text-gray-600">
-      <span>Total: {{ tasks.length }} tâches</span>
-      <span>Actives: {{ getActiveTasksCount() }}</span>
-      <span>En retard: {{ getOverdueTasksCount() }}</span>
+      <span>Total: {{ totalTasks() }} tâches</span>
+      <span>Actives: {{ activeTasksCount() }}</span>
+      <span>En retard: {{ overdueTasksCount() }}</span>
     </div>
   </div>
 
@@ -17,7 +17,8 @@
         <label class="block text-sm font-medium text-gray-700 mb-1">Rechercher</label>
         <input 
           type="text" 
-          [(ngModel)]="searchTerm"
+          [ngModel]="searchTerm()"
+          (ngModelChange)="searchTerm.set($event)"
           (input)="onFilterChange()"
           placeholder="Nom ou description..."
           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -28,7 +29,8 @@
       <div>
         <label class="block text-sm font-medium text-gray-700 mb-1">Catégorie</label>
         <select 
-          [(ngModel)]="selectedCategory"
+          [ngModel]="selectedCategory()"
+          (ngModelChange)="selectedCategory.set($event)"
           (change)="onFilterChange()"
           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
@@ -43,7 +45,8 @@
       <div>
         <label class="block text-sm font-medium text-gray-700 mb-1">Priorité</label>
         <select 
-          [(ngModel)]="selectedPriority"
+          [ngModel]="selectedPriority()"
+          (ngModelChange)="selectedPriority.set($event)"
           (change)="onFilterChange()"
           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
@@ -59,7 +62,8 @@
         <label class="flex items-center">
           <input 
             type="checkbox" 
-            [(ngModel)]="showCompleted"
+            [ngModel]="showCompleted()"
+            (ngModelChange)="showCompleted.set($event)"
             (change)="onFilterChange()"
             class="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
           >
@@ -71,7 +75,7 @@
 
   <!-- Liste des tâches -->
   <div class="space-y-4">
-    @if (filteredTasks.length === 0) {
+    @if (filteredTasks().length === 0) {
       <div class="text-center py-12">
         <div class="text-gray-400 text-6xl mb-4">📝</div>
         <h3 class="text-lg font-medium text-gray-600 mb-2">Aucune tâche trouvée</h3>
@@ -79,7 +83,7 @@
       </div>
     }
 
-    @for (task of filteredTasks; track task.id) {
+    @for (task of filteredTasks(); track task.id) {
       <div 
         class="bg-white rounded-lg shadow-sm border p-4 transition-all duration-200 hover:shadow-md"
         [ngClass]="getStatusClass(task)"
