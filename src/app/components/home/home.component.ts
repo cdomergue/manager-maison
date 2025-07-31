@@ -65,4 +65,8 @@ export class HomeComponent implements OnInit {
     this.showTaskForm.set(false);
     this.editingTask.set(undefined);
   }
+
+  editTask(task: Task): void {
+    this.showEditTaskForm(task);
+  }
 }

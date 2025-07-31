@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, signal, computed, effect } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal, computed, effect, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Task, TaskCategory } from '../../models/task.model';
@@ -13,6 +13,9 @@ import { Subscription } from 'rxjs';
   styleUrls: ['./task-list.component.css']
 })
 export class TaskListComponent implements OnInit, OnDestroy {
+  // Événement pour signaler qu'une tâche doit être éditée
+  editTaskEvent = output<Task>();
+
   // Signaux pour les filtres
   selectedCategory = signal<string>('all');
   selectedPriority = signal<string>('all');
@@ -146,5 +149,9 @@ export class TaskListComponent implements OnInit, OnDestroy {
     if (dueDate < now) return 'text-red-600';
     if (dueDate.getTime() - now.getTime() < 24 * 60 * 60 * 1000) return 'text-yellow-600';
     return 'text-green-600';
+  }
+
+  editTask(task: Task): void {
+    this.editTaskEvent.emit(task);
   }
 }

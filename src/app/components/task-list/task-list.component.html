@@ -215,6 +215,14 @@
             </button>
             
             <button
+              (click)="editTask(task)"
+              class="px-4 py-3 border border-blue-300 text-blue-600 rounded-lg hover:bg-blue-50 transition-colors text-sm"
+              title="Éditer"
+            >
+              ✏️
+            </button>
+            
+            <button
               (click)="toggleTaskActive(task)"
               class="px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm"
             >
@@ -295,6 +303,13 @@
               [disabled]="!task.isActive"
             >
               ✓ Terminer
+            </button>
+            
+            <button
+              (click)="editTask(task)"
+              class="px-4 py-2 border border-blue-300 text-blue-600 rounded-md hover:bg-blue-50 transition-colors text-sm"
+            >
+              ✏️ Éditer
             </button>
             
             <button
