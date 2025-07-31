@@ -1,12 +1,13 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { RouterModule } from '@angular/router';
 import { NotificationSettings } from '../../models/task.model';
 import { NotificationService } from '../../services/notification.service';
 
 @Component({
   selector: 'app-notifications-config',
-  imports: [CommonModule, FormsModule, ReactiveFormsModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterModule],
   templateUrl: './notifications-config.component.html',
   styleUrls: ['./notifications-config.component.css']
 })

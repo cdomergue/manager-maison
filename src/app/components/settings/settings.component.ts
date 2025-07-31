@@ -1,26 +1,33 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { TaskService } from '../../services/task.service';
+import { RouterModule } from '@angular/router';
 import { StorageService } from '../../services/storage.service';
 import { ApiService } from '../../services/api.service';
+import { BackgroundCheckService } from '../../services/background-check.service';
 
 @Component({
   selector: 'app-settings',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './settings.component.html',
   styleUrl: './settings.component.css'
 })
 export class SettingsComponent implements OnInit {
-  storageSize: number = 0;
-  isServerConnected: boolean = false;
-  serverStatus: any = null;
-  connectionStatus: string = 'Vérification...';
+  storageSize = signal(0);
+  isServerConnected = signal(false);
+  serverStatus = signal<any>(null);
+  connectionStatus = signal('Vérification...');
+  
+  // Signaux pour la vérification en arrière-plan
+  isCheckingBackground = computed(() => this.backgroundCheckService.isCheckingBackground());
+  lastBackgroundCheck = computed(() => this.backgroundCheckService.lastCheck());
+  backgroundCheckInterval = computed(() => this.backgroundCheckService.checkIntervalMs());
 
   constructor(
     private storageService: StorageService,
-    private apiService: ApiService
+    private apiService: ApiService,
+    private backgroundCheckService: BackgroundCheckService
   ) {}
 
   ngOnInit(): void {
@@ -29,17 +36,17 @@ export class SettingsComponent implements OnInit {
   }
 
   private updateStorageInfo(): void {
-    this.storageSize = this.storageService.getStorageSize();
+    this.storageSize.set(this.storageService.getStorageSize());
   }
 
   private checkServerStatus(): void {
     this.apiService.getConnectionStatus().subscribe(isConnected => {
-      this.isServerConnected = isConnected;
-      this.connectionStatus = isConnected ? 'Connecté' : 'Non connecté';
+      this.isServerConnected.set(isConnected);
+      this.connectionStatus.set(isConnected ? 'Connecté' : 'Non connecté');
     });
 
     this.apiService.getServerStatus().subscribe(status => {
-      this.serverStatus = status;
+      this.serverStatus.set(status);
     });
   }
 
@@ -51,8 +58,12 @@ export class SettingsComponent implements OnInit {
   }
 
   refreshServerStatus(): void {
-    this.connectionStatus = 'Vérification...';
+    this.connectionStatus.set('Vérification...');
     this.apiService.checkServerStatus();
     this.checkServerStatus();
+  }
+
+  async forceBackgroundCheck(): Promise<void> {
+    await this.backgroundCheckService.forceCheck();
   }
 }

@@ -1,6 +1,6 @@
 {
-  "name": "Tâches Ménagères",
-  "short_name": "TâchesMénage",
+  "name": "Manager de la maison",
+  "short_name": "Manager de la maison",
   "theme_color": "#1976d2",
   "background_color": "#fafafa",
   "display": "standalone",

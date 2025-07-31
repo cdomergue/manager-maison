@@ -1,14 +1,16 @@
 import { Component, OnInit, signal, computed, effect } from '@angular/core';
 import { RouterModule } from '@angular/router';
+import { DatePipe } from '@angular/common';
 import { TaskListComponent } from '../task-list/task-list.component';
 import { TaskFormComponent } from '../task-form/task-form.component';
 import { Task } from '../../models/task.model';
 import { TaskService } from '../../services/task.service';
 import { NotificationService } from '../../services/notification.service';
+import { BackgroundCheckService } from '../../services/background-check.service';
 
 @Component({
   selector: 'app-home',
-  imports: [RouterModule, TaskListComponent, TaskFormComponent],
+  imports: [RouterModule, DatePipe, TaskListComponent, TaskFormComponent],
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.css']
 })
@@ -19,10 +21,16 @@ export class HomeComponent implements OnInit {
   // Signaux calculés pour les tâches
   tasks = computed(() => this.taskService.tasks());
   overdueTasks = computed(() => this.taskService.overdueTasks());
+  
+  // Signaux pour le statut de vérification en arrière-plan
+  isCheckingBackground = computed(() => this.backgroundCheckService.isCheckingBackground());
+  lastBackgroundCheck = computed(() => this.backgroundCheckService.lastCheck());
+  backgroundCheckInterval = computed(() => this.backgroundCheckService.checkIntervalMs());
 
   constructor(
     private taskService: TaskService,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private backgroundCheckService: BackgroundCheckService
   ) {}
 
   ngOnInit(): void {

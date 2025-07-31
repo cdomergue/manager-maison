@@ -35,6 +35,30 @@ export class ApiService {
       });
   }
 
+  // Version asynchrone pour la vérification en arrière-plan
+  async checkServerStatusAsync(): Promise<boolean> {
+    try {
+      const status = await this.http.get<any>(`${this.API_BASE_URL}/status`).toPromise();
+      this.connectionStatus.next(true);
+      this.serverStatus.next(status);
+      return true;
+    } catch (error) {
+      this.connectionStatus.next(false);
+      this.serverStatus.next(null);
+      return false;
+    }
+  }
+
+  // Version asynchrone pour récupérer les tâches
+  async getTasksAsync(): Promise<Task[]> {
+    try {
+      return await this.http.get<Task[]>(`${this.API_BASE_URL}/tasks`).toPromise() || [];
+    } catch (error) {
+      console.warn('Erreur lors de la récupération des tâches:', error);
+      return [];
+    }
+  }
+
   // Obtenir le statut de connexion
   getConnectionStatus(): Observable<boolean> {
     return this.connectionStatus.asObservable();

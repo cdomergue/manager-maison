@@ -99,6 +99,44 @@ export class NotificationService {
     };
   }
 
+  async showNewTaskNotification(task: Task): Promise<void> {
+    if (!('Notification' in window) || Notification.permission !== 'granted') {
+      return;
+    }
+
+    const notification = new Notification('Nouvelle tâche ajoutée', {
+      body: `Nouvelle tâche : ${task.name}`,
+      icon: '/assets/icons/icon-192x192.png',
+      badge: '/assets/icons/icon-72x72.png',
+      tag: `new-task-${task.id}`,
+      requireInteraction: false
+    });
+
+    notification.onclick = () => {
+      window.focus();
+      notification.close();
+    };
+  }
+
+  async showMultipleNewTasksNotification(tasks: Task[]): Promise<void> {
+    if (!('Notification' in window) || Notification.permission !== 'granted') {
+      return;
+    }
+
+    const notification = new Notification('Nouvelles tâches ajoutées', {
+      body: `${tasks.length} nouvelles tâches ont été ajoutées`,
+      icon: '/assets/icons/icon-192x192.png',
+      badge: '/assets/icons/icon-72x72.png',
+      tag: 'multiple-new-tasks',
+      requireInteraction: false
+    });
+
+    notification.onclick = () => {
+      window.focus();
+      notification.close();
+    };
+  }
+
   updateSettings(settings: NotificationSettings): void {
     this.settings = { ...settings };
     this.saveSettings();

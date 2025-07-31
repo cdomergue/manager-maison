@@ -6,7 +6,7 @@ import { TaskService } from '../../services/task.service';
 
 @Component({
   selector: 'app-task-form',
-  imports: [CommonModule, FormsModule, ReactiveFormsModule],
+  imports: [ CommonModule, FormsModule, ReactiveFormsModule],
   templateUrl: './task-form.component.html',
   styleUrls: ['./task-form.component.css']
 })

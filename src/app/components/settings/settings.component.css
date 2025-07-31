@@ -4,12 +4,37 @@
   padding: 20px;
 }
 
+.header-with-back {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.back-btn {
+  background: #6b7280;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}
+
+.back-btn:hover {
+  background: #4b5563;
+}
+
 .settings-container h2 {
   font-size: 2rem;
   font-weight: bold;
   color: #1f2937;
-  margin-bottom: 2rem;
-  text-align: center;
+  margin: 0;
+  flex: 1;
 }
 
 .section {
