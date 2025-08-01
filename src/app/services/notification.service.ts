@@ -1,7 +1,7 @@
-import { Injectable } from '@angular/core';
-import { Task } from '../models/task.model';
-import { NotificationSettings } from '../models/task.model';
-import { UserService } from './user.service';
+import {Injectable} from '@angular/core';
+import {NotificationSettings, Task} from '../models/task.model';
+import {UserService} from './user.service';
+import {SwPush} from '@angular/service-worker';
 
 @Injectable({
   providedIn: 'root'
@@ -14,7 +14,12 @@ export class NotificationService {
     advanceNotice: 2
   };
 
-  constructor(private userService: UserService) {
+  private readonly VAPID_PUBLIC_KEY = 'BMB8LZ-B0Fin4W_pYzumsB6L6Rqoh1CfO-V3giCPRSy954jXVcE4Sdj99O5epl5Z8cbBY-IkG_IJjIoIYDo8Iss';
+
+  constructor(
+    private userService: UserService,
+    private swPush: SwPush
+  ) {
     this.loadSettings();
     this.requestPermission();
   }
@@ -25,17 +30,46 @@ export class NotificationService {
   }
 
   async requestPermission(): Promise<boolean> {
-    if (!('Notification' in window)) {
-      console.warn('This browser does not support notifications');
+    // En mode développement, utiliser l'API Notification native
+    if (!this.swPush.isEnabled) {
+      if (!('Notification' in window)) {
+        console.warn('Notifications not supported');
+        return false;
+      }
+
+      if (Notification.permission === 'default') {
+        const permission = await Notification.requestPermission();
+        return permission === 'granted';
+      }
+
+      return Notification.permission === 'granted';
+    }
+
+    // En mode production, utiliser les notifications push avec Service Worker
+    try {
+      const subscription = await this.swPush.requestSubscription({
+        serverPublicKey: this.VAPID_PUBLIC_KEY
+      });
+
+      if (subscription) {
+        console.log('Push subscription successful:', subscription);
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Error requesting push subscription:', error);
+
+      // Fallback vers l'API Notification native si la souscription push échoue
+      if ('Notification' in window) {
+        if (Notification.permission === 'default') {
+          const permission = await Notification.requestPermission();
+          return permission === 'granted';
+        }
+        return Notification.permission === 'granted';
+      }
+
       return false;
     }
-
-    if (Notification.permission === 'default') {
-      const permission = await Notification.requestPermission();
-      return permission === 'granted';
-    }
-
-    return Notification.permission === 'granted';
   }
 
   async scheduleTaskReminder(task: Task): Promise<void> {
@@ -64,70 +98,100 @@ export class NotificationService {
   }
 
   async showNotification(task: Task): Promise<void> {
-    if (!('Notification' in window) || Notification.permission !== 'granted') {
+    // Fallback vers l'API Notification native si Service Worker non disponible
+    if (!this.swPush.isEnabled) {
+      if ('Notification' in window && Notification.permission === 'granted') {
+        const notification = new Notification('Tâche ménagère à faire', {
+          body: `Il est temps de faire : ${task.name}`,
+          icon: '/icons/icon-192x192.png',
+          tag: `task-${task.id}`
+        });
+
+        notification.onclick = () => {
+          window.focus();
+          notification.close();
+          window.dispatchEvent(new CustomEvent('taskCompleted', {
+            detail: {taskId: task.id}
+          }));
+        };
+      }
       return;
     }
 
-    const notification = new Notification('Tâche ménagère à faire', {
-      body: `Il est temps de faire : ${task.name}`,
-      icon: '/assets/icons/icon-192x192.png',
-      badge: '/assets/icons/icon-72x72.png',
-      tag: `task-${task.id}`,
-      requireInteraction: true
-    });
+    try {
+      await this.swPush.notificationClicks.subscribe(action => {
+        if (action.notification.tag === `task-${task.id}`) {
+          window.dispatchEvent(new CustomEvent('taskCompleted', {
+            detail: {taskId: task.id}
+          }));
+        }
+      });
 
-    notification.onclick = () => {
-      window.focus();
-      notification.close();
-      // Émettre un événement pour marquer la tâche comme terminée
-      window.dispatchEvent(new CustomEvent('taskCompleted', { 
-        detail: { taskId: task.id } 
-      }));
-    };
+      // Envoyer une notification via Service Worker
+      await this.sendNotificationToServiceWorker({
+        title: 'Tâche ménagère à faire',
+        body: `Il est temps de faire : ${task.name}`,
+        icon: '/icons/icon-192x192.png',
+        badge: '/icons/icon-72x72.png',
+        tag: `task-${task.id}`,
+        requireInteraction: true
+      });
+    } catch (error) {
+      console.error('Error showing notification:', error);
+
+      // Fallback vers l'API Notification native
+      if ('Notification' in window && Notification.permission === 'granted') {
+        const notification = new Notification('Tâche ménagère à faire', {
+          body: `Il est temps de faire : ${task.name}`,
+          icon: '/icons/icon-192x192.png',
+          tag: `task-${task.id}`
+        });
+
+        notification.onclick = () => {
+          window.focus();
+          notification.close();
+          window.dispatchEvent(new CustomEvent('taskCompleted', {
+            detail: {taskId: task.id}
+          }));
+        };
+      }
+    }
   }
 
   async showOverdueNotification(tasks: Task[]): Promise<void> {
-    if (!('Notification' in window) || Notification.permission !== 'granted') {
+    if (!this.swPush.isEnabled) {
       return;
     }
 
     const userTasks = tasks.filter(task => this.isTaskForCurrentUser(task));
 
-    const notification = new Notification('Tâches en retard', {
+    await this.sendNotificationToServiceWorker({
+      title: 'Tâches en retard',
       body: `Vous avez ${userTasks.length} tâche(s) en retard`,
-      icon: '/assets/icons/icon-192x192.png',
-      badge: '/assets/icons/icon-72x72.png',
+      icon: '/icons/icon-192x192.png',
+      badge: '/icons/icon-72x72.png',
       tag: 'overdue-tasks',
       requireInteraction: true
     });
-
-    notification.onclick = () => {
-      window.focus();
-      notification.close();
-    };
   }
 
   async showNewTaskNotification(task: Task): Promise<void> {
-    if (!('Notification' in window) || Notification.permission !== 'granted' || !this.isTaskForCurrentUser(task)) {
+    if (!this.swPush.isEnabled || !this.isTaskForCurrentUser(task)) {
       return;
     }
 
-    const notification = new Notification('Nouvelle tâche ajoutée', {
+    await this.sendNotificationToServiceWorker({
+      title: 'Nouvelle tâche ajoutée',
       body: `Nouvelle tâche : ${task.name}`,
-      icon: '/assets/icons/icon-192x192.png',
-      badge: '/assets/icons/icon-72x72.png',
+      icon: '/icons/icon-192x192.png',
+      badge: '/icons/icon-72x72.png',
       tag: `new-task-${task.id}`,
       requireInteraction: false
     });
-
-    notification.onclick = () => {
-      window.focus();
-      notification.close();
-    };
   }
 
   async showMultipleNewTasksNotification(tasks: Task[]): Promise<void> {
-    if (!('Notification' in window) || Notification.permission !== 'granted') {
+    if (!this.swPush.isEnabled) {
       return;
     }
 
@@ -136,18 +200,14 @@ export class NotificationService {
       return;
     }
 
-    const notification = new Notification('Nouvelles tâches ajoutées', {
+    await this.sendNotificationToServiceWorker({
+      title: 'Nouvelles tâches ajoutées',
       body: `${userTasks.length} nouvelles tâches vous ont été assignées`,
-      icon: '/assets/icons/icon-192x192.png',
-      badge: '/assets/icons/icon-72x72.png',
+      icon: '/icons/icon-192x192.png',
+      badge: '/icons/icon-72x72.png',
       tag: 'multiple-new-tasks',
       requireInteraction: false
     });
-
-    notification.onclick = () => {
-      window.focus();
-      notification.close();
-    };
   }
 
   updateSettings(settings: NotificationSettings): void {
@@ -172,5 +232,62 @@ export class NotificationService {
 
   private saveSettings(): void {
     localStorage.setItem(this.SETTINGS_KEY, JSON.stringify(this.settings));
+  }
+
+  private async sendNotificationToServiceWorker(notificationData: any): Promise<void> {
+    if ('serviceWorker' in navigator && 'showNotification' in ServiceWorkerRegistration.prototype) {
+      try {
+        const registration = await navigator.serviceWorker.ready;
+        await registration.showNotification(notificationData.title, {
+          body: notificationData.body,
+          icon: notificationData.icon,
+          badge: notificationData.badge,
+          tag: notificationData.tag,
+          requireInteraction: notificationData.requireInteraction,
+          data: notificationData
+        } as any);
+      } catch (error) {
+        console.error('Erreur lors de l\'affichage de la notification:', error);
+      }
+    }
+  }
+
+  async testNotification(): Promise<void> {
+    // En mode développement ou si Service Worker non disponible, utiliser l'API Notification native
+    if (!this.swPush.isEnabled) {
+      if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification('Test de notification', {
+          body: 'Ceci est un test de notification pour vos tâches ménagères',
+          icon: '/icons/icon-192x192.png'
+        });
+        return;
+      } else {
+        throw new Error('Les notifications ne sont pas autorisées');
+      }
+    }
+
+    try {
+      // Test avec une notification via Service Worker
+      await this.sendNotificationToServiceWorker({
+        title: 'Test de notification',
+        body: 'Ceci est un test de notification pour vos tâches ménagères',
+        icon: '/icons/icon-192x192.png',
+        badge: '/icons/icon-72x72.png',
+        tag: 'test-notification',
+        requireInteraction: false
+      });
+    } catch (error) {
+      console.error('Erreur avec Service Worker, fallback vers API native:', error);
+
+      // Fallback vers l'API Notification native
+      if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification('Test de notification', {
+          body: 'Ceci est un test de notification pour vos tâches ménagères',
+          icon: '/icons/icon-192x192.png'
+        });
+      } else {
+        throw new Error('Les notifications ne sont pas autorisées');
+      }
+    }
   }
 }

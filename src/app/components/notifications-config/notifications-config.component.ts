@@ -1,9 +1,10 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { RouterModule } from '@angular/router';
-import { NotificationSettings } from '../../models/task.model';
-import { NotificationService } from '../../services/notification.service';
+import {Component, OnInit} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators} from '@angular/forms';
+import {RouterModule} from '@angular/router';
+import {NotificationSettings} from '../../models/task.model';
+import {NotificationService} from '../../services/notification.service';
+import {SwPush} from '@angular/service-worker';
 
 @Component({
   selector: 'app-notifications-config',
@@ -17,7 +18,8 @@ export class NotificationsConfigComponent implements OnInit {
 
   constructor(
     private fb: FormBuilder,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private swPush: SwPush
   ) {
     this.configForm = this.fb.group({
       enabled: [true],
@@ -30,7 +32,7 @@ export class NotificationsConfigComponent implements OnInit {
     // Charger les paramètres actuels
     const settings = this.notificationService.getSettings();
     this.configForm.patchValue(settings);
-    
+
     // Vérifier le statut des permissions
     this.checkNotificationPermission();
   }
@@ -38,7 +40,7 @@ export class NotificationsConfigComponent implements OnInit {
   async requestPermission(): Promise<void> {
     const granted = await this.notificationService.requestPermission();
     this.checkNotificationPermission();
-    
+
     if (granted) {
       alert('Notifications activées ! Vous recevrez des rappels pour vos tâches.');
     } else {
@@ -54,19 +56,23 @@ export class NotificationsConfigComponent implements OnInit {
     }
   }
 
-  testNotification(): void {
-    if ('Notification' in window && Notification.permission === 'granted') {
-      new Notification('Test de notification', {
-        body: 'Ceci est un test de notification pour vos tâches ménagères',
-        icon: '/assets/icons/icon-192x192.png'
-      });
-    } else {
-      alert('Veuillez d\'abord autoriser les notifications dans votre navigateur.');
+  async testNotification(): Promise<void> {
+    try {
+      await this.notificationService.testNotification();
+      alert('Notification de test envoyée !');
+    } catch (error) {
+      console.error('Erreur lors du test de notification:', error);
+      alert('Erreur lors du test de notification. Veuillez vérifier les permissions.');
     }
   }
 
   private checkNotificationPermission(): void {
-    if ('Notification' in window) {
+    if (this.swPush.isEnabled) {
+      // Vérifier si nous avons une subscription active
+      this.swPush.subscription.subscribe(subscription => {
+        this.notificationPermission = subscription ? 'granted' : 'default';
+      });
+    } else if ('Notification' in window) {
       this.notificationPermission = Notification.permission;
     }
   }
