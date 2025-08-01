@@ -1,27 +1,16 @@
 {
   "tasks": [
     {
-      "name": "Test christophe",
+      "name": "test",
       "category": "Cuisine",
-      "frequency": "weekly",
+      "frequency": "daily",
       "priority": "medium",
-      "nextDueDate": "2025-08-24T00:00:00.000Z",
+      "nextDueDate": "2025-08-02T18:06:20.572Z",
       "isActive": true,
-      "assignee": "Christophe",
-      "id": "mdt46rm6rlm774cyo9"
-    },
-    {
-      "name": "Faire la vaisselle",
-      "description": "test",
-      "category": "Ménage",
-      "frequency": "custom",
-      "priority": "low",
-      "nextDueDate": "2025-08-12T00:00:00.000Z",
-      "isActive": true,
-      "assignee": "Laurence",
-      "id": "mdt4bud77h8x9u6zeya",
-      "customDays": 7
+      "assignee": null,
+      "id": "mdt4ujws62h3iuqez1b",
+      "lastCompleted": "2025-08-01T18:06:20.572Z"
     }
   ],
-  "lastUpdated": "2025-08-01T17:50:02.336Z"
+  "lastUpdated": "2025-08-01T18:06:20.572Z"
 }

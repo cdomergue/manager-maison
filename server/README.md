@@ -1,6 +1,6 @@
-# Serveur Backend - Tâches Ménagères
+# Serveur Unifié - Tâches Ménagères
 
-Ce serveur Node.js fournit une API REST pour l'application Tâches Ménagères, permettant le partage des tâches entre plusieurs utilisateurs via une base de données JSON locale.
+Ce serveur Node.js unifié fournit à la fois les fichiers statiques de l'application Angular et l'API REST pour le développement local. Il permet le partage des tâches entre plusieurs utilisateurs via une base de données JSON locale.
 
 ## 🚀 Installation
 
@@ -15,8 +15,8 @@ Ce serveur Node.js fournit une API REST pour l'application Tâches Ménagères, 
    # Mode développement (avec redémarrage automatique)
    npm run dev
    
-   # Mode production
-   npm start
+   # Mode production local
+   npm run build-and-start
    ```
 
 Le serveur sera accessible sur `http://localhost:3001`
@@ -26,10 +26,15 @@ Le serveur sera accessible sur `http://localhost:3001`
 ```
 server/
 ├── server.js          # Serveur principal
-├── package.json       # Dépendances
-├── data/              # Base de données JSON
-│   └── tasks.json     # Fichier de données
-└── README.md          # Ce fichier
+├── server-https.js    # Version HTTPS du serveur
+├── config.js         # Configuration
+├── package.json      # Dépendances
+├── data/             # Base de données JSON
+│   └── tasks.json    # Fichier de données
+├── build-and-start.sh # Script de build et démarrage
+├── dev-start.sh      # Script de développement
+├── generate-certs.sh # Génération des certificats HTTPS
+└── README.md         # Ce fichier
 ```
 
 ## 🔌 API Endpoints
@@ -80,56 +85,44 @@ La base de données est stockée dans `data/tasks.json` avec la structure suivan
 ### Variables d'environnement
 
 - `PORT` : Port du serveur (défaut: 3001)
+- `HTTPS` : Activer le mode HTTPS (défaut: false)
 
 ### Exemple de configuration
 
 ```bash
 # .env
 PORT=3001
+HTTPS=false
 ```
-
-## 🌐 Déploiement local
-
-Pour utiliser le serveur dans votre réseau local :
-
-1. **Démarrer le serveur :**
-   ```bash
-   npm start
-   ```
-
-2. **Configurer l'application Angular :**
-   Modifier l'URL de l'API dans `src/app/services/api.service.ts` :
-   ```typescript
-   private readonly API_BASE_URL = 'http://VOTRE_IP_LOCALE:3001/api';
-   ```
-
-3. **Accéder depuis d'autres appareils :**
-   - Ordinateur : `http://VOTRE_IP_LOCALE:3001`
-   - Mobile : `http://VOTRE_IP_LOCALE:3001`
-
-## 🔒 Sécurité
-
-⚠️ **Attention :** Ce serveur est conçu pour un usage local et familial. Il n'inclut pas de mécanismes de sécurité avancés.
-
-### Recommandations pour un usage en réseau local :
-
-1. **Pare-feu :** Limiter l'accès au port 3001
-2. **Réseau privé :** Utiliser un réseau WiFi privé
-3. **Sauvegarde :** Sauvegarder régulièrement `data/tasks.json`
 
 ## 🛠️ Développement
 
-### Structure du code
+### Modes de fonctionnement
 
-- **server.js** : Configuration Express et routes API
-- **Middleware** : CORS, body-parser
-- **Utilitaires** : Fonctions de lecture/écriture de la base de données
+1. **Mode développement :**
+   - Serveur API sur port 3001
+   - Angular CLI sur port 4200
+   - Hot reload pour le frontend et le backend
 
-### Ajouter de nouvelles fonctionnalités
+2. **Mode production local :**
+   - Serveur unifié sur port 3001
+   - Sert les fichiers statiques et l'API
+   - Nécessite un build Angular préalable
 
-1. Ajouter la route dans `server.js`
-2. Implémenter la logique métier
-3. Tester avec l'application Angular
+### Scripts disponibles
+
+- `npm run dev` : Mode développement avec redémarrage automatique
+- `npm run build-and-start` : Build Angular + démarrage serveur unifié
+- `npm run generate-certs` : Génère des certificats pour HTTPS
+
+## 🔒 Sécurité
+
+⚠️ **Attention :** Ce serveur est conçu pour le développement local. En production, utilisez AWS Lambda et Amplify.
+
+### Recommandations pour le développement :
+
+1. **HTTPS :** Utilisez le mode HTTPS pour tester les fonctionnalités PWA
+2. **Sauvegarde :** Sauvegardez régulièrement `data/tasks.json`
 
 ## 📊 Monitoring
 
@@ -138,6 +131,7 @@ Le serveur fournit des informations de statut via `/api/status` :
 - Nombre total de tâches
 - Dernière mise à jour
 - Heure du serveur
+- Mode de fonctionnement (dev/prod)
 
 ## 🔄 Synchronisation
 
@@ -154,11 +148,11 @@ Les données sont synchronisées en temps réel entre tous les utilisateurs conn
 - Vérifier les permissions du dossier `data/`
 
 ### L'application ne se connecte pas
-- Vérifier l'URL de l'API dans `api.service.ts`
 - Vérifier que le serveur est démarré
 - Vérifier les paramètres CORS
+- En HTTPS, vérifier les certificats
 
 ### Erreurs de base de données
 - Vérifier les permissions du fichier `data/tasks.json`
 - Vérifier la syntaxe JSON
-- Restaurer depuis une sauvegarde si nécessaire 
+- Restaurer depuis une sauvegarde si nécessaire
