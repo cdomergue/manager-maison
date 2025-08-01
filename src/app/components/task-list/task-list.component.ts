@@ -1,10 +1,10 @@
-import { Component, OnInit, OnDestroy, signal, computed, effect, output } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { Task, TaskCategory } from '../../models/task.model';
-import { TaskService } from '../../services/task.service';
-import { NotificationService } from '../../services/notification.service';
-import { Subscription } from 'rxjs';
+import {Component, computed, OnDestroy, OnInit, output, signal} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {FormsModule} from '@angular/forms';
+import {Task, TaskCategory} from '../../models/task.model';
+import {TaskService} from '../../services/task.service';
+import {NotificationService} from '../../services/notification.service';
+import {Subscription} from 'rxjs';
 
 @Component({
   selector: 'app-task-list',
@@ -21,8 +21,8 @@ export class TaskListComponent implements OnInit, OnDestroy {
   selectedPriority = signal<string>('all');
   showCompleted = signal<boolean>(false);
   searchTerm = signal<string>('');
-  
-  // Signaux calculés pour les tâches filtrées
+
+  // Signaux calculés pour les tâches filtrées et triées
   filteredTasks = computed(() => {
     const tasks = this.taskService.tasks();
     const category = this.selectedCategory();
@@ -30,15 +30,35 @@ export class TaskListComponent implements OnInit, OnDestroy {
     const search = this.searchTerm();
     const showCompleted = this.showCompleted();
 
-    return tasks.filter(task => {
+    // Filtrer d'abord les tâches
+    const filtered = tasks.filter(task => {
       const matchesCategory = category === 'all' || (task.category && task.category === category);
       const matchesPriority = priority === 'all' || task.priority === priority;
-      const matchesSearch = !search || 
+      const matchesSearch = !search ||
         task.name.toLowerCase().includes(search.toLowerCase()) ||
         (task.description && task.description.toLowerCase().includes(search.toLowerCase()));
       const matchesCompleted = showCompleted || !task.lastCompleted;
-      
+
       return matchesCategory && matchesPriority && matchesSearch && matchesCompleted;
+    });
+
+    // Trier les tâches par date d'échéance
+    return filtered.sort((a, b) => {
+      const now = new Date();
+      const dateA = new Date(a.nextDueDate);
+      const dateB = new Date(b.nextDueDate);
+      const isOverdueA = dateA < now;
+      const isOverdueB = dateB < now;
+
+      // Si les deux tâches sont en retard, trier par la plus en retard d'abord
+      if (isOverdueA && isOverdueB) {
+        return dateA.getTime() - dateB.getTime();
+      }
+      // Si une seule tâche est en retard, la mettre en premier
+      if (isOverdueA) return -1;
+      if (isOverdueB) return 1;
+      // Pour les tâches non en retard, trier par date la plus proche
+      return dateA.getTime() - dateB.getTime();
     });
   });
 
@@ -46,7 +66,7 @@ export class TaskListComponent implements OnInit, OnDestroy {
   totalTasks = computed(() => this.taskService.tasks().length);
   activeTasksCount = computed(() => this.taskService.activeTasks().length);
   overdueTasksCount = computed(() => this.taskService.overdueTasks().length);
-  
+
   categories = Object.values(TaskCategory);
   priorities = [
     { value: 'low', label: 'Basse', color: 'text-green-600' },
@@ -104,10 +124,10 @@ export class TaskListComponent implements OnInit, OnDestroy {
 
   getStatusClass(task: Task): string {
     if (!task.isActive) return 'opacity-50';
-    
+
     const now = new Date();
     const dueDate = new Date(task.nextDueDate);
-    
+
     if (dueDate < now) return 'border-red-500 bg-red-50';
     if (dueDate.getTime() - now.getTime() < 24 * 60 * 60 * 1000) return 'border-yellow-500 bg-yellow-50';
     return 'border-green-500 bg-green-50';
@@ -145,7 +165,7 @@ export class TaskListComponent implements OnInit, OnDestroy {
   getDueDateClass(task: Task): string {
     const now = new Date();
     const dueDate = new Date(task.nextDueDate);
-    
+
     if (dueDate < now) return 'text-red-600';
     if (dueDate.getTime() - now.getTime() < 24 * 60 * 60 * 1000) return 'text-yellow-600';
     return 'text-green-600';
