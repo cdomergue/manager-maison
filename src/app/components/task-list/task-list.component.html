@@ -135,8 +135,9 @@
   <div class="space-y-4">
     @for (task of filteredTasks(); track task.id) {
       <div
-        class="bg-white rounded-lg shadow-sm border p-3 sm:p-4 transition-all duration-200 hover:shadow-md"
+        class="bg-white rounded-lg shadow-sm border p-3 sm:p-4 transition-all duration-200 hover:shadow-md cursor-pointer"
         [ngClass]="getStatusClass(task)"
+        (click)="showTaskDetails(task)"
       >
         <!-- Mobile Layout -->
         <div class="sm:hidden">
@@ -202,7 +203,7 @@
           <!-- Actions mobiles horizontales -->
           <div class="flex gap-2">
             <button
-              (click)="completeTask(task.id)"
+              (click)="$event.stopPropagation(); completeTask(task.id)"
               class="flex-1 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
               [disabled]="!task.isActive"
             >
@@ -210,7 +211,7 @@
             </button>
 
             <button
-              (click)="editTask(task)"
+              (click)="$event.stopPropagation(); editTask(task)"
               class="px-4 py-3 border border-blue-300 text-blue-600 rounded-lg hover:bg-blue-50 transition-colors text-sm"
               title="Éditer"
             >
@@ -218,14 +219,14 @@
             </button>
 
             <button
-              (click)="toggleTaskActive(task)"
+              (click)="$event.stopPropagation(); toggleTaskActive(task)"
               class="px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm"
             >
               {{ task.isActive ? '⏸️' : '▶️' }}
             </button>
 
             <button
-              (click)="deleteTask(task.id)"
+              (click)="$event.stopPropagation(); deleteTask(task.id)"
               class="px-4 py-3 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition-colors text-sm"
             >
               🗑️
@@ -301,7 +302,7 @@
           <!-- Actions desktop -->
           <div class="flex flex-col gap-2 ml-4">
             <button
-              (click)="completeTask(task.id)"
+              (click)="$event.stopPropagation(); completeTask(task.id)"
               class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors text-sm"
               [disabled]="!task.isActive"
             >
@@ -309,21 +310,21 @@
             </button>
 
             <button
-              (click)="editTask(task)"
+              (click)="$event.stopPropagation(); editTask(task)"
               class="px-4 py-2 border border-blue-300 text-blue-600 rounded-md hover:bg-blue-50 transition-colors text-sm"
             >
               ✏️ Éditer
             </button>
 
             <button
-              (click)="toggleTaskActive(task)"
+              (click)="$event.stopPropagation(); toggleTaskActive(task)"
               class="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors text-sm"
             >
               {{ task.isActive ? '⏸️ Pause' : '▶️ Activer' }}
             </button>
 
             <button
-              (click)="deleteTask(task.id)"
+              (click)="$event.stopPropagation(); deleteTask(task.id)"
               class="px-4 py-2 border border-red-300 text-red-600 rounded-md hover:bg-red-50 transition-colors text-sm"
             >
               🗑️ Supprimer
@@ -339,4 +340,16 @@
       </div>
     }
   </div>
+
+  <!-- Modal de détail de tâche -->
+  @if (selectedTask()) {
+    <app-task-detail
+      [task]="selectedTask()!"
+      (close)="closeTaskDetails()"
+      (complete)="completeTask($event)"
+      (edit)="editTask($event)"
+      (delete)="deleteTask($event)"
+      (toggleActive)="toggleTaskActive($event)"
+    />
+  }
 </div>

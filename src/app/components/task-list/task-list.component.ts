@@ -5,14 +5,16 @@ import {Task, TaskCategory} from '../../models/task.model';
 import {TaskService} from '../../services/task.service';
 import {NotificationService} from '../../services/notification.service';
 import {Subscription} from 'rxjs';
+import {TaskDetailComponent} from '../task-detail/task-detail.component';
 
 @Component({
   selector: 'app-task-list',
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TaskDetailComponent],
   templateUrl: './task-list.component.html',
   styleUrls: ['./task-list.component.css']
 })
 export class TaskListComponent implements OnInit, OnDestroy {
+  selectedTask = signal<Task | null>(null);
   // Événement pour signaler qu'une tâche doit être éditée
   editTaskEvent = output<Task>();
 
@@ -172,6 +174,15 @@ export class TaskListComponent implements OnInit, OnDestroy {
   }
 
   editTask(task: Task): void {
+    this.selectedTask.set(null);
     this.editTaskEvent.emit(task);
+  }
+
+  showTaskDetails(task: Task): void {
+    this.selectedTask.set(task);
+  }
+
+  closeTaskDetails(): void {
+    this.selectedTask.set(null);
   }
 }
