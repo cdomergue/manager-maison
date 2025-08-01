@@ -152,6 +152,7 @@ app.post('/api/tasks/:id/complete', (req, res) => {
     const task = db.tasks[taskIndex];
     task.lastCompleted = new Date().toISOString();
     task.nextDueDate = calculateNextDueDate(task);
+    task.isActive = true; // Réactiver la tâche
     
     if (writeDatabase(db)) {
       res.json(task);

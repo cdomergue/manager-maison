@@ -7,6 +7,7 @@ export enum TaskCategory {
   JARDIN = 'Jardin',
   ADMINISTRATIF = 'Administratif',
   CHATS = 'Chats',
+  RANGEMENTS = 'Rangements',
   AUTRE = 'Autre'
 }
 

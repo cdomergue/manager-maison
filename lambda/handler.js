@@ -154,6 +154,7 @@ exports.completeTask = async (event) => {
     task.lastCompleted = new Date().toISOString();
     task.nextDueDate = calculateNextDueDate(task).toISOString();
     task.updatedAt = new Date().toISOString();
+    task.isActive = true; // Réactiver la tâche
 
     await dynamodb.put({
       TableName: TABLE_NAME,

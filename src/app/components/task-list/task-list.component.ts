@@ -21,7 +21,7 @@ export class TaskListComponent implements OnInit, OnDestroy {
   // Signaux pour les filtres
   selectedCategory = signal<string>('all');
   selectedPriority = signal<string>('all');
-  showCompleted = signal<boolean>(false);
+
   searchTerm = signal<string>('');
 
   // Signaux calculés pour les tâches filtrées et triées
@@ -30,7 +30,7 @@ export class TaskListComponent implements OnInit, OnDestroy {
     const category = this.selectedCategory();
     const priority = this.selectedPriority();
     const search = this.searchTerm();
-    const showCompleted = this.showCompleted();
+
 
     // Filtrer d'abord les tâches
     const filtered = tasks.filter(task => {
@@ -39,9 +39,9 @@ export class TaskListComponent implements OnInit, OnDestroy {
       const matchesSearch = !search ||
         task.name.toLowerCase().includes(search.toLowerCase()) ||
         (task.description && task.description.toLowerCase().includes(search.toLowerCase()));
-      const matchesCompleted = showCompleted || !task.lastCompleted;
 
-      return matchesCategory && matchesPriority && matchesSearch && matchesCompleted;
+
+      return matchesCategory && matchesPriority && matchesSearch;
     });
 
     // Trier les tâches par date d'échéance

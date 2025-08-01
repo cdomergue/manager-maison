@@ -1,10 +1,9 @@
-import { Injectable, signal, computed, effect, inject } from '@angular/core';
-import { toSignal, toObservable } from '@angular/core/rxjs-interop';
-import { Observable, of } from 'rxjs';
-import { catchError, tap } from 'rxjs/operators';
-import { Task } from '../models/task.model';
-import { ApiService } from './api.service';
-import { StorageService } from './storage.service';
+import {computed, inject, Injectable, signal} from '@angular/core';
+import {toObservable} from '@angular/core/rxjs-interop';
+import {Observable, of} from 'rxjs';
+import {Task} from '../models/task.model';
+import {ApiService} from './api.service';
+import {StorageService} from './storage.service';
 
 @Injectable({
   providedIn: 'root'
@@ -13,19 +12,19 @@ export class TaskService {
   // Signaux pour la gestion des tâches
   private tasksSignal = signal<Task[]>([]);
   private useLocalStorageSignal = signal(false);
-  
+
   // Signaux publics en lecture seule
   readonly tasks = this.tasksSignal.asReadonly();
   readonly useLocalStorage = this.useLocalStorageSignal.asReadonly();
-  
+
   // Signaux calculés pour les filtres
-  readonly activeTasks = computed(() => 
+  readonly activeTasks = computed(() =>
     this.tasksSignal().filter(task => task.isActive)
   );
-  
+
   readonly overdueTasks = computed(() => {
     const now = new Date();
-    return this.tasksSignal().filter(task => 
+    return this.tasksSignal().filter(task =>
       task.isActive && new Date(task.nextDueDate) < now
     );
   });
@@ -111,7 +110,7 @@ export class TaskService {
         id: this.generateId(),
         isActive: true
       };
-      
+
       const currentTasks = this.tasksSignal();
       this.tasksSignal.set([...currentTasks, newTask]);
       this.saveTasksToLocalStorage();
@@ -135,7 +134,7 @@ export class TaskService {
     if (this.useLocalStorageSignal()) {
       const currentTasks = this.tasksSignal();
       const index = currentTasks.findIndex(t => t.id === task.id);
-      
+
       if (index !== -1) {
         const updatedTasks = [...currentTasks];
         updatedTasks[index] = task;
@@ -190,11 +189,16 @@ export class TaskService {
     if (this.useLocalStorageSignal()) {
       const currentTasks = this.tasksSignal();
       const task = currentTasks.find(t => t.id === taskId);
-      
+
       if (task) {
-        task.lastCompleted = new Date();
-        task.nextDueDate = this.calculateNextDueDate(task);
-        this.tasksSignal.set([...currentTasks]);
+        const updatedTask = {
+          ...task,
+          lastCompleted: new Date(),
+          nextDueDate: this.calculateNextDueDate(task),
+          isActive: true // Réactiver la tâche
+        };
+        const updatedTasks = currentTasks.map(t => t.id === taskId ? updatedTask : t);
+        this.tasksSignal.set(updatedTasks);
         this.saveTasksToLocalStorage();
       }
     } else {
@@ -243,7 +247,7 @@ export class TaskService {
   private calculateNextDueDate(task: Task): Date {
     const now = new Date();
     const nextDate = new Date(now);
-    
+
     switch (task.frequency) {
       case 'daily':
         nextDate.setDate(nextDate.getDate() + 1);
@@ -258,7 +262,7 @@ export class TaskService {
         nextDate.setDate(nextDate.getDate() + (task.customDays || 1));
         break;
     }
-    
+
     return nextDate;
   }
 }
