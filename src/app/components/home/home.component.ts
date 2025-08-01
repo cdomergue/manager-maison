@@ -1,4 +1,4 @@
-import {Component, computed, effect, Injector, OnDestroy, OnInit, runInInjectionContext, signal} from '@angular/core';
+import {Component, computed, OnDestroy, OnInit, signal} from '@angular/core';
 import {RouterModule} from '@angular/router';
 import {DatePipe} from '@angular/common';
 import {TaskListComponent} from '../task-list/task-list.component';
@@ -38,21 +38,10 @@ export class HomeComponent implements OnInit, OnDestroy {
   constructor(
     private taskService: TaskService,
     private notificationService: NotificationService,
-    private backgroundCheckService: BackgroundCheckService,
-    private injector: Injector
+    private backgroundCheckService: BackgroundCheckService
   ) {}
 
   ngOnInit(): void {
-    runInInjectionContext(this.injector, () => {
-      // Effet pour vérifier les tâches en retard
-      effect(() => {
-        const overdue = this.overdueTasks();
-        if (overdue.length > 0) {
-          this.notificationService.showOverdueNotification(overdue);
-        }
-      });
-    });
-
     // Écouter l'événement popstate pour fermer la modale
     window.addEventListener('popstate', this.popstateHandler);
   }

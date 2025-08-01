@@ -10,8 +10,9 @@ import { NotificationService } from './notification.service';
 export class BackgroundCheckService {
   private isChecking = signal(false);
   private lastCheckTime = signal<Date | null>(null);
-  private checkInterval = signal(30000); // 30 secondes par défaut
+  private checkInterval = signal(300000); // 5 minutes par défaut
   private intervalId: number | null = null;
+  private lastNotifiedOverdueTasks: Set<string> = new Set(); // IDs des tâches en retard déjà notifiées
   
   // Signaux publics
   readonly isCheckingBackground = this.isChecking.asReadonly();
@@ -33,11 +34,11 @@ export class BackgroundCheckService {
     // Écouter les changements de visibilité de la page
     document.addEventListener('visibilitychange', () => {
       if (document.hidden) {
-        // Page cachée : réduire la fréquence
-        this.setCheckInterval(60000); // 1 minute
+        // Page cachée : réduire la fréquence à 1 appel par heure
+        this.setCheckInterval(3600000); // 1 heure
       } else {
         // Page visible : fréquence normale
-        this.setCheckInterval(30000); // 30 secondes
+        this.setCheckInterval(300000); // 5 minutes
         // Vérifier immédiatement
         this.checkForNewTasks();
       }
@@ -107,8 +108,20 @@ export class BackgroundCheckService {
           task.isActive && new Date(task.nextDueDate) < new Date()
         );
         
+        // Ne notifier que s'il y a des nouvelles tâches en retard
         if (overdueTasks.length > 0) {
-          this.notificationService.showOverdueNotification(overdueTasks);
+          const currentOverdueIds = new Set(overdueTasks.map(task => task.id));
+          
+          // Vérifier s'il y a de nouvelles tâches en retard depuis la dernière notification
+          const hasNewOverdueTasks = overdueTasks.some(task => !this.lastNotifiedOverdueTasks.has(task.id));
+          
+          if (hasNewOverdueTasks) {
+            this.notificationService.showOverdueNotification(overdueTasks);
+            this.lastNotifiedOverdueTasks = currentOverdueIds;
+          }
+        } else {
+          // S'il n'y a plus de tâches en retard, vider la liste des notifications
+          this.lastNotifiedOverdueTasks.clear();
         }
       }
     } catch (error) {

@@ -28,12 +28,12 @@ export class ApiService {
 
   // Déterminer l'URL de l'API selon l'environnement
   private getApiBaseUrl(): string {
-    // En production (Amplify), utiliser Lambda
-    if (window.location.hostname.includes('amplifyapp.com')) {
-      return 'https://4cj8nou7ce.execute-api.eu-west-1.amazonaws.com/prod/api';
+    // En local (localhost), utiliser l'API relative vers le serveur local
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+      return '/api';
     }
-    // En local, utiliser l'API relative
-    return '/api';
+    // En production (Amplify ou autre), utiliser Lambda
+    return 'https://4cj8nou7ce.execute-api.eu-west-1.amazonaws.com/prod/api';
   }
 
   // Vérifier le statut du serveur
