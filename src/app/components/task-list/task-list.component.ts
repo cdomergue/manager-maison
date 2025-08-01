@@ -1,7 +1,9 @@
 import {Component, computed, OnDestroy, OnInit, output, signal} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
-import {Task, TaskCategory} from '../../models/task.model';
+import {Task} from '../../models/task.model';
+import {Category} from '../../models/category.model';
+import {CategoryService} from '../../services/category.service';
 import {TaskService} from '../../services/task.service';
 import {NotificationService} from '../../services/notification.service';
 import {Subscription} from 'rxjs';
@@ -76,7 +78,7 @@ export class TaskListComponent implements OnInit, OnDestroy {
   activeTasksCount = computed(() => this.taskService.activeTasks().length);
   overdueTasksCount = computed(() => this.taskService.overdueTasks().length);
 
-  categories = Object.values(TaskCategory);
+  categories: Category[] = [];
   priorities = [
     { value: 'low', label: 'Basse', color: 'text-green-600' },
     { value: 'medium', label: 'Moyenne', color: 'text-yellow-600' },
@@ -87,10 +89,16 @@ export class TaskListComponent implements OnInit, OnDestroy {
 
   constructor(
     private taskService: TaskService,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private categoryService: CategoryService
   ) {}
 
   ngOnInit(): void {
+    // Charger les catégories
+    this.categoryService.getCategories().subscribe(
+      categories => this.categories = categories
+    );
+
     // Écouter les événements de notification
     window.addEventListener('taskCompleted', ((event: CustomEvent) => {
       this.completeTask(event.detail.taskId);
@@ -207,5 +215,10 @@ export class TaskListComponent implements OnInit, OnDestroy {
   closeTaskDetailsFromBack(): void {
     // Fermeture via le bouton retour - pas besoin de modifier l'historique
     this.selectedTask.set(null);
+  }
+
+  getCategoryName(categoryId: string): string {
+    const category = this.categories.find(cat => cat.id === categoryId);
+    return category ? category.name : categoryId;
   }
 }

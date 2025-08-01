@@ -9,6 +9,7 @@ Globals:
     Environment:
       Variables:
         TABLE_NAME: !Ref TasksTable
+        CATEGORIES_TABLE_NAME: !Ref CategoriesTable
   Api:
     Cors:
       AllowMethods: "'GET,POST,PUT,DELETE,OPTIONS'"
@@ -16,11 +17,23 @@ Globals:
       AllowOrigin: "'*'"
 
 Resources:
-  # Table DynamoDB
+  # Tables DynamoDB
   TasksTable:
     Type: AWS::DynamoDB::Table
     Properties:
       TableName: gestion-maison-tasks
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
+
+  CategoriesTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: gestion-maison-categories
       AttributeDefinitions:
         - AttributeName: id
           AttributeType: S
@@ -136,6 +149,87 @@ Resources:
             Path: /api/tasks/{id}/complete
             Method: post
 
+  # ========== FONCTIONS CATEGORIES ==========
+  GetCategoriesFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda/
+      Handler: handler.getCategories
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref CategoriesTable
+      Events:
+        GetCategories:
+          Type: Api
+          Properties:
+            RestApiId: !Ref Api
+            Path: /api/categories
+            Method: get
+
+  GetCategoryFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda/
+      Handler: handler.getCategory
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref CategoriesTable
+      Events:
+        GetCategory:
+          Type: Api
+          Properties:
+            RestApiId: !Ref Api
+            Path: /api/categories/{id}
+            Method: get
+
+  CreateCategoryFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda/
+      Handler: handler.createCategory
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref CategoriesTable
+      Events:
+        CreateCategory:
+          Type: Api
+          Properties:
+            RestApiId: !Ref Api
+            Path: /api/categories
+            Method: post
+
+  UpdateCategoryFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda/
+      Handler: handler.updateCategory
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref CategoriesTable
+      Events:
+        UpdateCategory:
+          Type: Api
+          Properties:
+            RestApiId: !Ref Api
+            Path: /api/categories/{id}
+            Method: put
+
+  DeleteCategoryFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda/
+      Handler: handler.deleteCategory
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref CategoriesTable
+      Events:
+        DeleteCategory:
+          Type: Api
+          Properties:
+            RestApiId: !Ref Api
+            Path: /api/categories/{id}
+            Method: delete
+
   # CORS Options
   OptionsFunction:
     Type: AWS::Serverless::Function
@@ -162,3 +256,9 @@ Outputs:
     Value: !Ref TasksTable
     Export:
       Name: !Sub "${AWS::StackName}-TableName"
+  
+  CategoriesTableName:
+    Description: "Categories DynamoDB table name"
+    Value: !Ref CategoriesTable
+    Export:
+      Name: !Sub "${AWS::StackName}-CategoriesTableName"

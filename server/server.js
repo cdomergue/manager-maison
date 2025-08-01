@@ -4,6 +4,7 @@ const bodyParser = require('body-parser');
 const fs = require('fs-extra');
 const path = require('path');
 const config = require('./config');
+const categoriesRoutes = require('./routes/categories');
 
 const app = express();
 const PORT = process.env.PORT || config.port;
@@ -53,6 +54,9 @@ function writeDatabase(data) {
 }
 
 // Routes API
+
+// Routes des catégories
+app.use('/api/categories', categoriesRoutes);
 
 // GET /api/tasks - Récupérer toutes les tâches
 app.get('/api/tasks', (req, res) => {

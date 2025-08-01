@@ -1,7 +1,9 @@
 import {Component, EventEmitter, Input, OnInit, Output} from '@angular/core';
 import {CommonModule} from '@angular/common';
-import {FormBuilder, FormsModule, ReactiveFormsModule, Validators} from '@angular/forms';
-import {Assignee, Task, TaskCategory, TaskForm} from '../../models/task.model';
+import {FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators} from '@angular/forms';
+import {Assignee, Task} from '../../models/task.model';
+import {CategoryService} from '../../services/category.service';
+import {Category} from '../../models/category.model';
 import {TaskService} from '../../services/task.service';
 
 @Component({
@@ -15,8 +17,8 @@ export class TaskFormComponent implements OnInit {
   @Output() taskSaved = new EventEmitter<Task>();
   @Output() cancelled = new EventEmitter<void>();
 
-  taskForm: TaskForm;
-  categories = Object.values(TaskCategory);
+  taskForm: FormGroup;
+  categories: Category[] = [];
   assignees = Object.values(Assignee);
   frequencies = [
     { value: 'daily', label: 'Quotidienne' },
@@ -32,31 +34,36 @@ export class TaskFormComponent implements OnInit {
 
   constructor(
     private fb: FormBuilder,
-    private taskService: TaskService
+    private taskService: TaskService,
+    private categoryService: CategoryService
   ) {
     this.taskForm = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(2)]],
       description: [''],
-      category: [],
+      category: [''],
       frequency: ['weekly', Validators.required],
       customDays: [7],
       priority: ['medium', Validators.required],
       nextDueDate: ['', Validators.required],
-      assignee: []
-    }) as TaskForm;
+      assignee: ['']
+    });
   }
 
   ngOnInit(): void {
+    // Charger les catégories
+    this.categoryService.getCategories().subscribe(
+      categories => this.categories = categories
+    );
+
     if (this.task) {
       this.taskForm.patchValue({
         name: this.task.name,
         description: this.task.description || '',
-        category: this.task.category || null,
+        category: this.task.category || '',
         frequency: this.task.frequency,
         customDays: this.task.customDays || 7,
         priority: this.task.priority,
-        nextDueDate: this.formatDateForInput(this.task.nextDueDate),
-        assignee: this.task.assignee
+        nextDueDate: this.formatDateForInput(this.task.nextDueDate)
       });
     } else {
       // Date par défaut : demain
@@ -88,10 +95,10 @@ export class TaskFormComponent implements OnInit {
         frequency: formValue.frequency,
         customDays: formValue.frequency === 'custom' ? formValue.customDays : undefined,
         priority: formValue.priority,
-        nextDueDate: new Date(formValue.nextDueDate ?? 0),
+        nextDueDate: new Date(formValue.nextDueDate),
         isActive: true,
         assignee: formValue.assignee
-      } as Omit<Task, 'id'>;
+      };
 
       if (this.task) {
         // Mode édition

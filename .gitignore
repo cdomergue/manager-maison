@@ -53,3 +53,4 @@ certs/
 # AWS SAM build artifacts (contains secrets)
 .aws-sam/
 samconfig.toml
+/lambda/node_modules/

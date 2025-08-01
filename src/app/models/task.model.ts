@@ -1,16 +1,5 @@
 import {FormControl, FormGroup} from '@angular/forms';
 
-export enum TaskCategory {
-  CUISINE = 'Cuisine',
-  MENAGE = 'Ménage',
-  LINGE = 'Linge',
-  JARDIN = 'Jardin',
-  ADMINISTRATIF = 'Administratif',
-  CHATS = 'Chats',
-  RANGEMENTS = 'Rangements',
-  AUTRE = 'Autre'
-}
-
 export enum Assignee {
   LAURENCE = 'Laurence',
   CHRISTOPHE = 'Christophe',
@@ -29,7 +18,7 @@ export interface Task {
   nextDueDate: Date;
   lastCompleted?: Date;
   isActive: boolean;
-  category?: TaskCategory;
+  category?: string;
   priority: Priority;
   assignee: Assignee;
 }
@@ -43,7 +32,7 @@ export interface NotificationSettings {
 export type TaskForm = FormGroup<{
   name: FormControl<string | null>;
   description: FormControl<string | null>;
-  category: FormControl<TaskCategory | null>;
+  category: FormControl<string | null>;
   frequency: FormControl<Frequency | null>;
   customDays: FormControl<number | null>;
   priority: FormControl<Priority | null>;
