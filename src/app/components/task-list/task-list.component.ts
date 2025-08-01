@@ -24,6 +24,13 @@ export class TaskListComponent implements OnInit, OnDestroy {
 
   searchTerm = signal<string>('');
 
+  // Référence à la fonction pour pouvoir la supprimer
+  private popstateHandler = () => {
+    if (this.selectedTask()) {
+      this.closeTaskDetailsFromBack();
+    }
+  };
+
   // Signaux calculés pour les tâches filtrées et triées
   filteredTasks = computed(() => {
     const tasks = this.taskService.tasks();
@@ -89,6 +96,9 @@ export class TaskListComponent implements OnInit, OnDestroy {
       this.completeTask(event.detail.taskId);
     }) as EventListener);
 
+    // Écouter l'événement popstate pour fermer la modale
+    window.addEventListener('popstate', this.popstateHandler);
+
     // Forcer le rechargement après un délai pour s'assurer que l'API est connectée
     setTimeout(() => {
       this.taskService.refreshTasks();
@@ -97,6 +107,8 @@ export class TaskListComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.subscription.unsubscribe();
+    // Supprimer les écouteurs d'événements
+    window.removeEventListener('popstate', this.popstateHandler);
   }
 
   completeTask(taskId: string): void {
@@ -180,9 +192,20 @@ export class TaskListComponent implements OnInit, OnDestroy {
 
   showTaskDetails(task: Task): void {
     this.selectedTask.set(task);
+    // Ajouter un état dans l'historique pour la modale
+    history.pushState({modal: true}, '');
   }
 
   closeTaskDetails(): void {
+    this.selectedTask.set(null);
+    // Si on ferme manuellement, on revient dans l'historique
+    if (history.state?.modal) {
+      history.back();
+    }
+  }
+
+  closeTaskDetailsFromBack(): void {
+    // Fermeture via le bouton retour - pas besoin de modifier l'historique
     this.selectedTask.set(null);
   }
 }
