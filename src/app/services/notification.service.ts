@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Task } from '../models/task.model';
 import { NotificationSettings } from '../models/task.model';
+import { UserService } from './user.service';
 
 @Injectable({
   providedIn: 'root'
@@ -13,9 +14,14 @@ export class NotificationService {
     advanceNotice: 2
   };
 
-  constructor() {
+  constructor(private userService: UserService) {
     this.loadSettings();
     this.requestPermission();
+  }
+
+  private isTaskForCurrentUser(task: Task): boolean {
+    const currentUser = this.userService.getCurrentUser();
+    return currentUser?.id === task.assignee;
   }
 
   async requestPermission(): Promise<boolean> {
@@ -33,7 +39,7 @@ export class NotificationService {
   }
 
   async scheduleTaskReminder(task: Task): Promise<void> {
-    if (!this.settings.enabled) return;
+    if (!this.settings.enabled || !this.isTaskForCurrentUser(task)) return;
 
     const hasPermission = await this.requestPermission();
     if (!hasPermission) return;
@@ -85,8 +91,10 @@ export class NotificationService {
       return;
     }
 
+    const userTasks = tasks.filter(task => this.isTaskForCurrentUser(task));
+
     const notification = new Notification('Tâches en retard', {
-      body: `Vous avez ${tasks.length} tâche(s) en retard`,
+      body: `Vous avez ${userTasks.length} tâche(s) en retard`,
       icon: '/assets/icons/icon-192x192.png',
       badge: '/assets/icons/icon-72x72.png',
       tag: 'overdue-tasks',
@@ -100,7 +108,7 @@ export class NotificationService {
   }
 
   async showNewTaskNotification(task: Task): Promise<void> {
-    if (!('Notification' in window) || Notification.permission !== 'granted') {
+    if (!('Notification' in window) || Notification.permission !== 'granted' || !this.isTaskForCurrentUser(task)) {
       return;
     }
 
@@ -123,8 +131,13 @@ export class NotificationService {
       return;
     }
 
+    const userTasks = tasks.filter(task => this.isTaskForCurrentUser(task));
+    if (userTasks.length === 0) {
+      return;
+    }
+
     const notification = new Notification('Nouvelles tâches ajoutées', {
-      body: `${tasks.length} nouvelles tâches ont été ajoutées`,
+      body: `${userTasks.length} nouvelles tâches vous ont été assignées`,
       icon: '/assets/icons/icon-192x192.png',
       badge: '/assets/icons/icon-72x72.png',
       tag: 'multiple-new-tasks',

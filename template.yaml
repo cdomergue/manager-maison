@@ -5,7 +5,7 @@ Description: 'Gestion de la Maison - API Backend'
 Globals:
   Function:
     Timeout: 30
-    Runtime: nodejs18.x
+    Runtime: nodejs20.x
     Environment:
       Variables:
         TABLE_NAME: !Ref TasksTable
