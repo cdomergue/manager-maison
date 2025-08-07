@@ -27,6 +27,8 @@ fs.ensureDirSync(path.dirname(DB_PATH));
 if (!fs.existsSync(DB_PATH)) {
   fs.writeJsonSync(DB_PATH, {
     tasks: [],
+    shoppingItems: [],
+    shoppingList: [],
     lastUpdated: new Date().toISOString()
   });
 }
@@ -34,10 +36,14 @@ if (!fs.existsSync(DB_PATH)) {
 // Fonction utilitaire pour lire la base de données
 function readDatabase() {
   try {
-    return fs.readJsonSync(DB_PATH);
+    const data = fs.readJsonSync(DB_PATH);
+    // Rétro-compatibilité: garantir les nouvelles clés
+    if (!data.shoppingItems) data.shoppingItems = [];
+    if (!data.shoppingList) data.shoppingList = [];
+    return data;
   } catch (error) {
     console.error('Erreur lors de la lecture de la base de données:', error);
-    return { tasks: [], lastUpdated: new Date().toISOString() };
+    return {tasks: [], shoppingItems: [], shoppingList: [], lastUpdated: new Date().toISOString()};
   }
 }
 
@@ -57,6 +63,152 @@ function writeDatabase(data) {
 
 // Routes des catégories
 app.use('/api/categories', categoriesRoutes);
+
+// ================= LISTE DE COURSES =================
+// GET /api/shopping/items - Récupérer le catalogue
+app.get('/api/shopping/items', (req, res) => {
+  try {
+    const db = readDatabase();
+    res.json(db.shoppingItems);
+  } catch (error) {
+    res.status(500).json({error: 'Erreur lors de la récupération du catalogue'});
+  }
+});
+
+// POST /api/shopping/items - Ajouter un item au catalogue
+app.post('/api/shopping/items', (req, res) => {
+  try {
+    const db = readDatabase();
+    const name = (req.body.name || '').trim();
+    const category = (req.body.category || '').trim();
+    if (!name) return res.status(400).json({error: 'Nom requis'});
+
+    const newItem = {
+      id: Date.now().toString(36) + Math.random().toString(36).substr(2),
+      name,
+      category: category || undefined
+    };
+    db.shoppingItems.unshift(newItem);
+    if (writeDatabase(db)) {
+      res.status(201).json(newItem);
+    } else {
+      res.status(500).json({error: 'Erreur lors de la sauvegarde'});
+    }
+  } catch (error) {
+    res.status(400).json({error: 'Données invalides'});
+  }
+});
+
+// DELETE /api/shopping/items/:id - Supprimer un item du catalogue (et ses entrées associées)
+app.delete('/api/shopping/items/:id', (req, res) => {
+  try {
+    const db = readDatabase();
+    const id = req.params.id;
+    db.shoppingItems = db.shoppingItems.filter(i => i.id !== id);
+    db.shoppingList = db.shoppingList.filter(e => e.itemId !== id);
+    if (writeDatabase(db)) return res.status(204).send();
+    return res.status(500).json({error: 'Erreur lors de la suppression'});
+  } catch (error) {
+    res.status(500).json({error: 'Erreur lors de la suppression'});
+  }
+});
+
+// GET /api/shopping/list - Récupérer la liste courante
+app.get('/api/shopping/list', (req, res) => {
+  try {
+    const db = readDatabase();
+    res.json(db.shoppingList);
+  } catch (error) {
+    res.status(500).json({error: 'Erreur lors de la récupération de la liste'});
+  }
+});
+
+// POST /api/shopping/list - Ajouter une entrée à la liste
+app.post('/api/shopping/list', (req, res) => {
+  try {
+    const db = readDatabase();
+    const {itemId, quantity} = req.body;
+    const item = db.shoppingItems.find(i => i.id === itemId);
+    if (!item) return res.status(404).json({error: 'Item non trouvé'});
+
+    // Tenter d'agréger si une entrée non cochée existe déjà
+    const existing = db.shoppingList.find(e => e.itemId === itemId && !e.checked);
+    if (existing) {
+      existing.quantity = Math.max(1, (existing.quantity || 1) + (quantity || 1));
+      if (writeDatabase(db)) return res.json(existing);
+      return res.status(500).json({error: 'Erreur lors de la sauvegarde'});
+    }
+
+    const entry = {
+      id: Date.now().toString(36) + Math.random().toString(36).substr(2),
+      itemId: item.id,
+      name: item.name,
+      quantity: Math.max(1, quantity || 1),
+      checked: false
+    };
+    db.shoppingList.unshift(entry);
+    if (writeDatabase(db)) return res.status(201).json(entry);
+    return res.status(500).json({error: 'Erreur lors de la sauvegarde'});
+  } catch (error) {
+    res.status(400).json({error: 'Données invalides'});
+  }
+});
+
+// PUT /api/shopping/list/:id - Mettre à jour quantité/checked
+app.put('/api/shopping/list/:id', (req, res) => {
+  try {
+    const db = readDatabase();
+    const idx = db.shoppingList.findIndex(e => e.id === req.params.id);
+    if (idx === -1) return res.status(404).json({error: 'Entrée non trouvée'});
+
+    const {quantity, checked} = req.body;
+    if (quantity !== undefined) db.shoppingList[idx].quantity = Math.max(1, Number(quantity));
+    if (checked !== undefined) db.shoppingList[idx].checked = !!checked;
+
+    if (writeDatabase(db)) return res.json(db.shoppingList[idx]);
+    return res.status(500).json({error: 'Erreur lors de la sauvegarde'});
+  } catch (error) {
+    res.status(400).json({error: 'Données invalides'});
+  }
+});
+
+// DELETE /api/shopping/list/:id - Supprimer une entrée
+app.delete('/api/shopping/list/:id', (req, res) => {
+  try {
+    const db = readDatabase();
+    const before = db.shoppingList.length;
+    db.shoppingList = db.shoppingList.filter(e => e.id !== req.params.id);
+    if (db.shoppingList.length === before) return res.status(404).json({error: 'Entrée non trouvée'});
+    if (writeDatabase(db)) return res.status(204).send();
+    return res.status(500).json({error: 'Erreur lors de la suppression'});
+  } catch (error) {
+    res.status(500).json({error: 'Erreur lors de la suppression'});
+  }
+});
+
+// POST /api/shopping/list/clear-checked - Retirer les cochés
+app.post('/api/shopping/list/clear-checked', (req, res) => {
+  try {
+    const db = readDatabase();
+    db.shoppingList = db.shoppingList.filter(e => !e.checked);
+    if (writeDatabase(db)) return res.status(204).send();
+    return res.status(500).json({error: 'Erreur lors du nettoyage'});
+  } catch (error) {
+    res.status(500).json({error: 'Erreur lors du nettoyage'});
+  }
+});
+
+// DELETE /api/shopping/list - Vider la liste
+app.delete('/api/shopping/list', (req, res) => {
+  try {
+    const db = readDatabase();
+    db.shoppingList = [];
+    if (writeDatabase(db)) return res.status(204).send();
+    return res.status(500).json({error: 'Erreur lors du vidage'});
+  } catch (error) {
+    res.status(500).json({error: 'Erreur lors du vidage'});
+  }
+});
 
 // GET /api/tasks - Récupérer toutes les tâches
 app.get('/api/tasks', (req, res) => {
@@ -79,9 +231,9 @@ app.post('/api/tasks', (req, res) => {
       lastCompleted: req.body.lastCompleted ? new Date(req.body.lastCompleted).toISOString() : undefined,
       isActive: true
     };
-    
+
     db.tasks.push(newTask);
-    
+
     if (writeDatabase(db)) {
       res.status(201).json(newTask);
     } else {
@@ -97,20 +249,20 @@ app.put('/api/tasks/:id', (req, res) => {
   try {
     const db = readDatabase();
     const taskIndex = db.tasks.findIndex(task => task.id === req.params.id);
-    
+
     if (taskIndex === -1) {
       return res.status(404).json({ error: 'Tâche non trouvée' });
     }
-    
+
     const updatedTask = {
       ...db.tasks[taskIndex],
       ...req.body,
       nextDueDate: req.body.nextDueDate ? new Date(req.body.nextDueDate).toISOString() : db.tasks[taskIndex].nextDueDate,
       lastCompleted: req.body.lastCompleted ? new Date(req.body.lastCompleted).toISOString() : db.tasks[taskIndex].lastCompleted
     };
-    
+
     db.tasks[taskIndex] = updatedTask;
-    
+
     if (writeDatabase(db)) {
       res.json(updatedTask);
     } else {
@@ -126,13 +278,13 @@ app.delete('/api/tasks/:id', (req, res) => {
   try {
     const db = readDatabase();
     const taskIndex = db.tasks.findIndex(task => task.id === req.params.id);
-    
+
     if (taskIndex === -1) {
       return res.status(404).json({ error: 'Tâche non trouvée' });
     }
-    
+
     db.tasks.splice(taskIndex, 1);
-    
+
     if (writeDatabase(db)) {
       res.status(204).send();
     } else {
@@ -148,16 +300,16 @@ app.post('/api/tasks/:id/complete', (req, res) => {
   try {
     const db = readDatabase();
     const taskIndex = db.tasks.findIndex(task => task.id === req.params.id);
-    
+
     if (taskIndex === -1) {
       return res.status(404).json({ error: 'Tâche non trouvée' });
     }
-    
+
     const task = db.tasks[taskIndex];
     task.lastCompleted = new Date().toISOString();
     task.nextDueDate = calculateNextDueDate(task);
     task.isActive = true; // Réactiver la tâche
-    
+
     if (writeDatabase(db)) {
       res.json(task);
     } else {
@@ -173,7 +325,7 @@ app.get('/api/tasks/overdue', (req, res) => {
   try {
     const db = readDatabase();
     const now = new Date();
-    const overdueTasks = db.tasks.filter(task => 
+    const overdueTasks = db.tasks.filter(task =>
       task.isActive && new Date(task.nextDueDate) < now
     );
     res.json(overdueTasks);
@@ -217,7 +369,7 @@ app.get('*', (req, res) => {
   if (req.path.startsWith('/api/')) {
     return res.status(404).json({ error: 'Route API non trouvée' });
   }
-  
+
   // Servir index.html pour toutes les autres routes (SPA)
   const indexPath = path.join(STATIC_PATH, 'index.html');
   if (fs.existsSync(indexPath)) {
@@ -241,7 +393,7 @@ app.get('*', (req, res) => {
 function calculateNextDueDate(task) {
   const now = new Date();
   const nextDate = new Date(now);
-  
+
   switch (task.frequency) {
     case 'daily':
       nextDate.setDate(nextDate.getDate() + 1);
@@ -256,7 +408,7 @@ function calculateNextDueDate(task) {
       nextDate.setDate(nextDate.getDate() + (task.customDays || 1));
       break;
   }
-  
+
   return nextDate.toISOString();
 }
 
@@ -267,4 +419,4 @@ app.listen(PORT, () => {
   console.log(`🌐 API disponible sur: http://localhost:${PORT}/api`);
 });
 
-module.exports = app; 
+module.exports = app;

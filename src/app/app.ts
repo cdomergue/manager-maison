@@ -1,10 +1,10 @@
 import {Component, signal} from '@angular/core';
-import {RouterOutlet} from '@angular/router';
+import {RouterLink, RouterLinkActive, RouterOutlet} from '@angular/router';
 import {UserSelectComponent} from './components/user-select/user-select.component';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, UserSelectComponent],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, UserSelectComponent],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })

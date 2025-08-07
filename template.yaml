@@ -10,6 +10,8 @@ Globals:
       Variables:
         TABLE_NAME: !Ref TasksTable
         CATEGORIES_TABLE_NAME: !Ref CategoriesTable
+        SHOPPING_ITEMS_TABLE_NAME: !Ref ShoppingItemsTable
+        SHOPPING_LIST_TABLE_NAME: !Ref ShoppingListTable
   Api:
     Cors:
       AllowMethods: "'GET,POST,PUT,DELETE,OPTIONS'"
@@ -34,6 +36,30 @@ Resources:
     Type: AWS::DynamoDB::Table
     Properties:
       TableName: gestion-maison-categories
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
+
+  ShoppingItemsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: gestion-maison-shopping-items
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
+
+  ShoppingListTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: gestion-maison-shopping-list
       AttributeDefinitions:
         - AttributeName: id
           AttributeType: S
@@ -230,6 +256,155 @@ Resources:
             Path: /api/categories/{id}
             Method: delete
 
+  # ========== SHOPPING LIST FUNCTIONS ==========
+  GetShoppingItemsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda/
+      Handler: handler.getShoppingItems
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref ShoppingItemsTable
+      Events:
+        GetShoppingItems:
+          Type: Api
+          Properties:
+            RestApiId: !Ref Api
+            Path: /api/shopping/items
+            Method: get
+
+  CreateShoppingItemFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda/
+      Handler: handler.createShoppingItem
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ShoppingItemsTable
+      Events:
+        CreateShoppingItem:
+          Type: Api
+          Properties:
+            RestApiId: !Ref Api
+            Path: /api/shopping/items
+            Method: post
+
+  DeleteShoppingItemFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda/
+      Handler: handler.deleteShoppingItem
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ShoppingItemsTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ShoppingListTable
+      Events:
+        DeleteShoppingItem:
+          Type: Api
+          Properties:
+            RestApiId: !Ref Api
+            Path: /api/shopping/items/{id}
+            Method: delete
+
+  GetShoppingListFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda/
+      Handler: handler.getShoppingList
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref ShoppingListTable
+      Events:
+        GetShoppingList:
+          Type: Api
+          Properties:
+            RestApiId: !Ref Api
+            Path: /api/shopping/list
+            Method: get
+
+  AddShoppingEntryFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda/
+      Handler: handler.addShoppingEntry
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ShoppingItemsTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ShoppingListTable
+      Events:
+        AddShoppingEntry:
+          Type: Api
+          Properties:
+            RestApiId: !Ref Api
+            Path: /api/shopping/list
+            Method: post
+
+  UpdateShoppingEntryFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda/
+      Handler: handler.updateShoppingEntry
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ShoppingListTable
+      Events:
+        UpdateShoppingEntry:
+          Type: Api
+          Properties:
+            RestApiId: !Ref Api
+            Path: /api/shopping/list/{id}
+            Method: put
+
+  DeleteShoppingEntryFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda/
+      Handler: handler.deleteShoppingEntry
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ShoppingListTable
+      Events:
+        DeleteShoppingEntry:
+          Type: Api
+          Properties:
+            RestApiId: !Ref Api
+            Path: /api/shopping/list/{id}
+            Method: delete
+
+  ClearCheckedShoppingEntriesFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda/
+      Handler: handler.clearCheckedShoppingEntries
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ShoppingListTable
+      Events:
+        ClearCheckedShoppingEntries:
+          Type: Api
+          Properties:
+            RestApiId: !Ref Api
+            Path: /api/shopping/list/clear-checked
+            Method: post
+
+  ClearAllShoppingEntriesFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda/
+      Handler: handler.clearAllShoppingEntries
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ShoppingListTable
+      Events:
+        ClearAllShoppingEntries:
+          Type: Api
+          Properties:
+            RestApiId: !Ref Api
+            Path: /api/shopping/list
+            Method: delete
+
   # CORS Options
   OptionsFunction:
     Type: AWS::Serverless::Function
@@ -262,3 +437,15 @@ Outputs:
     Value: !Ref CategoriesTable
     Export:
       Name: !Sub "${AWS::StackName}-CategoriesTableName"
+
+  ShoppingItemsTableName:
+    Description: "Shopping items DynamoDB table name"
+    Value: !Ref ShoppingItemsTable
+    Export:
+      Name: !Sub "${AWS::StackName}-ShoppingItemsTableName"
+
+  ShoppingListTableName:
+    Description: "Shopping list DynamoDB table name"
+    Value: !Ref ShoppingListTable
+    Export:
+      Name: !Sub "${AWS::StackName}-ShoppingListTableName"

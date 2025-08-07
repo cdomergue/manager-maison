@@ -9,12 +9,12 @@ import {NotificationService} from '../../services/notification.service';
 import {BackgroundCheckService} from '../../services/background-check.service';
 
 @Component({
-  selector: 'app-home',
+  selector: 'app-tasks',
   imports: [RouterModule, DatePipe, TaskListComponent, TaskFormComponent],
-  templateUrl: './home.component.html',
-  styleUrls: ['./home.component.css']
+  templateUrl: './tasks.component.html',
+  styleUrls: ['./tasks.component.css']
 })
-export class HomeComponent implements OnInit, OnDestroy {
+export class TasksComponent implements OnInit, OnDestroy {
   showTaskForm = signal(false);
   editingTask = signal<Task | undefined>(undefined);
 
@@ -95,3 +95,4 @@ export class HomeComponent implements OnInit, OnDestroy {
     window.removeEventListener('popstate', this.popstateHandler);
   }
 }
+

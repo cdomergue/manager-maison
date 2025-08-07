@@ -5,12 +5,28 @@
       "category": "Cuisine",
       "frequency": "daily",
       "priority": "medium",
-      "nextDueDate": "2025-08-02T18:06:20.572Z",
+      "nextDueDate": "2025-08-08T19:57:48.459Z",
       "isActive": true,
       "assignee": null,
       "id": "mdt4ujws62h3iuqez1b",
-      "lastCompleted": "2025-08-01T18:06:20.572Z"
+      "lastCompleted": "2025-08-07T19:57:48.459Z"
     }
   ],
-  "lastUpdated": "2025-08-01T18:06:20.572Z"
+  "lastUpdated": "2025-08-07T19:57:48.459Z",
+  "shoppingItems": [
+    {
+      "id": "me1sotgmhy8n2q7aexi",
+      "name": "Sac poubelle",
+      "category": "Ménager"
+    }
+  ],
+  "shoppingList": [
+    {
+      "id": "me1spaxdeml16ub87rk",
+      "itemId": "me1sotgmhy8n2q7aexi",
+      "name": "Sac poubelle",
+      "quantity": 2,
+      "checked": true
+    }
+  ]
 }

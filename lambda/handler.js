@@ -4,6 +4,8 @@ const AWS = require('aws-sdk');
 const dynamodb = new AWS.DynamoDB.DocumentClient();
 const TABLE_NAME = process.env.TABLE_NAME || 'gestion-maison-tasks';
 const CATEGORIES_TABLE_NAME = process.env.CATEGORIES_TABLE_NAME || 'gestion-maison-categories';
+const SHOPPING_ITEMS_TABLE_NAME = process.env.SHOPPING_ITEMS_TABLE_NAME || 'gestion-maison-shopping-items';
+const SHOPPING_LIST_TABLE_NAME = process.env.SHOPPING_LIST_TABLE_NAME || 'gestion-maison-shopping-list';
 
 // Configuration spéciale
 const YOU_KNOW_WHAT = '21cdf2c38551';
@@ -214,6 +216,193 @@ exports.completeTask = async (event) => {
 // OPTIONS pour CORS
 exports.options = async (event) => {
   return response(200, {});
+};
+
+// ========== GESTION LISTE DE COURSES ==========
+
+// GET /api/shopping/items
+exports.getShoppingItems = async (event) => {
+  const authError = authenticate(event);
+  if (authError) return authError;
+  try {
+    const result = await dynamodb.scan({TableName: SHOPPING_ITEMS_TABLE_NAME}).promise();
+    return response(200, result.Items || []);
+  } catch (error) {
+    console.error('Error in getShoppingItems:', error);
+    return response(500, {error: 'Erreur lors de la récupération du catalogue'});
+  }
+};
+
+// POST /api/shopping/items
+exports.createShoppingItem = async (event) => {
+  const authError = authenticate(event);
+  if (authError) return authError;
+  try {
+    const body = JSON.parse(event.body || '{}');
+    const name = (body.name || '').trim();
+    const category = (body.category || '').trim();
+    if (!name) return response(400, {error: 'Nom requis'});
+    const item = {
+      id: Date.now().toString(36) + Math.random().toString(36).substr(2),
+      name,
+      category: category || undefined,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    await dynamodb.put({TableName: SHOPPING_ITEMS_TABLE_NAME, Item: item}).promise();
+    return response(201, item);
+  } catch (error) {
+    console.error('Error in createShoppingItem:', error);
+    return response(400, {error: 'Données invalides'});
+  }
+};
+
+// DELETE /api/shopping/items/:id
+exports.deleteShoppingItem = async (event) => {
+  const authError = authenticate(event);
+  if (authError) return authError;
+  try {
+    const id = event.pathParameters.id;
+    await dynamodb.delete({TableName: SHOPPING_ITEMS_TABLE_NAME, Key: {id}}).promise();
+    // Supprimer les entrées associées dans la liste
+    const list = await dynamodb.scan({TableName: SHOPPING_LIST_TABLE_NAME}).promise();
+    const toDelete = (list.Items || []).filter(e => e.itemId === id);
+    for (const entry of toDelete) {
+      await dynamodb.delete({TableName: SHOPPING_LIST_TABLE_NAME, Key: {id: entry.id}}).promise();
+    }
+    return response(204, {});
+  } catch (error) {
+    console.error('Error in deleteShoppingItem:', error);
+    return response(500, {error: 'Erreur lors de la suppression'});
+  }
+};
+
+// GET /api/shopping/list
+exports.getShoppingList = async (event) => {
+  const authError = authenticate(event);
+  if (authError) return authError;
+  try {
+    const result = await dynamodb.scan({TableName: SHOPPING_LIST_TABLE_NAME}).promise();
+    return response(200, result.Items || []);
+  } catch (error) {
+    console.error('Error in getShoppingList:', error);
+    return response(500, {error: 'Erreur lors de la récupération de la liste'});
+  }
+};
+
+// POST /api/shopping/list
+exports.addShoppingEntry = async (event) => {
+  const authError = authenticate(event);
+  if (authError) return authError;
+  try {
+    const body = JSON.parse(event.body || '{}');
+    const itemId = body.itemId;
+    const quantity = Math.max(1, Number(body.quantity || 1));
+    if (!itemId) return response(400, {error: 'itemId requis'});
+
+    // Récupérer l'item
+    const item = await dynamodb.get({TableName: SHOPPING_ITEMS_TABLE_NAME, Key: {id: itemId}}).promise();
+    if (!item.Item) return response(404, {error: 'Item non trouvé'});
+
+    // Tenter d'agréger une entrée non cochée existante
+    const list = await dynamodb.scan({TableName: SHOPPING_LIST_TABLE_NAME}).promise();
+    const existing = (list.Items || []).find(e => e.itemId === itemId && !e.checked);
+    if (existing) {
+      const updated = {
+        ...existing,
+        quantity: Math.max(1, (existing.quantity || 1) + quantity),
+        updatedAt: new Date().toISOString()
+      };
+      await dynamodb.put({TableName: SHOPPING_LIST_TABLE_NAME, Item: updated}).promise();
+      return response(200, updated);
+    }
+
+    const entry = {
+      id: Date.now().toString(36) + Math.random().toString(36).substr(2),
+      itemId: itemId,
+      name: item.Item.name,
+      quantity,
+      checked: false,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    await dynamodb.put({TableName: SHOPPING_LIST_TABLE_NAME, Item: entry}).promise();
+    return response(201, entry);
+  } catch (error) {
+    console.error('Error in addShoppingEntry:', error);
+    return response(400, {error: 'Données invalides'});
+  }
+};
+
+// PUT /api/shopping/list/:id
+exports.updateShoppingEntry = async (event) => {
+  const authError = authenticate(event);
+  if (authError) return authError;
+  try {
+    const id = event.pathParameters.id;
+    const body = JSON.parse(event.body || '{}');
+    const existing = await dynamodb.get({TableName: SHOPPING_LIST_TABLE_NAME, Key: {id}}).promise();
+    if (!existing.Item) return response(404, {error: 'Entrée non trouvée'});
+
+    const updated = {
+      ...existing.Item,
+      quantity: body.quantity !== undefined ? Math.max(1, Number(body.quantity)) : existing.Item.quantity,
+      checked: body.checked !== undefined ? !!body.checked : existing.Item.checked,
+      updatedAt: new Date().toISOString()
+    };
+    await dynamodb.put({TableName: SHOPPING_LIST_TABLE_NAME, Item: updated}).promise();
+    return response(200, updated);
+  } catch (error) {
+    console.error('Error in updateShoppingEntry:', error);
+    return response(400, {error: 'Données invalides'});
+  }
+};
+
+// DELETE /api/shopping/list/:id
+exports.deleteShoppingEntry = async (event) => {
+  const authError = authenticate(event);
+  if (authError) return authError;
+  try {
+    const id = event.pathParameters.id;
+    await dynamodb.delete({TableName: SHOPPING_LIST_TABLE_NAME, Key: {id}}).promise();
+    return response(204, {});
+  } catch (error) {
+    console.error('Error in deleteShoppingEntry:', error);
+    return response(500, {error: 'Erreur lors de la suppression'});
+  }
+};
+
+// POST /api/shopping/list/clear-checked
+exports.clearCheckedShoppingEntries = async (event) => {
+  const authError = authenticate(event);
+  if (authError) return authError;
+  try {
+    const list = await dynamodb.scan({TableName: SHOPPING_LIST_TABLE_NAME}).promise();
+    const toDelete = (list.Items || []).filter(e => e.checked);
+    for (const entry of toDelete) {
+      await dynamodb.delete({TableName: SHOPPING_LIST_TABLE_NAME, Key: {id: entry.id}}).promise();
+    }
+    return response(204, {});
+  } catch (error) {
+    console.error('Error in clearCheckedShoppingEntries:', error);
+    return response(500, {error: 'Erreur lors du nettoyage'});
+  }
+};
+
+// DELETE /api/shopping/list
+exports.clearAllShoppingEntries = async (event) => {
+  const authError = authenticate(event);
+  if (authError) return authError;
+  try {
+    const list = await dynamodb.scan({TableName: SHOPPING_LIST_TABLE_NAME}).promise();
+    for (const entry of (list.Items || [])) {
+      await dynamodb.delete({TableName: SHOPPING_LIST_TABLE_NAME, Key: {id: entry.id}}).promise();
+    }
+    return response(204, {});
+  } catch (error) {
+    console.error('Error in clearAllShoppingEntries:', error);
+    return response(500, {error: 'Erreur lors du vidage'});
+  }
 };
 
 // ========== GESTION DES CATÉGORIES ==========

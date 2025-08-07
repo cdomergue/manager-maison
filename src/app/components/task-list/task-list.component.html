@@ -319,13 +319,15 @@
 
   <!-- Modal de détail de tâche -->
   @if (selectedTask()) {
-    <app-task-detail
-      [task]="selectedTask()!"
-      (close)="closeTaskDetails()"
-      (complete)="completeTask($event)"
-      (edit)="editTask($event)"
-      (delete)="deleteTask($event)"
-      (toggleActive)="toggleTaskActive($event)"
-    />
+    @defer {
+      <app-task-detail
+        [task]="selectedTask()!"
+        (close)="closeTaskDetails()"
+        (complete)="completeTask($event)"
+        (edit)="editTask($event)"
+        (delete)="deleteTask($event)"
+        (toggleActive)="toggleTaskActive($event)"
+      />
+    }
   }
 </div>

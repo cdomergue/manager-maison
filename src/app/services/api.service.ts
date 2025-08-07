@@ -3,6 +3,7 @@ import {HttpClient, HttpErrorResponse, HttpHeaders} from '@angular/common/http';
 import {BehaviorSubject, Observable, throwError} from 'rxjs';
 import {catchError, tap} from 'rxjs/operators';
 import {Task} from '../models/task.model';
+import {ShoppingItem, ShoppingListEntry} from '../models/shopping-item.model';
 
 @Injectable({
   providedIn: 'root'
@@ -170,6 +171,43 @@ export class ApiService {
         tap(tasks => this.convertDates(tasks)),
         catchError(this.handleError)
       );
+  }
+
+  // ================= SHOPPING LIST =================
+  getShoppingItems(): Observable<ShoppingItem[]> {
+    return this.get<ShoppingItem[]>('/shopping/items');
+  }
+
+  createShoppingItem(name: string, category?: string): Observable<ShoppingItem> {
+    return this.post<ShoppingItem>('/shopping/items', {name, category});
+  }
+
+  deleteShoppingItem(itemId: string): Observable<void> {
+    return this.delete<void>(`/shopping/items/${itemId}`);
+  }
+
+  getShoppingList(): Observable<ShoppingListEntry[]> {
+    return this.get<ShoppingListEntry[]>('/shopping/list');
+  }
+
+  addShoppingEntry(itemId: string, quantity: number): Observable<ShoppingListEntry> {
+    return this.post<ShoppingListEntry>('/shopping/list', {itemId, quantity});
+  }
+
+  updateShoppingEntry(entryId: string, data: Partial<Pick<ShoppingListEntry, 'quantity' | 'checked'>>): Observable<ShoppingListEntry> {
+    return this.put<ShoppingListEntry>(`/shopping/list/${entryId}`, data);
+  }
+
+  deleteShoppingEntry(entryId: string): Observable<void> {
+    return this.delete<void>(`/shopping/list/${entryId}`);
+  }
+
+  clearCheckedShoppingList(): Observable<void> {
+    return this.post<void>('/shopping/list/clear-checked', {});
+  }
+
+  clearAllShoppingList(): Observable<void> {
+    return this.delete<void>('/shopping/list');
   }
 
   // Convertir les dates ISO en objets Date

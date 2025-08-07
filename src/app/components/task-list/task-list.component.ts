@@ -121,6 +121,8 @@ export class TaskListComponent implements OnInit, OnDestroy {
 
   completeTask(taskId: string): void {
     this.taskService.completeTask(taskId);
+    // Fermer la modale si elle est ouverte
+    this.closeTaskDetails();
   }
 
   deleteTask(taskId: string): void {
