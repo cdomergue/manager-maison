@@ -1,8 +1,8 @@
-import { Injectable, signal, effect, inject } from '@angular/core';
-import { Task } from '../models/task.model';
-import { TaskService } from './task.service';
-import { ApiService } from './api.service';
-import { NotificationService } from './notification.service';
+import {inject, Injectable, signal} from '@angular/core';
+import {Task} from '../models/task.model';
+import {TaskService} from './task.service';
+import {ApiService} from './api.service';
+import {NotificationService} from './notification.service';
 
 @Injectable({
   providedIn: 'root'
@@ -13,7 +13,7 @@ export class BackgroundCheckService {
   private checkInterval = signal(300000); // 5 minutes par défaut
   private intervalId: number | null = null;
   private lastNotifiedOverdueTasks: Set<string> = new Set(); // IDs des tâches en retard déjà notifiées
-  
+
   // Signaux publics
   readonly isCheckingBackground = this.isChecking.asReadonly();
   readonly lastCheck = this.lastCheckTime.asReadonly();
@@ -30,7 +30,7 @@ export class BackgroundCheckService {
   private initializeBackgroundCheck(): void {
     // Démarrer la vérification périodique
     this.startPeriodicCheck();
-    
+
     // Écouter les changements de visibilité de la page
     document.addEventListener('visibilitychange', () => {
       if (document.hidden) {
@@ -82,39 +82,39 @@ export class BackgroundCheckService {
     if (this.isChecking()) return;
 
     this.isChecking.set(true);
-    
+
     try {
       // Vérifier si le serveur est accessible
       const isConnected = await this.apiService.checkServerStatusAsync();
-      
+
       if (isConnected) {
         // Récupérer les tâches depuis l'API
         const apiTasks = await this.apiService.getTasksAsync();
         const currentTasks = this.taskService.tasks();
-        
+
         // Comparer pour détecter les nouvelles tâches
         const newTasks = this.detectNewTasks(currentTasks, apiTasks);
-        
+
         if (newTasks.length > 0) {
           // Notifier les nouvelles tâches
           this.notifyNewTasks(newTasks);
-          
+
           // Mettre à jour le service de tâches
-          this.taskService.refreshTasks();
+          this.taskService.refreshTasks(true);
         }
-        
+
         // Vérifier les tâches en retard
-        const overdueTasks = apiTasks.filter(task => 
+        const overdueTasks = apiTasks.filter(task =>
           task.isActive && new Date(task.nextDueDate) < new Date()
         );
-        
+
         // Ne notifier que s'il y a des nouvelles tâches en retard
         if (overdueTasks.length > 0) {
           const currentOverdueIds = new Set(overdueTasks.map(task => task.id));
-          
+
           // Vérifier s'il y a de nouvelles tâches en retard depuis la dernière notification
           const hasNewOverdueTasks = overdueTasks.some(task => !this.lastNotifiedOverdueTasks.has(task.id));
-          
+
           if (hasNewOverdueTasks) {
             this.notificationService.showOverdueNotification(overdueTasks);
             this.lastNotifiedOverdueTasks = currentOverdueIds;
@@ -164,4 +164,4 @@ export class BackgroundCheckService {
       isOnline: navigator.onLine
     };
   }
-} 
+}

@@ -58,8 +58,8 @@ export class TaskService {
   }
 
   // Méthodes pour charger les tâches
-  private loadTasksFromAPI(): void {
-    this.apiService.getTasks().subscribe({
+  private loadTasksFromAPI(silent: boolean = false): void {
+    this.apiService.getTasks(silent).subscribe({
       next: (tasks) => {
         this.tasksSignal.set(tasks);
       },
@@ -94,11 +94,11 @@ export class TaskService {
   }
 
   // Méthode pour forcer le rechargement des tâches
-  refreshTasks(): void {
+  refreshTasks(silent: boolean = false): void {
     if (this.useLocalStorageSignal()) {
       this.loadTasksFromLocalStorage();
     } else {
-      this.loadTasksFromAPI();
+      this.loadTasksFromAPI(silent);
     }
   }
 

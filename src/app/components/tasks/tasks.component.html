@@ -2,65 +2,28 @@
 <div class="min-h-screen bg-gray-50">
   <!-- Le contenu est identique à l'ancien fichier -->
 
-  <!-- En-tête -->
+  <!-- En-tête simplifié (uniquement pour Tasks) -->
   <header class="bg-white shadow-sm border-b">
-    <div class="container mx-auto">
-      <!-- Version Mobile (stacked) -->
-      <div class="sm:hidden">
-        <div class="flex items-center justify-between mb-3">
-          <div class="flex items-center space-x-2">
-            <div class="text-2xl">🏠</div>
-            <h1 class="text-lg font-bold text-gray-800">Gestion de la Maison</h1>
-          </div>
-          <div class="flex items-center space-x-1">
-            <a routerLink="/categories" class="p-3 text-gray-600 hover:text-blue-600 transition-colors rounded-lg" title="Gestion des catégories">📑</a>
-            <a routerLink="/notifications" class="p-3 text-gray-600 hover:text-blue-600 transition-colors rounded-lg" title="Configuration des notifications">🔔</a>
-            <a routerLink="/settings" class="p-3 text-gray-600 hover:text-blue-600 transition-colors rounded-lg" title="Paramètres">⚙️</a>
-          </div>
-        </div>
-
-        <div class="flex flex-col space-y-2">
-          <div class="flex items-center space-x-2 text-xs text-gray-500">
-            <div class="flex items-center space-x-1">
-              <div class="w-2 h-2 rounded-full" [class]="isCheckingBackground() ? 'bg-yellow-400 animate-pulse' : 'bg-green-400'" [title]="isCheckingBackground() ? 'Vérification en cours...' : 'Connecté'"></div>
-              <span>{{ isCheckingBackground() ? 'Vérification...' : 'En ligne' }}</span>
-            </div>
-            @if (lastBackgroundCheck()) {<span>• {{ lastBackgroundCheck() | date:'HH:mm' }}</span>}
-          </div>
-
-          <button (click)="showAddTaskForm()" class="w-full bg-blue-600 text-white px-4 py-3 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2 text-base font-medium">
-            <span class="text-lg">+</span><span>Nouvelle tâche</span>
-          </button>
-        </div>
+    <div class="container mx-auto py-3">
+      <!-- Mobile -->
+      <div class="sm:hidden flex items-center justify-between gap-2">
+        <button (click)="showAddTaskForm()"
+                class="flex-1 bg-blue-600 text-white px-4 py-3 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 text-base font-medium">
+          <span class="text-lg">+</span><span>Nouvelle tâche</span>
+        </button>
+        <a routerLink="/categories" class="p-3 text-gray-600 hover:text-blue-600 transition-colors rounded-lg"
+           title="Gestion des catégories">📑</a>
       </div>
 
-      <!-- Version Desktop (horizontal) -->
-      <div class="hidden sm:flex items-center justify-between pb-4">
-        <div class="flex items-center space-x-3">
-          <div class="text-3xl">🏠</div>
-          <div>
-            <h1 class="text-2xl font-bold text-gray-800">Gestion de la Maison</h1>
-            <div class="flex items-center space-x-2 text-xs text-gray-500">
-              <div class="flex items-center space-x-1">
-                <div class="w-2 h-2 rounded-full" [class]="isCheckingBackground() ? 'bg-yellow-400 animate-pulse' : 'bg-green-400'" [title]="isCheckingBackground() ? 'Vérification en cours...' : 'Connecté'"></div>
-                <span>{{ isCheckingBackground() ? 'Vérification...' : 'En ligne' }}</span>
-              </div>
-              @if (lastBackgroundCheck()) {<span>• Dernière vérif: {{ lastBackgroundCheck() | date:'HH:mm' }}</span>}
-            </div>
-          </div>
-        </div>
-
-        <div class="flex items-center space-x-4">
-          <button (click)="showAddTaskForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2">
-            <span>+</span><span>Nouvelle tâche</span>
-          </button>
-
-          <div class="flex space-x-2">
-            <a routerLink="/categories" class="px-3 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-md transition-colors" title="Gestion des catégories">📑</a>
-            <a routerLink="/notifications" class="px-3 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-md transition-colors" title="Configuration des notifications">🔔</a>
-            <a routerLink="/settings" class="px-3 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-md transition-colors" title="Paramètres">⚙️</a>
-          </div>
-        </div>
+      <!-- Desktop -->
+      <div class="hidden sm:flex items-center justify-between pb-2">
+        <button (click)="showAddTaskForm()"
+                class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2">
+          <span>+</span><span>Nouvelle tâche</span>
+        </button>
+        <a routerLink="/categories"
+           class="px-3 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-md transition-colors"
+           title="Gestion des catégories">📑</a>
       </div>
     </div>
   </header>

@@ -1,6 +1,5 @@
 import {Component, computed, OnDestroy, OnInit, signal} from '@angular/core';
 import {RouterModule} from '@angular/router';
-import {DatePipe} from '@angular/common';
 import {TaskListComponent} from '../task-list/task-list.component';
 import {TaskFormComponent} from '../task-form/task-form.component';
 import {Task} from '../../models/task.model';
@@ -10,7 +9,7 @@ import {BackgroundCheckService} from '../../services/background-check.service';
 
 @Component({
   selector: 'app-tasks',
-  imports: [RouterModule, DatePipe, TaskListComponent, TaskFormComponent],
+  imports: [RouterModule, TaskListComponent, TaskFormComponent],
   templateUrl: './tasks.component.html',
   styleUrls: ['./tasks.component.css']
 })

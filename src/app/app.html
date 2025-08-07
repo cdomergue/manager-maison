@@ -1,7 +1,26 @@
 <div class="min-h-screen bg-gray-100">
   <header class="bg-white shadow">
     <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-      <h1 class="text-3xl font-bold text-gray-900">{{ title() }}</h1>
+      <div class="flex items-center justify-between gap-4">
+        <h1 class="text-3xl font-bold text-gray-900 flex items-center"><img ngSrc="/assets/maison.png" alt="Maison"
+                                                                            width="72" height="72">Maison</h1>
+        <div class="flex items-center gap-4 text-sm text-gray-600">
+          <div class="flex items-center gap-2">
+            <div class="w-2.5 h-2.5 rounded-full"
+                 [class]="isCheckingBackground() ? 'bg-yellow-400 animate-pulse' : 'bg-green-500'"
+                 [title]="isCheckingBackground() ? 'Vérification en cours…' : 'Connecté'"></div>
+            <span>{{ isCheckingBackground() ? 'Vérification…' : 'En ligne' }}</span>
+            @if (lastBackgroundCheck()) {
+              <span>• {{ lastBackgroundCheck() | date:'HH:mm' }}</span>
+            }
+          </div>
+          <div class="flex items-center gap-2">
+            <a routerLink="/notifications" class="px-3 py-2 rounded-md hover:bg-gray-100"
+               title="Configuration des notifications">🔔</a>
+            <a routerLink="/settings" class="px-3 py-2 rounded-md hover:bg-gray-100" title="Paramètres">⚙️</a>
+          </div>
+        </div>
+      </div>
     </div>
   </header>
   <nav class="bg-white border-b">
@@ -31,4 +50,9 @@
     </div>
   </main>
   <app-user-select/>
+  @if (loading.isLoading()) {
+    <div class="fixed inset-0 z-50 grid place-items-center bg-black/20">
+      <div class="h-12 w-12 rounded-full border-4 border-blue-500 border-t-transparent animate-spin"></div>
+    </div>
+  }
 </div>

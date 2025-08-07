@@ -109,7 +109,7 @@ export class TaskListComponent implements OnInit, OnDestroy {
 
     // Forcer le rechargement après un délai pour s'assurer que l'API est connectée
     setTimeout(() => {
-      this.taskService.refreshTasks();
+      this.taskService.refreshTasks(true);
     }, 2000);
   }
 

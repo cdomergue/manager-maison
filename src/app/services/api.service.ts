@@ -1,9 +1,10 @@
 import {Injectable} from '@angular/core';
-import {HttpClient, HttpErrorResponse, HttpHeaders} from '@angular/common/http';
+import {HttpClient, HttpContext, HttpErrorResponse, HttpHeaders} from '@angular/common/http';
 import {BehaviorSubject, Observable, throwError} from 'rxjs';
 import {catchError, tap} from 'rxjs/operators';
 import {Task} from '../models/task.model';
 import {ShoppingItem, ShoppingListEntry} from '../models/shopping-item.model';
+import {SKIP_GLOBAL_LOADING} from '../http/http-context.tokens';
 
 @Injectable({
   providedIn: 'root'
@@ -39,7 +40,10 @@ export class ApiService {
 
   // Vérifier le statut du serveur
   checkServerStatus(): void {
-    this.http.get<any>(`${this.API_BASE_URL}/status`, {headers: this.getHeaders()})
+    this.http.get<any>(
+      `${this.API_BASE_URL}/status`,
+      {headers: this.getHeaders(), context: new HttpContext().set(SKIP_GLOBAL_LOADING, true)}
+    )
       .pipe(
         catchError(this.handleError)
       )
@@ -59,7 +63,10 @@ export class ApiService {
   // Version asynchrone pour la vérification en arrière-plan
   async checkServerStatusAsync(): Promise<boolean> {
     try {
-      const status = await this.http.get<any>(`${this.API_BASE_URL}/status`, {headers: this.getHeaders()}).toPromise();
+      const status = await this.http.get<any>(
+        `${this.API_BASE_URL}/status`,
+        {headers: this.getHeaders(), context: new HttpContext().set(SKIP_GLOBAL_LOADING, true)}
+      ).toPromise();
       this.connectionStatus.next(true);
       this.serverStatus.next(status);
       return true;
@@ -73,7 +80,10 @@ export class ApiService {
   // Version asynchrone pour récupérer les tâches
   async getTasksAsync(): Promise<Task[]> {
     try {
-      return await this.http.get<Task[]>(`${this.API_BASE_URL}/tasks`, {headers: this.getHeaders()}).toPromise() || [];
+      return await this.http.get<Task[]>(
+        `${this.API_BASE_URL}/tasks`,
+        {headers: this.getHeaders(), context: new HttpContext().set(SKIP_GLOBAL_LOADING, true)}
+      ).toPromise() || [];
     } catch (error) {
       console.warn('Erreur lors de la récupération des tâches:', error);
       return [];
@@ -112,8 +122,9 @@ export class ApiService {
   }
 
   // Récupérer toutes les tâches
-  getTasks(): Observable<Task[]> {
-    return this.http.get<Task[]>(`${this.API_BASE_URL}/tasks`, {headers: this.getHeaders()})
+  getTasks(silent: boolean = false): Observable<Task[]> {
+    const context = silent ? new HttpContext().set(SKIP_GLOBAL_LOADING, true) : new HttpContext();
+    return this.http.get<Task[]>(`${this.API_BASE_URL}/tasks`, {headers: this.getHeaders(), context})
       .pipe(
         tap(tasks => this.convertDates(tasks)),
         catchError(this.handleError)
