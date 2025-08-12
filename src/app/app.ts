@@ -4,6 +4,7 @@ import {UserSelectComponent} from './components/user-select/user-select.componen
 import {LoadingService} from './services/loading.service';
 import {BackgroundCheckService} from './services/background-check.service';
 import {DatePipe, NgOptimizedImage} from '@angular/common';
+import {PwaUpdateService} from './services/pwa-update.service';
 
 @Component({
   selector: 'app-root',
@@ -14,6 +15,8 @@ import {DatePipe, NgOptimizedImage} from '@angular/common';
 export class App {
   protected readonly loading = inject(LoadingService);
   private readonly backgroundCheckService = inject(BackgroundCheckService);
+  // Injection pour initialiser le suivi des mises à jour PWA
+  private readonly pwaUpdateService = inject(PwaUpdateService);
 
   // Signaux globaux pour l'état du serveur
   protected readonly isCheckingBackground = computed(() => this.backgroundCheckService.isCheckingBackground());
