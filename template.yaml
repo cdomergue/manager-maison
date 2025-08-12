@@ -12,10 +12,11 @@ Globals:
         CATEGORIES_TABLE_NAME: !Ref CategoriesTable
         SHOPPING_ITEMS_TABLE_NAME: !Ref ShoppingItemsTable
         SHOPPING_LIST_TABLE_NAME: !Ref ShoppingListTable
+        NOTES_TABLE_NAME: !Ref NotesTable
   Api:
     Cors:
       AllowMethods: "'GET,POST,PUT,DELETE,OPTIONS'"
-      AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Secret-Key'"
+      AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Secret-Key,X-User-Id'"
       AllowOrigin: "'*'"
 
 Resources:
@@ -24,6 +25,18 @@ Resources:
     Type: AWS::DynamoDB::Table
     Properties:
       TableName: gestion-maison-tasks
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
+
+  NotesTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: gestion-maison-notes
       AttributeDefinitions:
         - AttributeName: id
           AttributeType: S
@@ -75,7 +88,7 @@ Resources:
       StageName: prod
       Cors:
         AllowMethods: "'GET,POST,PUT,DELETE,OPTIONS'"
-        AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Secret-Key'"
+        AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Secret-Key,X-User-Id'"
         AllowOrigin: "'*'"
 
   # Lambda Functions
@@ -173,6 +186,103 @@ Resources:
           Properties:
             RestApiId: !Ref Api
             Path: /api/tasks/{id}/complete
+            Method: post
+
+  # ========== NOTES FUNCTIONS ==========
+  GetNotesFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda/
+      Handler: handler.getNotes
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref NotesTable
+      Events:
+        GetNotes:
+          Type: Api
+          Properties:
+            RestApiId: !Ref Api
+            Path: /api/notes
+            Method: get
+
+  GetNoteFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda/
+      Handler: handler.getNote
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref NotesTable
+      Events:
+        GetNote:
+          Type: Api
+          Properties:
+            RestApiId: !Ref Api
+            Path: /api/notes/{id}
+            Method: get
+
+  CreateNoteFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda/
+      Handler: handler.createNote
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref NotesTable
+      Events:
+        CreateNote:
+          Type: Api
+          Properties:
+            RestApiId: !Ref Api
+            Path: /api/notes
+            Method: post
+
+  UpdateNoteFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda/
+      Handler: handler.updateNote
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref NotesTable
+      Events:
+        UpdateNote:
+          Type: Api
+          Properties:
+            RestApiId: !Ref Api
+            Path: /api/notes/{id}
+            Method: put
+
+  DeleteNoteFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda/
+      Handler: handler.deleteNote
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref NotesTable
+      Events:
+        DeleteNote:
+          Type: Api
+          Properties:
+            RestApiId: !Ref Api
+            Path: /api/notes/{id}
+            Method: delete
+
+  ShareNoteFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda/
+      Handler: handler.shareNote
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref NotesTable
+      Events:
+        ShareNote:
+          Type: Api
+          Properties:
+            RestApiId: !Ref Api
+            Path: /api/notes/{id}/share
             Method: post
 
   # ========== FONCTIONS CATEGORIES ==========
@@ -449,3 +559,9 @@ Outputs:
     Value: !Ref ShoppingListTable
     Export:
       Name: !Sub "${AWS::StackName}-ShoppingListTableName"
+
+  NotesTableName:
+    Description: "Notes DynamoDB table name"
+    Value: !Ref NotesTable
+    Export:
+      Name: !Sub "${AWS::StackName}-NotesTableName"

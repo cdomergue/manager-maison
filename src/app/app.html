@@ -41,6 +41,13 @@
         >
           Liste de courses
         </a>
+        <a
+          routerLink="/notes"
+          routerLinkActive="active"
+          class="px-3 py-2 rounded-md border transition-colors text-gray-700 hover:text-blue-600 hover:border-blue-200"
+        >
+          Notes
+        </a>
       </div>
     </div>
   </nav>
@@ -51,8 +58,16 @@
   </main>
   <app-user-select/>
   @if (loading.isLoading()) {
-    <div class="fixed inset-0 z-50 grid place-items-center bg-black/20">
+    <div class="fixed inset-0 z-50 grid place-items-center bg-black/20 pointer-events-none">
       <div class="h-12 w-12 rounded-full border-4 border-blue-500 border-t-transparent animate-spin"></div>
     </div>
   }
+  <footer class="bg-white border-t mt-12">
+    <div class="container mx-auto px-4 py-6">
+      <div class="text-center text-gray-600">
+        <p>Créer par Christophe & Laurence</p>
+        <p class="text-sm mt-1">Application de gestion de la maison</p>
+      </div>
+    </div>
+  </footer>
 </div>

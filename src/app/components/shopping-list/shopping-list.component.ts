@@ -5,7 +5,6 @@ import {ShoppingListService} from '../../services/shopping-list.service';
 
 @Component({
   selector: 'app-shopping-list',
-  standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: 'shopping-list.component.html',
   styleUrls: ['shopping-list.component.css']

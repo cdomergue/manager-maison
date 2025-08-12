@@ -2,6 +2,14 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Styles globaux pour le contenu des notes (au cas où l'encapsulation empêcherait l'application) */
+.note-content h1 { font-size: 1.5rem; line-height: 2rem; font-weight: 700; margin: 0.5rem 0; }
+.note-content h2 { font-size: 1.25rem; line-height: 1.75rem; font-weight: 700; margin: 0.5rem 0; }
+.note-content h3 { font-size: 1.125rem; line-height: 1.5rem; font-weight: 600; margin: 0.5rem 0; }
+.note-content p { margin: 0.25rem 0; }
+.note-content ul { list-style: disc inside; margin: 0.25rem 0; }
+.note-content ol { list-style: decimal inside; margin: 0.25rem 0; }
+
 /* Styles personnalisés */
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;

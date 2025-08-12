@@ -5,7 +5,6 @@ import { User } from '../../models/user.model';
 
 @Component({
   selector: 'app-user-select',
-  standalone: true,
   imports: [CommonModule],
   template: `
     @if (!isUserSelected) {

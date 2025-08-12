@@ -8,7 +8,6 @@ import { BackgroundCheckService } from '../../services/background-check.service'
 
 @Component({
   selector: 'app-settings',
-  standalone: true,
   imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './settings.component.html',
   styleUrl: './settings.component.css'
@@ -18,7 +17,7 @@ export class SettingsComponent implements OnInit {
   isServerConnected = signal(false);
   serverStatus = signal<any>(null);
   connectionStatus = signal('Vérification...');
-  
+
   // Signaux pour la vérification en arrière-plan
   isCheckingBackground = computed(() => this.backgroundCheckService.isCheckingBackground());
   lastBackgroundCheck = computed(() => this.backgroundCheckService.lastCheck());

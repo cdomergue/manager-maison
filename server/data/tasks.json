@@ -12,7 +12,7 @@
       "lastCompleted": "2025-08-07T19:57:48.459Z"
     }
   ],
-  "lastUpdated": "2025-08-07T20:23:00.043Z",
+  "lastUpdated": "2025-08-12T20:13:25.158Z",
   "shoppingItems": [
     {
       "id": "me1ugcejd8u37lf652f",
@@ -35,6 +35,17 @@
       "name": "Sac poubelle",
       "quantity": 2,
       "checked": true
+    }
+  ],
+  "notes": [
+    {
+      "id": "me8yq96rrr3gqcrl33",
+      "title": "Bah alors",
+      "content": "<h1>Titre 1</h1><h2>Titre 2</h2><div><b>Gras</b></div><div><i style=\"\">Italique</i></div><div><strike>Barré</strike><br><br>Liste :</div><div><ul><li>1er element</li><li>2em element</li></ul><div><br></div></div><div>Liste numérotée :&nbsp;</div><div><ol><li>1er element</li><li>2eme element</li></ol></div><div><br></div>Pourquoi je peux pas modifier ma note. Ah voilà, je peux modifier la note",
+      "ownerId": "Christophe",
+      "sharedWith": [],
+      "createdAt": "2025-08-12T19:57:04.131Z",
+      "updatedAt": "2025-08-12T20:13:25.158Z"
     }
   ]
 }

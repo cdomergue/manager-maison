@@ -22,10 +22,22 @@ export class ApiService {
 
   // Créer les headers avec le truc spécial
   private getHeaders(): HttpHeaders {
-    return new HttpHeaders({
+    const userId = this.getCurrentUserIdSafely();
+    const base = {
       'Content-Type': 'application/json',
       'X-Secret-Key': this.YOU_KNOW_WHAT
-    });
+    } as Record<string, string>;
+    if (userId) base['X-User-Id'] = userId;
+    return new HttpHeaders(base);
+  }
+
+  private getCurrentUserIdSafely(): string | null {
+    try {
+      // Lecture directe du localStorage où UserService persiste l'utilisateur courant
+      return localStorage.getItem('current_user');
+    } catch {
+      return null;
+    }
   }
 
   // Déterminer l'URL de l'API selon l'environnement
@@ -220,6 +232,29 @@ export class ApiService {
   clearAllShoppingList(): Observable<void> {
     return this.delete<void>('/shopping/list');
   }
+
+  // ================= NOTES =================
+  getNotes(): Observable<any[]> {
+    return this.get<any[]>('/notes');
+  }
+
+  getNote(id: string): Observable<any> {
+    return this.get<any>(`/notes/${id}`);
+  }
+
+  createNote(payload: { title: string; content: string }): Observable<any> {
+    return this.post<any>('/notes', payload);
+  }
+
+  updateNote(id: string, payload: Partial<{ title: string; content: string }>): Observable<any> {
+    return this.put<any>(`/notes/${id}`, payload);
+  }
+
+  deleteNote(id: string): Observable<void> {
+    return this.delete<void>(`/notes/${id}`);
+  }
+
+  // partage supprimé
 
   // Convertir les dates ISO en objets Date
   private convertDates(tasks: Task[]): void {

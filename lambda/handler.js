@@ -6,6 +6,7 @@ const TABLE_NAME = process.env.TABLE_NAME || 'gestion-maison-tasks';
 const CATEGORIES_TABLE_NAME = process.env.CATEGORIES_TABLE_NAME || 'gestion-maison-categories';
 const SHOPPING_ITEMS_TABLE_NAME = process.env.SHOPPING_ITEMS_TABLE_NAME || 'gestion-maison-shopping-items';
 const SHOPPING_LIST_TABLE_NAME = process.env.SHOPPING_LIST_TABLE_NAME || 'gestion-maison-shopping-list';
+const NOTES_TABLE_NAME = process.env.NOTES_TABLE_NAME || 'gestion-maison-notes';
 
 // Configuration spéciale
 const YOU_KNOW_WHAT = '21cdf2c38551';
@@ -13,7 +14,7 @@ const YOU_KNOW_WHAT = '21cdf2c38551';
 // Headers CORS pour toutes les réponses
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Secret-Key',
+  'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Secret-Key,X-User-Id',
   'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS'
 };
 
@@ -217,6 +218,113 @@ exports.completeTask = async (event) => {
 exports.options = async (event) => {
   return response(200, {});
 };
+
+// ========== GESTION DES NOTES ==========
+
+// GET /api/notes
+exports.getNotes = async (event) => {
+  const authError = authenticate(event);
+  if (authError) return authError;
+  try {
+    const result = await dynamodb.scan({ TableName: NOTES_TABLE_NAME }).promise();
+    return response(200, result.Items || []);
+  } catch (error) {
+    console.error('Error in getNotes:', error);
+    return response(500, { error: 'Erreur lors de la récupération des notes' });
+  }
+};
+
+// GET /api/notes/:id
+exports.getNote = async (event) => {
+  const authError = authenticate(event);
+  if (authError) return authError;
+  try {
+    const userId = event.headers['X-User-Id'] || event.headers['x-user-id'];
+    const id = event.pathParameters.id;
+    const result = await dynamodb.get({ TableName: NOTES_TABLE_NAME, Key: { id } }).promise();
+    const note = result.Item;
+    if (!note) return response(404, { error: 'Note non trouvée' });
+    if (note.ownerId !== userId) {
+      return response(403, { error: 'Accès non autorisé' });
+    }
+    return response(200, note);
+  } catch (error) {
+    console.error('Error in getNote:', error);
+    return response(500, { error: 'Erreur lors de la récupération de la note' });
+  }
+};
+
+// POST /api/notes
+exports.createNote = async (event) => {
+  const authError = authenticate(event);
+  if (authError) return authError;
+  try {
+    const userId = event.headers['X-User-Id'] || event.headers['x-user-id'];
+    const body = JSON.parse(event.body || '{}');
+    const now = new Date().toISOString();
+    const otherUsers = ['Christophe', 'Laurence'].filter(u => u !== userId);
+    const newNote = {
+      id: Date.now().toString(36) + Math.random().toString(36).substr(2),
+      title: (body.title || '').trim(),
+      content: body.content || '',
+      ownerId: userId,
+      createdAt: now,
+      updatedAt: now
+    };
+    await dynamodb.put({ TableName: NOTES_TABLE_NAME, Item: newNote }).promise();
+    return response(201, newNote);
+  } catch (error) {
+    console.error('Error in createNote:', error);
+    return response(400, { error: 'Données invalides' });
+  }
+};
+
+// PUT /api/notes/:id
+exports.updateNote = async (event) => {
+  const authError = authenticate(event);
+  if (authError) return authError;
+  try {
+    const userId = event.headers['X-User-Id'] || event.headers['x-user-id'];
+    const id = event.pathParameters.id;
+    const body = JSON.parse(event.body || '{}');
+    const existing = await dynamodb.get({ TableName: NOTES_TABLE_NAME, Key: { id } }).promise();
+    if (!existing.Item) return response(404, { error: 'Note non trouvée' });
+    const canEdit = existing.Item.ownerId === userId;
+    if (!canEdit) return response(403, { error: 'Accès non autorisé' });
+    const updated = {
+      ...existing.Item,
+      title: body.title !== undefined ? (body.title || '').trim() : existing.Item.title,
+      content: body.content !== undefined ? body.content : existing.Item.content,
+      // sharedWith modifiable via endpoint dédié de partage
+      updatedAt: new Date().toISOString()
+    };
+    await dynamodb.put({ TableName: NOTES_TABLE_NAME, Item: updated }).promise();
+    return response(200, updated);
+  } catch (error) {
+    console.error('Error in updateNote:', error);
+    return response(400, { error: 'Données invalides' });
+  }
+};
+
+// DELETE /api/notes/:id
+exports.deleteNote = async (event) => {
+  const authError = authenticate(event);
+  if (authError) return authError;
+  try {
+    const userId = event.headers['X-User-Id'] || event.headers['x-user-id'];
+    const id = event.pathParameters.id;
+    const existing = await dynamodb.get({ TableName: NOTES_TABLE_NAME, Key: { id } }).promise();
+    if (!existing.Item) return response(404, { error: 'Note non trouvée' });
+    if (existing.Item.ownerId !== userId) return response(403, { error: 'Accès non autorisé' });
+    await dynamodb.delete({ TableName: NOTES_TABLE_NAME, Key: { id } }).promise();
+    return response(204, {});
+  } catch (error) {
+    console.error('Error in deleteNote:', error);
+    return response(500, { error: 'Erreur lors de la suppression' });
+  }
+};
+
+// partage supprimé
 
 // ========== GESTION LISTE DE COURSES ==========
 

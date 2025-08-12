@@ -4,7 +4,6 @@ import {Task} from '../../models/task.model';
 
 @Component({
   selector: 'app-task-detail',
-  standalone: true,
   imports: [CommonModule],
   templateUrl: './task-detail.component.html',
   styleUrls: ['./task-detail.component.css']

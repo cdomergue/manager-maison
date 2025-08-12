@@ -29,6 +29,7 @@ if (!fs.existsSync(DB_PATH)) {
     tasks: [],
     shoppingItems: [],
     shoppingList: [],
+    notes: [],
     lastUpdated: new Date().toISOString()
   });
 }
@@ -40,10 +41,11 @@ function readDatabase() {
     // Rétro-compatibilité: garantir les nouvelles clés
     if (!data.shoppingItems) data.shoppingItems = [];
     if (!data.shoppingList) data.shoppingList = [];
+    if (!data.notes) data.notes = [];
     return data;
   } catch (error) {
     console.error('Erreur lors de la lecture de la base de données:', error);
-    return {tasks: [], shoppingItems: [], shoppingList: [], lastUpdated: new Date().toISOString()};
+    return {tasks: [], shoppingItems: [], shoppingList: [], notes: [], lastUpdated: new Date().toISOString()};
   }
 }
 
@@ -209,6 +211,97 @@ app.delete('/api/shopping/list', (req, res) => {
     res.status(500).json({error: 'Erreur lors du vidage'});
   }
 });
+
+// ================= NOTES =================
+// GET /api/notes - Récupérer toutes les notes
+app.get('/api/notes', (req, res) => {
+  try {
+    const db = readDatabase();
+    res.json(db.notes || []);
+  } catch (error) {
+    res.status(500).json({ error: 'Erreur lors de la récupération des notes' });
+  }
+});
+
+// GET /api/notes/:id
+app.get('/api/notes/:id', (req, res) => {
+  try {
+    const db = readDatabase();
+    const userId = req.header('X-User-Id');
+    const note = (db.notes || []).find(n => n.id === req.params.id);
+    if (!note) return res.status(404).json({ error: 'Note non trouvée' });
+    if (userId && note.ownerId !== userId) {
+      return res.status(403).json({ error: 'Accès non autorisé' });
+    }
+    res.json(note);
+  } catch (error) {
+    res.status(500).json({ error: 'Erreur lors de la récupération de la note' });
+  }
+});
+
+// POST /api/notes
+app.post('/api/notes', (req, res) => {
+  try {
+    const db = readDatabase();
+    const userId = req.header('X-User-Id');
+    const { title, content } = req.body || {};
+    const note = {
+      id: Date.now().toString(36) + Math.random().toString(36).substr(2),
+      title: (title || '').trim(),
+      content: content || '',
+      ownerId: userId || 'anonymous',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    db.notes.unshift(note);
+    if (writeDatabase(db)) return res.status(201).json(note);
+    return res.status(500).json({ error: 'Erreur lors de la sauvegarde' });
+  } catch (error) {
+    res.status(400).json({ error: 'Données invalides' });
+  }
+});
+
+// PUT /api/notes/:id
+app.put('/api/notes/:id', (req, res) => {
+  try {
+    const db = readDatabase();
+    const userId = req.header('X-User-Id');
+    const idx = (db.notes || []).findIndex(n => n.id === req.params.id);
+    if (idx === -1) return res.status(404).json({ error: 'Note non trouvée' });
+    const sharedWith = Array.isArray(db.notes[idx].sharedWith) ? db.notes[idx].sharedWith : [];
+    const canEdit = !userId || db.notes[idx].ownerId === userId || sharedWith.includes(userId);
+    if (!canEdit) return res.status(403).json({ error: 'Accès non autorisé' });
+    const { title, content } = req.body || {};
+    db.notes[idx] = {
+      ...db.notes[idx],
+      title: title !== undefined ? (title || '').trim() : db.notes[idx].title,
+      content: content !== undefined ? content : db.notes[idx].content,
+      updatedAt: new Date().toISOString()
+    };
+    if (writeDatabase(db)) return res.json(db.notes[idx]);
+    return res.status(500).json({ error: 'Erreur lors de la sauvegarde' });
+  } catch (error) {
+    res.status(400).json({ error: 'Données invalides' });
+  }
+});
+
+// DELETE /api/notes/:id
+app.delete('/api/notes/:id', (req, res) => {
+  try {
+    const db = readDatabase();
+    const userId = req.header('X-User-Id');
+    const idx = (db.notes || []).findIndex(n => n.id === req.params.id);
+    if (idx === -1) return res.status(404).json({ error: 'Note non trouvée' });
+    if (userId && db.notes[idx].ownerId !== userId) return res.status(403).json({ error: 'Accès non autorisé' });
+    db.notes.splice(idx, 1);
+    if (writeDatabase(db)) return res.status(204).send();
+    return res.status(500).json({ error: 'Erreur lors de la suppression' });
+  } catch (error) {
+    res.status(500).json({ error: 'Erreur lors de la suppression' });
+  }
+});
+
+// partage supprimé
 
 // GET /api/tasks - Récupérer toutes les tâches
 app.get('/api/tasks', (req, res) => {

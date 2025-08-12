@@ -10,7 +10,6 @@ import {Router} from '@angular/router';
   selector: 'app-category-management',
   templateUrl: './category-management.component.html',
   styleUrls: ['./category-management.component.css'],
-  standalone: true,
   imports: [CommonModule, ReactiveFormsModule]
 })
 export class CategoryManagementComponent implements OnInit {
