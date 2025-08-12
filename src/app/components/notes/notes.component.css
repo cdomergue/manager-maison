@@ -7,3 +7,16 @@
 .btn { transition: background-color .15s ease; }
 .btn.active { background-color: #e0e7ff; }
 
+/* Eviter que les boutons d'action s'étirent en pleine hauteur en mode mobile */
+.note-actions button {
+  height: auto;
+  align-self: flex-start;
+}
+
+@media (max-width: 640px) {
+  /* Sur mobile, stack horizontal et éviter l'étirement vertical */
+  .note-actions {
+    align-items: flex-start;
+  }
+}
+

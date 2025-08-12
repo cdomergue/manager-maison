@@ -94,9 +94,9 @@
                 <div class="note-content text-gray-700 mt-1" [innerHTML]="n.content"></div>
                 <div class="text-xs text-gray-500 mt-2">Propriétaire: {{ n.ownerId }}</div>
               </div>
-              <div class="shrink-0 flex gap-2">
-                <button class="px-2 py-1 text-sm border rounded hover:bg-gray-50" (click)="startEdit(n.id, n.title, n.content)">Modifier</button>
-                <button class="px-2 py-1 text-sm border rounded hover:bg-gray-50" (click)="remove(n.id)">Supprimer</button>
+              <div class="note-actions shrink-0 flex items-start gap-2">
+                <button class="h-auto px-2 py-1 text-sm border rounded hover:bg-gray-50" (click)="startEdit(n.id, n.title, n.content)">Modifier</button>
+                <button class="h-auto px-2 py-1 text-sm border rounded hover:bg-gray-50" (click)="remove(n.id)">Supprimer</button>
               </div>
             </div>
           }
