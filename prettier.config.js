@@ -1,0 +1,11 @@
+module.exports = {
+  printWidth: 120,
+  overrides: [
+    {
+      files: "*.html",
+      options: {
+        parser: "angular",
+      },
+    },
+  ],
+};
