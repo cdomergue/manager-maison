@@ -1,4 +1,4 @@
-import {Component, computed, signal} from '@angular/core';
+import {Component, computed, signal, inject} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
 import {ShoppingListService} from '../../services/shopping-list.service';
@@ -14,7 +14,8 @@ export class ShoppingListComponent {
   newItemCategory = signal<string>('');
   search = signal<string>('');
 
-  constructor(public shopping: ShoppingListService) {}
+  // pas de constructeur nécessaire
+  public shopping = inject(ShoppingListService);
 
   filteredCatalog = computed(() => {
     const term = this.search().toLowerCase().trim();

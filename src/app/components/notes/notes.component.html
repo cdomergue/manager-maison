@@ -3,11 +3,11 @@
     <summary class="cursor-pointer select-none px-4 py-3 font-semibold">Nouvelle note</summary>
     <form class="space-y-3 p-4 pt-2" (ngSubmit)="create()">
       <div>
-        <label class="block text-sm text-gray-600 mb-1">Titre</label>
-        <input [(ngModel)]="title" name="title" class="w-full px-3 py-2 border rounded" placeholder="Titre"/>
+        <label for="title-input" class="block text-sm text-gray-600 mb-1">Titre</label>
+        <input id="title-input" [(ngModel)]="title" name="title" class="w-full px-3 py-2 border rounded" placeholder="Titre"/>
       </div>
       <div>
-        <label class="block text-sm text-gray-600 mb-1">Contenu</label>
+        <div class="block text-sm text-gray-600 mb-1">Contenu</div>
         <div class="flex flex-wrap items-center gap-2 mb-2 text-sm">
           <select class="px-2 py-1 border rounded"
                   [value]="toolbar.block"
@@ -65,7 +65,8 @@
         <div class="border rounded p-4">
           @if (editingId === n.id) {
             <div class="space-y-3">
-              <input [(ngModel)]="editTitle" name="editTitle" class="w-full px-3 py-2 border rounded" />
+              <label for="edit-title-{{n.id}}" class="sr-only">Titre</label>
+              <input id="edit-title-{{n.id}}" [(ngModel)]="editTitle" name="editTitle" class="w-full px-3 py-2 border rounded" />
               <div class="flex flex-wrap items-center gap-2 mb-2 text-sm">
                 <select class="px-2 py-1 border rounded"
                         [value]="toolbar.block"

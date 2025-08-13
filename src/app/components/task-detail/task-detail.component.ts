@@ -10,10 +10,10 @@ import {Task} from '../../models/task.model';
 })
 export class TaskDetailComponent {
   @Input() task!: Task;
-  @Output() close = new EventEmitter<void>();
+  @Output() closed = new EventEmitter<void>();
   @Output() complete = new EventEmitter<string>();
   @Output() edit = new EventEmitter<Task>();
-  @Output() delete = new EventEmitter<string>();
+  @Output() removeTask = new EventEmitter<string>();
   @Output() toggleActive = new EventEmitter<Task>();
 
   priorities = [

@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed } from '@angular/core';
+import { Component, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
@@ -15,7 +15,7 @@ import { BackgroundCheckService } from '../../services/background-check.service'
 export class SettingsComponent implements OnInit {
   storageSize = signal(0);
   isServerConnected = signal(false);
-  serverStatus = signal<any>(null);
+  serverStatus = signal<ServerStatus | null>(null);
   connectionStatus = signal('Vérification...');
 
   // Signaux pour la vérification en arrière-plan
@@ -23,11 +23,9 @@ export class SettingsComponent implements OnInit {
   lastBackgroundCheck = computed(() => this.backgroundCheckService.lastCheck());
   backgroundCheckInterval = computed(() => this.backgroundCheckService.checkIntervalMs());
 
-  constructor(
-    private storageService: StorageService,
-    private apiService: ApiService,
-    private backgroundCheckService: BackgroundCheckService
-  ) {}
+  private storageService = inject(StorageService);
+  private apiService = inject(ApiService);
+  private backgroundCheckService = inject(BackgroundCheckService);
 
   ngOnInit(): void {
     this.updateStorageInfo();
@@ -45,7 +43,7 @@ export class SettingsComponent implements OnInit {
     });
 
     this.apiService.getServerStatus().subscribe(status => {
-      this.serverStatus.set(status);
+      this.serverStatus.set(status as ServerStatus | null);
     });
   }
 
@@ -65,4 +63,10 @@ export class SettingsComponent implements OnInit {
   async forceBackgroundCheck(): Promise<void> {
     await this.backgroundCheckService.forceCheck();
   }
+}
+
+interface ServerStatus {
+  totalTasks: number;
+  lastUpdated: string | Date;
+  serverTime: string | Date;
 }

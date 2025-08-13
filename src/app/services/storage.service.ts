@@ -5,9 +5,7 @@ import { Injectable } from '@angular/core';
 })
 export class StorageService {
 
-  constructor() { }
-
-  setItem(key: string, value: any): void {
+  setItem<T>(key: string, value: T): void {
     try {
       localStorage.setItem(key, JSON.stringify(value));
     } catch (error) {
@@ -43,11 +41,10 @@ export class StorageService {
 
   getStorageSize(): number {
     let total = 0;
-    for (let key in localStorage) {
-      if (localStorage.hasOwnProperty(key)) {
-        total += localStorage[key].length + key.length;
-      }
-    }
+    Object.keys(localStorage).forEach((key) => {
+      const value = localStorage.getItem(key) ?? '';
+      total += value.length + key.length;
+    });
     return total;
   }
 
@@ -57,7 +54,7 @@ export class StorageService {
       localStorage.setItem(test, test);
       localStorage.removeItem(test);
       return true;
-    } catch (e) {
+    } catch {
       return false;
     }
   }

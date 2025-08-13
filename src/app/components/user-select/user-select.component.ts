@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { UserService } from '../../services/user.service';
 import { User } from '../../models/user.model';
@@ -31,7 +31,7 @@ export class UserSelectComponent implements OnInit {
   isUserSelected = false;
   availableUsers: User[] = [];
 
-  constructor(private userService: UserService) {}
+  private userService = inject(UserService);
 
   ngOnInit() {
     this.availableUsers = this.userService.getAvailableUsers();

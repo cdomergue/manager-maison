@@ -1,11 +1,11 @@
-import {Component, computed, OnDestroy, OnInit, output, signal} from '@angular/core';
+import {Component, computed, OnDestroy, OnInit, output, signal, inject} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
 import {Task} from '../../models/task.model';
 import {Category} from '../../models/category.model';
 import {CategoryService} from '../../services/category.service';
 import {TaskService} from '../../services/task.service';
-import {NotificationService} from '../../services/notification.service';
+// import {NotificationService} from '../../services/notification.service';
 import {Subscription} from 'rxjs';
 import {TaskDetailComponent} from '../task-detail/task-detail.component';
 
@@ -87,11 +87,8 @@ export class TaskListComponent implements OnInit, OnDestroy {
 
   private subscription: Subscription = new Subscription();
 
-  constructor(
-    private taskService: TaskService,
-    private notificationService: NotificationService,
-    private categoryService: CategoryService
-  ) {}
+  private taskService = inject(TaskService);
+  private categoryService = inject(CategoryService);
 
   ngOnInit(): void {
     // Charger les catégories

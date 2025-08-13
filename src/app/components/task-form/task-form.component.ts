@@ -1,4 +1,4 @@
-import {Component, EventEmitter, Input, OnInit, Output} from '@angular/core';
+import {Component, EventEmitter, Input, OnInit, Output, inject} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators} from '@angular/forms';
 import {Assignee, Task} from '../../models/task.model';
@@ -32,11 +32,11 @@ export class TaskFormComponent implements OnInit {
     { value: 'high', label: 'Haute' }
   ];
 
-  constructor(
-    private fb: FormBuilder,
-    private taskService: TaskService,
-    private categoryService: CategoryService
-  ) {
+  private fb = inject(FormBuilder);
+  private taskService = inject(TaskService);
+  private categoryService = inject(CategoryService);
+
+  constructor() {
     this.taskForm = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(2)]],
       description: [''],

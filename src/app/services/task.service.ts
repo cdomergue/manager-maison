@@ -58,7 +58,7 @@ export class TaskService {
   }
 
   // Méthodes pour charger les tâches
-  private loadTasksFromAPI(silent: boolean = false): void {
+  private loadTasksFromAPI(silent = false): void {
     this.apiService.getTasks(silent).subscribe({
       next: (tasks) => {
         this.tasksSignal.set(tasks);
@@ -76,7 +76,7 @@ export class TaskService {
     const stored = this.storageService.getItem<Task[]>(this.STORAGE_KEY);
     if (stored) {
       try {
-        const tasks = stored.map((task: any) => ({
+        const tasks = stored.map((task: Task) => ({
           ...task,
           nextDueDate: new Date(task.nextDueDate),
           lastCompleted: task.lastCompleted ? new Date(task.lastCompleted) : undefined
@@ -94,7 +94,7 @@ export class TaskService {
   }
 
   // Méthode pour forcer le rechargement des tâches
-  refreshTasks(silent: boolean = false): void {
+  refreshTasks(silent = false): void {
     if (this.useLocalStorageSignal()) {
       this.loadTasksFromLocalStorage();
     } else {

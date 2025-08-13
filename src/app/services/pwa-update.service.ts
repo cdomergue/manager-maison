@@ -54,7 +54,7 @@ export class PwaUpdateService {
   private async safeCheckForUpdate(): Promise<void> {
     try {
       await this.swUpdate.checkForUpdate();
-    } catch (err) {
+    } catch {
       // Silencieux: peut échouer si offline ou si le SW n'est pas encore prêt
     }
   }

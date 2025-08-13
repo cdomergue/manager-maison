@@ -1,4 +1,4 @@
-import {Component, OnInit} from '@angular/core';
+import {Component, OnInit, inject} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators} from '@angular/forms';
 import {RouterModule} from '@angular/router';
@@ -14,13 +14,13 @@ import {SwPush} from '@angular/service-worker';
 })
 export class NotificationsConfigComponent implements OnInit {
   configForm: FormGroup;
-  notificationPermission: string = 'default';
+  notificationPermission = 'default';
 
-  constructor(
-    private fb: FormBuilder,
-    private notificationService: NotificationService,
-    private swPush: SwPush
-  ) {
+  private fb = inject(FormBuilder);
+  private notificationService = inject(NotificationService);
+  private swPush = inject(SwPush);
+
+  constructor() {
     this.configForm = this.fb.group({
       enabled: [true],
       reminderTime: ['09:00', [Validators.required, Validators.pattern(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/)]],

@@ -1,4 +1,4 @@
-import {Injectable} from '@angular/core';
+import {Injectable, inject} from '@angular/core';
 import {NotificationSettings, Task} from '../models/task.model';
 import {UserService} from './user.service';
 import {SwPush} from '@angular/service-worker';
@@ -16,10 +16,9 @@ export class NotificationService {
 
   private readonly VAPID_PUBLIC_KEY = 'BMB8LZ-B0Fin4W_pYzumsB6L6Rqoh1CfO-V3giCPRSy954jXVcE4Sdj99O5epl5Z8cbBY-IkG_IJjIoIYDo8Iss';
 
-  constructor(
-    private userService: UserService,
-    private swPush: SwPush
-  ) {
+  private userService = inject(UserService);
+  private swPush = inject(SwPush);
+  constructor() {
     this.loadSettings();
     this.requestPermission();
   }
@@ -234,7 +233,14 @@ export class NotificationService {
     localStorage.setItem(this.SETTINGS_KEY, JSON.stringify(this.settings));
   }
 
-  private async sendNotificationToServiceWorker(notificationData: any): Promise<void> {
+  private async sendNotificationToServiceWorker(notificationData: {
+    title: string;
+    body: string;
+    icon: string;
+    badge?: string;
+    tag?: string;
+    requireInteraction?: boolean;
+  }): Promise<void> {
     if ('serviceWorker' in navigator && 'showNotification' in ServiceWorkerRegistration.prototype) {
       try {
         const registration = await navigator.serviceWorker.ready;
@@ -245,7 +251,7 @@ export class NotificationService {
           tag: notificationData.tag,
           requireInteraction: notificationData.requireInteraction,
           data: notificationData
-        } as any);
+        } as NotificationOptions);
       } catch (error) {
         console.error('Erreur lors de l\'affichage de la notification:', error);
       }

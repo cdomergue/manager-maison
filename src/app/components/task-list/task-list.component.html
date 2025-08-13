@@ -15,8 +15,8 @@
     <div class="sm:hidden space-y-4">
       <!-- Recherche principale -->
       <div>
-        <label class="block text-sm font-medium text-gray-700 mb-2">🔍 Rechercher</label>
-        <input
+        <label for="mobile-search" class="block text-sm font-medium text-gray-700 mb-2">🔍 Rechercher</label>
+        <input id="mobile-search"
           type="text"
           [ngModel]="searchTerm()"
           (ngModelChange)="searchTerm.set($event)"
@@ -28,7 +28,8 @@
 
       <!-- Filtres rapides en ligne -->
       <div class="flex flex-wrap gap-2">
-        <select
+        <label for="mobile-category" class="sr-only">Catégorie</label>
+        <select id="mobile-category"
           [ngModel]="selectedCategory()"
           (ngModelChange)="selectedCategory.set($event)"
           (change)="onFilterChange()"
@@ -40,7 +41,8 @@
           }
         </select>
 
-        <select
+        <label for="mobile-priority" class="sr-only">Priorité</label>
+        <select id="mobile-priority"
           [ngModel]="selectedPriority()"
           (ngModelChange)="selectedPriority.set($event)"
           (change)="onFilterChange()"
@@ -60,8 +62,8 @@
     <div class="hidden sm:grid grid-cols-2 lg:grid-cols-5 gap-4">
       <!-- Recherche -->
       <div class="lg:col-span-2">
-        <label class="block text-sm font-medium text-gray-700 mb-1">Rechercher</label>
-        <input
+        <label for="desktop-search" class="block text-sm font-medium text-gray-700 mb-1">Rechercher</label>
+        <input id="desktop-search"
           type="text"
           [ngModel]="searchTerm()"
           (ngModelChange)="searchTerm.set($event)"
@@ -73,8 +75,8 @@
 
       <!-- Catégorie -->
       <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">Catégorie</label>
-        <select
+        <label for="desktop-category" class="block text-sm font-medium text-gray-700 mb-1">Catégorie</label>
+        <select id="desktop-category"
           [ngModel]="selectedCategory()"
           (ngModelChange)="selectedCategory.set($event)"
           (change)="onFilterChange()"
@@ -89,8 +91,8 @@
 
       <!-- Priorité -->
       <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">Priorité</label>
-        <select
+        <label for="desktop-priority" class="block text-sm font-medium text-gray-700 mb-1">Priorité</label>
+        <select id="desktop-priority"
           [ngModel]="selectedPriority()"
           (ngModelChange)="selectedPriority.set($event)"
           (change)="onFilterChange()"
@@ -114,6 +116,11 @@
         class="bg-white rounded-lg shadow-sm border p-3 sm:p-4 transition-all duration-200 hover:shadow-md cursor-pointer"
         [ngClass]="getStatusClass(task)"
         (click)="showTaskDetails(task)"
+        role="button"
+        tabindex="0"
+        (keyup.enter)="showTaskDetails(task)"
+        (keyup.space)="$event.preventDefault(); showTaskDetails(task)"
+        attr.aria-label="Voir les détails de la tâche {{ task.name }}"
       >
         <!-- Mobile Layout -->
         <div class="sm:hidden">
@@ -180,6 +187,8 @@
           <div class="flex gap-2">
             <button
               (click)="$event.stopPropagation(); completeTask(task.id)"
+              (keyup.enter)="$event.stopPropagation(); completeTask(task.id)"
+              (keyup.space)="$event.stopPropagation(); completeTask(task.id)"
               class="flex-1 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
               [disabled]="!task.isActive"
             >
@@ -188,6 +197,8 @@
 
             <button
               (click)="$event.stopPropagation(); editTask(task)"
+              (keyup.enter)="$event.stopPropagation(); editTask(task)"
+              (keyup.space)="$event.stopPropagation(); editTask(task)"
               class="px-4 py-3 border border-blue-300 text-blue-600 rounded-lg hover:bg-blue-50 transition-colors text-sm"
               title="Éditer"
             >
@@ -196,6 +207,8 @@
 
             <button
               (click)="$event.stopPropagation(); toggleTaskActive(task)"
+              (keyup.enter)="$event.stopPropagation(); toggleTaskActive(task)"
+              (keyup.space)="$event.stopPropagation(); toggleTaskActive(task)"
               class="px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm"
             >
               {{ task.isActive ? '⏸️' : '▶️' }}
@@ -203,6 +216,8 @@
 
             <button
               (click)="$event.stopPropagation(); deleteTask(task.id)"
+              (keyup.enter)="$event.stopPropagation(); deleteTask(task.id)"
+              (keyup.space)="$event.stopPropagation(); deleteTask(task.id)"
               class="px-4 py-3 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition-colors text-sm"
             >
               🗑️
@@ -322,10 +337,10 @@
     @defer {
       <app-task-detail
         [task]="selectedTask()!"
-        (close)="closeTaskDetails()"
+        (closed)="closeTaskDetails()"
         (complete)="completeTask($event)"
         (edit)="editTask($event)"
-        (delete)="deleteTask($event)"
+        (delete)="deleteTask($any($event))"
         (toggleActive)="toggleTaskActive($event)"
       />
     }

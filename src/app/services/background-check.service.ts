@@ -12,7 +12,7 @@ export class BackgroundCheckService {
   private lastCheckTime = signal<Date | null>(null);
   private checkInterval = signal(300000); // 5 minutes par défaut
   private intervalId: number | null = null;
-  private lastNotifiedOverdueTasks: Set<string> = new Set(); // IDs des tâches en retard déjà notifiées
+  private lastNotifiedOverdueTasks = new Set<string>(); // IDs des tâches en retard déjà notifiées
 
   // Signaux publics
   readonly isCheckingBackground = this.isChecking.asReadonly();

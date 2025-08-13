@@ -24,17 +24,17 @@
       @if (serverStatus()) {
         <div class="status-item">
           <span class="label">Tâches totales :</span>
-          <span class="value">{{ serverStatus().totalTasks }}</span>
+          <span class="value">{{ serverStatus()?.totalTasks }}</span>
         </div>
 
         <div class="status-item">
           <span class="label">Dernière mise à jour :</span>
-          <span class="value">{{ serverStatus().lastUpdated | date:'dd/MM/yyyy HH:mm' }}</span>
+          <span class="value">{{ serverStatus()?.lastUpdated | date:'dd/MM/yyyy HH:mm' }}</span>
         </div>
 
         <div class="status-item">
           <span class="label">Heure du serveur :</span>
-          <span class="value">{{ serverStatus().serverTime | date:'dd/MM/yyyy HH:mm:ss' }}</span>
+          <span class="value">{{ serverStatus()?.serverTime | date:'dd/MM/yyyy HH:mm:ss' }}</span>
         </div>
       }
     </div>

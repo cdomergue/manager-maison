@@ -85,7 +85,7 @@ export class ShoppingListService {
     }
   }
 
-  addToCurrentList(itemId: string, quantity: number = 1): void {
+  addToCurrentList(itemId: string, quantity = 1): void {
     const item = this.itemsSignal().find(i => i.id === itemId);
     if (!item) return;
 

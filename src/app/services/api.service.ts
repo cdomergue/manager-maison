@@ -1,4 +1,4 @@
-import {Injectable} from '@angular/core';
+import {Injectable, inject} from '@angular/core';
 import {HttpClient, HttpContext, HttpErrorResponse, HttpHeaders} from '@angular/common/http';
 import {BehaviorSubject, Observable, throwError} from 'rxjs';
 import {catchError, tap} from 'rxjs/operators';
@@ -14,9 +14,10 @@ export class ApiService {
   private readonly API_BASE_URL = this.getApiBaseUrl();
   private readonly YOU_KNOW_WHAT = '21cdf2c38551';
   private connectionStatus = new BehaviorSubject<boolean>(false);
-  private serverStatus = new BehaviorSubject<any>(null);
+  private serverStatus = new BehaviorSubject<unknown | null>(null);
 
-  constructor(private http: HttpClient) {
+  private http = inject(HttpClient);
+  constructor() {
     this.checkServerStatus();
   }
 
@@ -52,7 +53,7 @@ export class ApiService {
 
   // Vérifier le statut du serveur
   checkServerStatus(): void {
-    this.http.get<any>(
+    this.http.get<unknown>(
       `${this.API_BASE_URL}/status`,
       {headers: this.getHeaders(), context: new HttpContext().set(SKIP_GLOBAL_LOADING, true)}
     )
@@ -60,12 +61,12 @@ export class ApiService {
         catchError(this.handleError)
       )
       .subscribe({
-        next: (status) => {
+        next: (status: unknown) => {
           this.connectionStatus.next(true);
           this.serverStatus.next(status);
         },
-        error: (error) => {
-          console.warn('Serveur non accessible:', error);
+        error: () => {
+          console.warn('Serveur non accessible');
           this.connectionStatus.next(false);
           this.serverStatus.next(null);
         }
@@ -75,14 +76,14 @@ export class ApiService {
   // Version asynchrone pour la vérification en arrière-plan
   async checkServerStatusAsync(): Promise<boolean> {
     try {
-      const status = await this.http.get<any>(
+      const status = await this.http.get<unknown>(
         `${this.API_BASE_URL}/status`,
         {headers: this.getHeaders(), context: new HttpContext().set(SKIP_GLOBAL_LOADING, true)}
       ).toPromise();
       this.connectionStatus.next(true);
-      this.serverStatus.next(status);
+      this.serverStatus.next(status ?? null);
       return true;
-    } catch (error) {
+    } catch {
       this.connectionStatus.next(false);
       this.serverStatus.next(null);
       return false;
@@ -108,7 +109,7 @@ export class ApiService {
   }
 
   // Obtenir le statut du serveur
-  getServerStatus(): Observable<any> {
+  getServerStatus(): Observable<unknown | null> {
     return this.serverStatus.asObservable();
   }
 
@@ -118,12 +119,12 @@ export class ApiService {
       .pipe(catchError(this.handleError));
   }
 
-  post<T>(path: string, body: any): Observable<T> {
+  post<T>(path: string, body: unknown): Observable<T> {
     return this.http.post<T>(`${this.API_BASE_URL}${path}`, body, {headers: this.getHeaders()})
       .pipe(catchError(this.handleError));
   }
 
-  put<T>(path: string, body: any): Observable<T> {
+  put<T>(path: string, body: unknown): Observable<T> {
     return this.http.put<T>(`${this.API_BASE_URL}${path}`, body, {headers: this.getHeaders()})
       .pipe(catchError(this.handleError));
   }
@@ -134,7 +135,7 @@ export class ApiService {
   }
 
   // Récupérer toutes les tâches
-  getTasks(silent: boolean = false): Observable<Task[]> {
+  getTasks(silent = false): Observable<Task[]> {
     const context = silent ? new HttpContext().set(SKIP_GLOBAL_LOADING, true) : new HttpContext();
     return this.http.get<Task[]>(`${this.API_BASE_URL}/tasks`, {headers: this.getHeaders(), context})
       .pipe(
@@ -234,20 +235,20 @@ export class ApiService {
   }
 
   // ================= NOTES =================
-  getNotes(): Observable<any[]> {
-    return this.get<any[]>('/notes');
+  getNotes(): Observable<unknown[]> {
+    return this.get<unknown[]>('/notes');
   }
 
-  getNote(id: string): Observable<any> {
-    return this.get<any>(`/notes/${id}`);
+  getNote(id: string): Observable<unknown> {
+    return this.get<unknown>(`/notes/${id}`);
   }
 
-  createNote(payload: { title: string; content: string }): Observable<any> {
-    return this.post<any>('/notes', payload);
+  createNote(payload: { title: string; content: string }): Observable<unknown> {
+    return this.post<unknown>('/notes', payload);
   }
 
-  updateNote(id: string, payload: Partial<{ title: string; content: string }>): Observable<any> {
-    return this.put<any>(`/notes/${id}`, payload);
+  updateNote(id: string, payload: Partial<{ title: string; content: string }>): Observable<unknown> {
+    return this.put<unknown>(`/notes/${id}`, payload);
   }
 
   deleteNote(id: string): Observable<void> {

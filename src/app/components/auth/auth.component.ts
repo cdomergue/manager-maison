@@ -1,4 +1,4 @@
-import {Component} from '@angular/core';
+import {Component, inject} from '@angular/core';
 import {FormsModule} from '@angular/forms';
 import {Router} from '@angular/router';
 import {AuthService} from '../../services/auth.service';
@@ -20,7 +20,7 @@ import {CommonModule} from '@angular/common';
               class="w-full px-4 py-3 border rounded-lg"
               placeholder="Mot de passe"
               required
-              autofocus>
+             >
           </div>
           @if (error) {
             <div class="text-red-500 mb-4 text-center">
@@ -43,10 +43,10 @@ export class AuthComponent {
   error = '';
   isAuthenticated = false;
 
-  constructor(
-    private authService: AuthService,
-    private router: Router
-  ) {
+  private authService = inject(AuthService);
+  private router = inject(Router);
+
+  constructor() {
     this.authService.isAuthenticated$.subscribe(isAuth => {
       this.isAuthenticated = isAuth;
       if (isAuth) {
@@ -63,7 +63,7 @@ export class AuthComponent {
       if (!isValid) {
         this.error = 'Mot de passe incorrect';
       }
-    } catch (err) {
+    } catch {
       this.error = 'Une erreur est survenue';
     }
     this.password = '';

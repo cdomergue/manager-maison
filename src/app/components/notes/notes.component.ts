@@ -51,6 +51,7 @@ export class NotesComponent {
       const panel = document.querySelector('details') as HTMLDetailsElement | null;
       if (panel) panel.open = false;
     } catch {
+      // ignore
     }
   }
 
@@ -111,7 +112,9 @@ export class NotesComponent {
       } else {
         document.execCommand(command, false, value);
       }
-    } catch {}
+    } catch {
+      void 0;
+    }
   }
 
   insertLink(editor: HTMLElement | null): void {
@@ -140,7 +143,9 @@ export class NotesComponent {
         const anchorHtml = `<a href="${href}" target="_blank" rel="noopener noreferrer">${href}</a>`;
         document.execCommand('insertHTML', false, anchorHtml);
       }
-    } catch {}
+    } catch {
+      void 0;
+    }
 
     this.sanitizeLinks(editor);
     this.onEditorInput(editor);
@@ -151,7 +156,9 @@ export class NotesComponent {
     editor.focus();
     try {
       document.execCommand('unlink');
-    } catch {}
+    } catch {
+      void 0;
+    }
     this.onEditorInput(editor);
   }
 
@@ -200,7 +207,7 @@ export class NotesComponent {
       else if (block.includes('H3')) this.toolbar.block = 'H3';
       else this.toolbar.block = 'P';
     } catch {
-      // No-op
+      void 0;
     }
 
     // Déterminer si la sélection courante est dans un lien
@@ -213,7 +220,9 @@ export class NotesComponent {
         node = node.parentNode;
       }
       this.toolbar.link = inLink;
-    } catch {}
+    } catch {
+      void 0;
+    }
   }
 }
 

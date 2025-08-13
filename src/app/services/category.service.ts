@@ -1,4 +1,4 @@
-import {Injectable} from '@angular/core';
+import {Injectable, inject} from '@angular/core';
 import {ApiService} from './api.service';
 import {Category} from '../models/category.model';
 import {BehaviorSubject, map, Observable, tap} from 'rxjs';
@@ -10,7 +10,8 @@ export class CategoryService {
   private categories = new BehaviorSubject<Category[]>([]);
   categories$ = this.categories.asObservable();
 
-  constructor(private api: ApiService) {
+  private api = inject(ApiService);
+  constructor() {
     this.loadCategories();
   }
 

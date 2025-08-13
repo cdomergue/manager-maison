@@ -1,4 +1,4 @@
-import {Component, OnInit} from '@angular/core';
+import {Component, OnInit, inject} from '@angular/core';
 import {FormBuilder, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 
 import {CommonModule} from '@angular/common';
@@ -18,11 +18,11 @@ export class CategoryManagementComponent implements OnInit {
   editingCategory: Category | null = null;
   showForm = false;
 
-  constructor(
-    private categoryService: CategoryService,
-    private fb: FormBuilder,
-    private router: Router
-  ) {
+  private categoryService = inject(CategoryService);
+  private fb = inject(FormBuilder);
+  private router = inject(Router);
+
+  constructor() {
     this.categoryForm = this.createForm();
   }
 

@@ -1,6 +1,5 @@
-import { computed, inject, Injectable, signal } from '@angular/core';
+import { inject, Injectable, signal } from '@angular/core';
 import { toObservable } from '@angular/core/rxjs-interop';
-import { Observable, of } from 'rxjs';
 import { ApiService } from './api.service';
 import { StorageService } from './storage.service';
 import { Note } from '../models/note.model';
@@ -34,12 +33,12 @@ export class NotesService {
 
   refresh(): void {
     if (this.useLocalStorageSignal()) this.loadFromLocal();
-    else this.loadFromAPI(true);
+    else this.loadFromAPI();
   }
 
-  private loadFromAPI(silent = false): void {
+  private loadFromAPI(): void {
     this.api.getNotes().subscribe({
-      next: notes => this.notesSignal.set(notes),
+      next: (notes) => this.notesSignal.set(notes as Note[]),
       error: () => {
         this.useLocalStorageSignal.set(true);
         this.loadFromLocal();
@@ -70,7 +69,7 @@ export class NotesService {
       this.saveLocal();
     } else {
       this.api.createNote({ title: note.title, content: note.content }).subscribe({
-        next: created => this.notesSignal.set([created, ...this.notesSignal()]),
+        next: (created) => this.notesSignal.set([created as Note, ...this.notesSignal()]),
         error: () => {
           this.useLocalStorageSignal.set(true);
           this.create(note);
@@ -86,8 +85,8 @@ export class NotesService {
       this.saveLocal();
     } else {
       this.api.updateNote(id, data).subscribe({
-        next: serverNote => {
-          const updated = this.notesSignal().map(n => n.id === id ? serverNote : n);
+        next: (serverNote) => {
+          const updated = this.notesSignal().map(n => n.id === id ? (serverNote as Note) : n);
           this.notesSignal.set(updated);
         },
         error: () => {
