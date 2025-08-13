@@ -9,6 +9,11 @@ export type Frequency = 'daily' | 'weekly' | 'monthly' | 'custom';
 
 type Priority = 'low' | 'medium' | 'high';
 
+export interface TaskHistoryEntry {
+  date: Date;
+  author: Assignee;
+}
+
 export interface Task {
   id: string;
   name: string;
@@ -21,6 +26,7 @@ export interface Task {
   category?: string;
   priority: Priority;
   assignee: Assignee;
+  history?: TaskHistoryEntry[];
 }
 
 export interface NotificationSettings {

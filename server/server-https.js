@@ -168,8 +168,12 @@ app.post('/api/tasks/:id/complete', (req, res) => {
     }
     
     const task = db.tasks[taskIndex];
-    task.lastCompleted = new Date().toISOString();
+    const nowIso = new Date().toISOString();
+    const author = req.header('X-User-Id') || task.assignee || 'unknown';
+    task.lastCompleted = nowIso;
     task.nextDueDate = calculateNextDueDate(task).toISOString();
+    task.history = Array.isArray(task.history) ? task.history : [];
+    task.history.push({ date: nowIso, author });
     
     if (writeDatabase(db)) {
       res.json(task);

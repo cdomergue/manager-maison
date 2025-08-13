@@ -5,14 +5,24 @@
       "category": "Cuisine",
       "frequency": "daily",
       "priority": "medium",
-      "nextDueDate": "2025-08-08T19:57:48.459Z",
+      "nextDueDate": "2025-08-14T21:59:52.971Z",
       "isActive": true,
       "assignee": null,
       "id": "mdt4ujws62h3iuqez1b",
-      "lastCompleted": "2025-08-07T19:57:48.459Z"
+      "lastCompleted": "2025-08-13T21:59:52.971Z",
+      "history": [
+        {
+          "date": "2025-08-13T21:57:59.619Z",
+          "author": "Christophe"
+        },
+        {
+          "date": "2025-08-13T21:59:52.971Z",
+          "author": "Christophe"
+        }
+      ]
     }
   ],
-  "lastUpdated": "2025-08-13T20:45:00.903Z",
+  "lastUpdated": "2025-08-13T21:59:52.971Z",
   "shoppingItems": [
     {
       "id": "me1ugcejd8u37lf652f",

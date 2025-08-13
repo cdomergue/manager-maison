@@ -1,7 +1,7 @@
 import {computed, inject, Injectable, signal} from '@angular/core';
 import {toObservable} from '@angular/core/rxjs-interop';
 import {Observable, of} from 'rxjs';
-import {Task} from '../models/task.model';
+import {Assignee, Task, TaskHistoryEntry} from '../models/task.model';
 import {ApiService} from './api.service';
 import {StorageService} from './storage.service';
 
@@ -79,13 +79,23 @@ export class TaskService {
         const tasks = stored.map((task: Task) => ({
           ...task,
           nextDueDate: new Date(task.nextDueDate),
-          lastCompleted: task.lastCompleted ? new Date(task.lastCompleted) : undefined
+          lastCompleted: task.lastCompleted ? new Date(task.lastCompleted) : undefined,
+          history: this.parseHistory((task as unknown as { history?: { date: string; author: Assignee }[] }).history)
         }));
         this.tasksSignal.set(tasks);
       } catch (error) {
         console.error('Erreur lors du chargement depuis localStorage:', error);
       }
     }
+  }
+
+  private parseHistory(history: unknown): TaskHistoryEntry[] {
+    if (!Array.isArray(history)) return [];
+    return history.map((entry) => {
+      const e = entry as { date: string | Date; author: Assignee };
+      const dateValue = e.date instanceof Date ? e.date : new Date(e.date);
+      return { date: dateValue, author: e.author } as TaskHistoryEntry;
+    });
   }
 
   // Méthodes pour sauvegarder les tâches
@@ -191,11 +201,13 @@ export class TaskService {
       const task = currentTasks.find(t => t.id === taskId);
 
       if (task) {
+        const author = (localStorage.getItem('current_user') as Assignee) || task.assignee;
         const updatedTask = {
           ...task,
           lastCompleted: new Date(),
           nextDueDate: this.calculateNextDueDate(task),
-          isActive: true // Réactiver la tâche
+          isActive: true, // Réactiver la tâche
+          history: [...(task.history || []), { date: new Date(), author }]
         };
         const updatedTasks = currentTasks.map(t => t.id === taskId ? updatedTask : t);
         this.tasksSignal.set(updatedTasks);

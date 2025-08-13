@@ -266,6 +266,12 @@ export class ApiService {
       if (task.lastCompleted) {
         task.lastCompleted = new Date(task.lastCompleted);
       }
+      if (task.history && Array.isArray(task.history)) {
+        task.history = task.history.map(entry => ({
+          ...entry,
+          date: new Date(entry.date as unknown as string)
+        }));
+      }
     });
   }
 

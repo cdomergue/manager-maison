@@ -185,6 +185,7 @@ exports.completeTask = async (event) => {
 
   try {
     const taskId = event.pathParameters.id;
+    const userId = event.headers['X-User-Id'] || event.headers['x-user-id'] || 'unknown';
 
     // Récupérer la tâche existante
     const existing = await dynamodb.get({
@@ -197,10 +198,14 @@ exports.completeTask = async (event) => {
     }
 
     const task = existing.Item;
-    task.lastCompleted = new Date().toISOString();
+    const nowIso = new Date().toISOString();
+    task.lastCompleted = nowIso;
     task.nextDueDate = calculateNextDueDate(task).toISOString();
     task.updatedAt = new Date().toISOString();
     task.isActive = true; // Réactiver la tâche
+    task.history = Array.isArray(task.history) ? task.history : [];
+    const author = userId || task.assignee || 'unknown';
+    task.history.push({ date: nowIso, author });
 
     await dynamodb.put({
       TableName: TABLE_NAME,
