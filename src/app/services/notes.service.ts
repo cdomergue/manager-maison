@@ -19,7 +19,7 @@ export class NotesService {
 
   constructor() {
     setTimeout(() => {
-      this.api.getConnectionStatus().subscribe(isConnected => {
+      this.api.getConnectionStatus().subscribe((isConnected) => {
         if (isConnected) {
           this.useLocalStorageSignal.set(false);
           this.loadFromAPI();
@@ -42,7 +42,7 @@ export class NotesService {
       error: () => {
         this.useLocalStorageSignal.set(true);
         this.loadFromLocal();
-      }
+      },
     });
   }
 
@@ -63,7 +63,7 @@ export class NotesService {
         content: note.content,
         ownerId: localStorage.getItem('current_user') || 'anonymous',
         createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString(),
       };
       this.notesSignal.set([newNote, ...this.notesSignal()]);
       this.saveLocal();
@@ -73,46 +73,46 @@ export class NotesService {
         error: () => {
           this.useLocalStorageSignal.set(true);
           this.create(note);
-        }
+        },
       });
     }
   }
 
   update(id: string, data: Partial<Pick<Note, 'title' | 'content'>>): void {
     if (this.useLocalStorageSignal()) {
-      const updated = this.notesSignal().map(n => n.id === id ? { ...n, ...data, updatedAt: new Date().toISOString() } : n);
+      const updated = this.notesSignal().map((n) =>
+        n.id === id ? { ...n, ...data, updatedAt: new Date().toISOString() } : n,
+      );
       this.notesSignal.set(updated);
       this.saveLocal();
     } else {
       this.api.updateNote(id, data).subscribe({
         next: (serverNote) => {
-          const updated = this.notesSignal().map(n => n.id === id ? (serverNote as Note) : n);
+          const updated = this.notesSignal().map((n) => (n.id === id ? (serverNote as Note) : n));
           this.notesSignal.set(updated);
         },
         error: () => {
           this.useLocalStorageSignal.set(true);
           this.update(id, data);
-        }
+        },
       });
     }
   }
 
   remove(id: string): void {
     if (this.useLocalStorageSignal()) {
-      this.notesSignal.set(this.notesSignal().filter(n => n.id !== id));
+      this.notesSignal.set(this.notesSignal().filter((n) => n.id !== id));
       this.saveLocal();
     } else {
       this.api.deleteNote(id).subscribe({
-        next: () => this.notesSignal.set(this.notesSignal().filter(n => n.id !== id)),
+        next: () => this.notesSignal.set(this.notesSignal().filter((n) => n.id !== id)),
         error: () => {
           this.useLocalStorageSignal.set(true);
           this.remove(id);
-        }
+        },
       });
     }
   }
 
   // partage supprimé
 }
-
-

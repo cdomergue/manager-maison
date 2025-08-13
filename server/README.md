@@ -5,16 +5,18 @@ Ce serveur Node.js unifié fournit à la fois les fichiers statiques de l'applic
 ## 🚀 Installation
 
 1. **Installer les dépendances :**
+
    ```bash
    cd server
    npm install
    ```
 
 2. **Démarrer le serveur :**
+
    ```bash
    # Mode développement (avec redémarrage automatique)
    npm run dev
-   
+
    # Mode production local
    npm run build-and-start
    ```
@@ -136,6 +138,7 @@ Le serveur fournit des informations de statut via `/api/status` :
 ## 🔄 Synchronisation
 
 L'application Angular bascule automatiquement entre :
+
 - **Mode serveur** : Quand le serveur est accessible
 - **Mode local** : Quand le serveur est indisponible
 
@@ -144,15 +147,18 @@ Les données sont synchronisées en temps réel entre tous les utilisateurs conn
 ## 🚨 Dépannage
 
 ### Le serveur ne démarre pas
+
 - Vérifier que le port 3001 est libre
 - Vérifier les permissions du dossier `data/`
 
 ### L'application ne se connecte pas
+
 - Vérifier que le serveur est démarré
 - Vérifier les paramètres CORS
 - En HTTPS, vérifier les certificats
 
 ### Erreurs de base de données
+
 - Vérifier les permissions du fichier `data/tasks.json`
 - Vérifier la syntaxe JSON
 - Restaurer depuis une sauvegarde si nécessaire

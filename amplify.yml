@@ -13,7 +13,7 @@ frontend:
   artifacts:
     baseDirectory: dist/gestion-maison/browser
     files:
-      - '**/*'
+      - "**/*"
   cache:
     paths:
       - node_modules/**/*

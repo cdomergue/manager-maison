@@ -1,11 +1,11 @@
-import {inject, Injectable, signal} from '@angular/core';
-import {Task} from '../models/task.model';
-import {TaskService} from './task.service';
-import {ApiService} from './api.service';
-import {NotificationService} from './notification.service';
+import { inject, Injectable, signal } from '@angular/core';
+import { Task } from '../models/task.model';
+import { TaskService } from './task.service';
+import { ApiService } from './api.service';
+import { NotificationService } from './notification.service';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class BackgroundCheckService {
   private isChecking = signal(false);
@@ -104,16 +104,14 @@ export class BackgroundCheckService {
         }
 
         // Vérifier les tâches en retard
-        const overdueTasks = apiTasks.filter(task =>
-          task.isActive && new Date(task.nextDueDate) < new Date()
-        );
+        const overdueTasks = apiTasks.filter((task) => task.isActive && new Date(task.nextDueDate) < new Date());
 
         // Ne notifier que s'il y a des nouvelles tâches en retard
         if (overdueTasks.length > 0) {
-          const currentOverdueIds = new Set(overdueTasks.map(task => task.id));
+          const currentOverdueIds = new Set(overdueTasks.map((task) => task.id));
 
           // Vérifier s'il y a de nouvelles tâches en retard depuis la dernière notification
-          const hasNewOverdueTasks = overdueTasks.some(task => !this.lastNotifiedOverdueTasks.has(task.id));
+          const hasNewOverdueTasks = overdueTasks.some((task) => !this.lastNotifiedOverdueTasks.has(task.id));
 
           if (hasNewOverdueTasks) {
             this.notificationService.showOverdueNotification(overdueTasks);
@@ -133,8 +131,8 @@ export class BackgroundCheckService {
   }
 
   private detectNewTasks(currentTasks: Task[], apiTasks: Task[]): Task[] {
-    const currentIds = new Set(currentTasks.map(task => task.id));
-    return apiTasks.filter(task => !currentIds.has(task.id));
+    const currentIds = new Set(currentTasks.map((task) => task.id));
+    return apiTasks.filter((task) => !currentIds.has(task.id));
   }
 
   private notifyNewTasks(newTasks: Task[]): void {
@@ -161,7 +159,7 @@ export class BackgroundCheckService {
       isChecking: this.isChecking(),
       lastCheck: this.lastCheckTime(),
       interval: this.checkInterval(),
-      isOnline: navigator.onLine
+      isOnline: navigator.onLine,
     };
   }
 }

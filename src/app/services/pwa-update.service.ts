@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { SwUpdate, VersionEvent } from '@angular/service-worker';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class PwaUpdateService {
   private readonly swUpdate = inject(SwUpdate);
@@ -24,7 +24,7 @@ export class PwaUpdateService {
           this.activateAndReload();
           break;
         case 'VERSION_INSTALLATION_FAILED':
-          console.error('Echec d\'installation de la nouvelle version du Service Worker');
+          console.error("Echec d'installation de la nouvelle version du Service Worker");
           break;
         default:
           // VERSION_DETECTED, NO_NEW_VERSION_DETECTED
@@ -67,9 +67,7 @@ export class PwaUpdateService {
         location.reload();
       }
     } catch (err) {
-      console.error('Erreur lors de l\'activation de la mise à jour PWA:', err);
+      console.error("Erreur lors de l'activation de la mise à jour PWA:", err);
     }
   }
 }
-
-

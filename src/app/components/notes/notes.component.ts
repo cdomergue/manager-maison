@@ -1,7 +1,7 @@
-import {Component, ElementRef, inject, ViewChild, ViewEncapsulation} from '@angular/core';
-import {CommonModule} from '@angular/common';
-import {FormsModule} from '@angular/forms';
-import {NotesService} from '../../services/notes.service';
+import { Component, ElementRef, inject, ViewChild, ViewEncapsulation } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { NotesService } from '../../services/notes.service';
 
 @Component({
   selector: 'app-notes',
@@ -9,7 +9,7 @@ import {NotesService} from '../../services/notes.service';
   imports: [CommonModule, FormsModule],
   encapsulation: ViewEncapsulation.None,
   styleUrls: ['./notes.component.css'],
-  templateUrl: './notes.component.html'
+  templateUrl: './notes.component.html',
 })
 export class NotesComponent {
   private notesService = inject(NotesService);
@@ -33,7 +33,7 @@ export class NotesComponent {
     ul: false,
     ol: false,
     block: 'P',
-    link: false
+    link: false,
   };
 
   private activeEditor: 'create' | 'edit' = 'create';
@@ -216,7 +216,10 @@ export class NotesComponent {
       let node: Node | null | undefined = sel?.anchorNode || null;
       let inLink = false;
       while (node && node !== editor) {
-        if ((node as HTMLElement).nodeName === 'A') { inLink = true; break; }
+        if ((node as HTMLElement).nodeName === 'A') {
+          inLink = true;
+          break;
+        }
         node = node.parentNode;
       }
       this.toolbar.link = inLink;
@@ -225,5 +228,3 @@ export class NotesComponent {
     }
   }
 }
-
-

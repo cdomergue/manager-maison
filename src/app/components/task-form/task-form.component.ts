@@ -1,16 +1,16 @@
-import {Component, EventEmitter, Input, OnInit, Output, inject} from '@angular/core';
-import {CommonModule} from '@angular/common';
-import {FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators} from '@angular/forms';
-import {Assignee, Task} from '../../models/task.model';
-import {CategoryService} from '../../services/category.service';
-import {Category} from '../../models/category.model';
-import {TaskService} from '../../services/task.service';
+import { Component, EventEmitter, Input, OnInit, Output, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Assignee, Task } from '../../models/task.model';
+import { CategoryService } from '../../services/category.service';
+import { Category } from '../../models/category.model';
+import { TaskService } from '../../services/task.service';
 
 @Component({
   selector: 'app-task-form',
-  imports: [ CommonModule, FormsModule, ReactiveFormsModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule],
   templateUrl: './task-form.component.html',
-  styleUrls: ['./task-form.component.css']
+  styleUrls: ['./task-form.component.css'],
 })
 export class TaskFormComponent implements OnInit {
   @Input() task?: Task;
@@ -24,12 +24,12 @@ export class TaskFormComponent implements OnInit {
     { value: 'daily', label: 'Quotidienne' },
     { value: 'weekly', label: 'Hebdomadaire' },
     { value: 'monthly', label: 'Mensuelle' },
-    { value: 'custom', label: 'Personnalisée' }
+    { value: 'custom', label: 'Personnalisée' },
   ];
   priorities = [
     { value: 'low', label: 'Basse' },
     { value: 'medium', label: 'Moyenne' },
-    { value: 'high', label: 'Haute' }
+    { value: 'high', label: 'Haute' },
   ];
 
   private fb = inject(FormBuilder);
@@ -45,15 +45,13 @@ export class TaskFormComponent implements OnInit {
       customDays: [7],
       priority: ['medium', Validators.required],
       nextDueDate: ['', Validators.required],
-      assignee: ['']
+      assignee: [''],
     });
   }
 
   ngOnInit(): void {
     // Charger les catégories
-    this.categoryService.getCategories().subscribe(
-      categories => this.categories = categories
-    );
+    this.categoryService.getCategories().subscribe((categories) => (this.categories = categories));
 
     if (this.task) {
       this.taskForm.patchValue({
@@ -63,19 +61,19 @@ export class TaskFormComponent implements OnInit {
         frequency: this.task.frequency,
         customDays: this.task.customDays || 7,
         priority: this.task.priority,
-        nextDueDate: this.formatDateForInput(this.task.nextDueDate)
+        nextDueDate: this.formatDateForInput(this.task.nextDueDate),
       });
     } else {
       // Date par défaut : demain
       const tomorrow = new Date();
       tomorrow.setDate(tomorrow.getDate() + 1);
       this.taskForm.patchValue({
-        nextDueDate: this.formatDateForInput(tomorrow)
+        nextDueDate: this.formatDateForInput(tomorrow),
       });
     }
 
     // Écouter les changements de fréquence pour ajuster les jours personnalisés
-    this.taskForm.get('frequency')?.valueChanges.subscribe(frequency => {
+    this.taskForm.get('frequency')?.valueChanges.subscribe((frequency) => {
       if (frequency === 'custom') {
         this.taskForm.get('customDays')?.enable();
       } else {
@@ -97,14 +95,14 @@ export class TaskFormComponent implements OnInit {
         priority: formValue.priority,
         nextDueDate: new Date(formValue.nextDueDate),
         isActive: true,
-        assignee: formValue.assignee
+        assignee: formValue.assignee,
       };
 
       if (this.task) {
         // Mode édition
         const updatedTask: Task = {
           ...this.task,
-          ...taskData
+          ...taskData,
         };
         this.taskService.updateTask(updatedTask);
         this.taskSaved.emit(updatedTask);

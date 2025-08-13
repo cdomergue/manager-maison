@@ -1,6 +1,6 @@
-import {computed, Injectable, signal} from '@angular/core';
+import { computed, Injectable, signal } from '@angular/core';
 
-@Injectable({providedIn: 'root'})
+@Injectable({ providedIn: 'root' })
 export class LoadingService {
   private readonly pendingRequestsCount = signal<number>(0);
   readonly isLoading = computed(() => this.pendingRequestsCount() > 0);
@@ -14,5 +14,3 @@ export class LoadingService {
     this.pendingRequestsCount.set(next < 0 ? 0 : next);
   }
 }
-
-

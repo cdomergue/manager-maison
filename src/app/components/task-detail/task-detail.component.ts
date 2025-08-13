@@ -1,12 +1,12 @@
-import {Component, EventEmitter, Input, Output} from '@angular/core';
-import {CommonModule} from '@angular/common';
-import {Task} from '../../models/task.model';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { Task } from '../../models/task.model';
 
 @Component({
   selector: 'app-task-detail',
   imports: [CommonModule],
   templateUrl: './task-detail.component.html',
-  styleUrls: ['./task-detail.component.css']
+  styleUrls: ['./task-detail.component.css'],
 })
 export class TaskDetailComponent {
   @Input() task!: Task;
@@ -17,18 +17,18 @@ export class TaskDetailComponent {
   @Output() toggleActive = new EventEmitter<Task>();
 
   priorities = [
-    {value: 'low', label: 'Basse', color: 'text-green-600'},
-    {value: 'medium', label: 'Moyenne', color: 'text-yellow-600'},
-    {value: 'high', label: 'Haute', color: 'text-red-600'}
+    { value: 'low', label: 'Basse', color: 'text-green-600' },
+    { value: 'medium', label: 'Moyenne', color: 'text-yellow-600' },
+    { value: 'high', label: 'Haute', color: 'text-red-600' },
   ];
 
   getPriorityColor(priority: string): string {
-    const priorityObj = this.priorities.find(p => p.value === priority);
+    const priorityObj = this.priorities.find((p) => p.value === priority);
     return priorityObj ? priorityObj.color : 'text-gray-600';
   }
 
   getPriorityLabel(priority: string): string {
-    const priorityObj = this.priorities.find(p => p.value === priority);
+    const priorityObj = this.priorities.find((p) => p.value === priority);
     return priorityObj ? priorityObj.label : 'Inconnue';
   }
 
@@ -41,7 +41,7 @@ export class TaskDetailComponent {
     if (diffDays < 0) {
       return `En retard de ${Math.abs(diffDays)} jour(s)`;
     } else if (diffDays === 0) {
-      return 'Aujourd\'hui';
+      return "Aujourd'hui";
     } else if (diffDays === 1) {
       return 'Demain';
     } else {
@@ -62,7 +62,7 @@ export class TaskDetailComponent {
     return new Date(date).toLocaleDateString('fr-FR', {
       day: '2-digit',
       month: '2-digit',
-      year: 'numeric'
+      year: 'numeric',
     });
   }
 
@@ -78,7 +78,7 @@ export class TaskDetailComponent {
       month: '2-digit',
       year: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
     });
   }
 }

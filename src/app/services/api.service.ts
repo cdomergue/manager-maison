@@ -1,13 +1,13 @@
-import {Injectable, inject} from '@angular/core';
-import {HttpClient, HttpContext, HttpErrorResponse, HttpHeaders} from '@angular/common/http';
-import {BehaviorSubject, Observable, throwError} from 'rxjs';
-import {catchError, tap} from 'rxjs/operators';
-import {Task} from '../models/task.model';
-import {ShoppingItem, ShoppingListEntry} from '../models/shopping-item.model';
-import {SKIP_GLOBAL_LOADING} from '../http/http-context.tokens';
+import { Injectable, inject } from '@angular/core';
+import { HttpClient, HttpContext, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
+import { BehaviorSubject, Observable, throwError } from 'rxjs';
+import { catchError, tap } from 'rxjs/operators';
+import { Task } from '../models/task.model';
+import { ShoppingItem, ShoppingListEntry } from '../models/shopping-item.model';
+import { SKIP_GLOBAL_LOADING } from '../http/http-context.tokens';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class ApiService {
   // URL AWS Lambda en production, local en développement
@@ -26,7 +26,7 @@ export class ApiService {
     const userId = this.getCurrentUserIdSafely();
     const base = {
       'Content-Type': 'application/json',
-      'X-Secret-Key': this.YOU_KNOW_WHAT
+      'X-Secret-Key': this.YOU_KNOW_WHAT,
     } as Record<string, string>;
     if (userId) base['X-User-Id'] = userId;
     return new HttpHeaders(base);
@@ -53,13 +53,12 @@ export class ApiService {
 
   // Vérifier le statut du serveur
   checkServerStatus(): void {
-    this.http.get<unknown>(
-      `${this.API_BASE_URL}/status`,
-      {headers: this.getHeaders(), context: new HttpContext().set(SKIP_GLOBAL_LOADING, true)}
-    )
-      .pipe(
-        catchError(this.handleError)
-      )
+    this.http
+      .get<unknown>(`${this.API_BASE_URL}/status`, {
+        headers: this.getHeaders(),
+        context: new HttpContext().set(SKIP_GLOBAL_LOADING, true),
+      })
+      .pipe(catchError(this.handleError))
       .subscribe({
         next: (status: unknown) => {
           this.connectionStatus.next(true);
@@ -69,17 +68,19 @@ export class ApiService {
           console.warn('Serveur non accessible');
           this.connectionStatus.next(false);
           this.serverStatus.next(null);
-        }
+        },
       });
   }
 
   // Version asynchrone pour la vérification en arrière-plan
   async checkServerStatusAsync(): Promise<boolean> {
     try {
-      const status = await this.http.get<unknown>(
-        `${this.API_BASE_URL}/status`,
-        {headers: this.getHeaders(), context: new HttpContext().set(SKIP_GLOBAL_LOADING, true)}
-      ).toPromise();
+      const status = await this.http
+        .get<unknown>(`${this.API_BASE_URL}/status`, {
+          headers: this.getHeaders(),
+          context: new HttpContext().set(SKIP_GLOBAL_LOADING, true),
+        })
+        .toPromise();
       this.connectionStatus.next(true);
       this.serverStatus.next(status ?? null);
       return true;
@@ -93,10 +94,13 @@ export class ApiService {
   // Version asynchrone pour récupérer les tâches
   async getTasksAsync(): Promise<Task[]> {
     try {
-      return await this.http.get<Task[]>(
-        `${this.API_BASE_URL}/tasks`,
-        {headers: this.getHeaders(), context: new HttpContext().set(SKIP_GLOBAL_LOADING, true)}
-      ).toPromise() || [];
+      return (
+        (await this.http
+          .get<
+            Task[]
+          >(`${this.API_BASE_URL}/tasks`, { headers: this.getHeaders(), context: new HttpContext().set(SKIP_GLOBAL_LOADING, true) })
+          .toPromise()) || []
+      );
     } catch (error) {
       console.warn('Erreur lors de la récupération des tâches:', error);
       return [];
@@ -115,85 +119,88 @@ export class ApiService {
 
   // Méthodes HTTP génériques
   get<T>(path: string): Observable<T> {
-    return this.http.get<T>(`${this.API_BASE_URL}${path}`, {headers: this.getHeaders()})
+    return this.http
+      .get<T>(`${this.API_BASE_URL}${path}`, { headers: this.getHeaders() })
       .pipe(catchError(this.handleError));
   }
 
   post<T>(path: string, body: unknown): Observable<T> {
-    return this.http.post<T>(`${this.API_BASE_URL}${path}`, body, {headers: this.getHeaders()})
+    return this.http
+      .post<T>(`${this.API_BASE_URL}${path}`, body, { headers: this.getHeaders() })
       .pipe(catchError(this.handleError));
   }
 
   put<T>(path: string, body: unknown): Observable<T> {
-    return this.http.put<T>(`${this.API_BASE_URL}${path}`, body, {headers: this.getHeaders()})
+    return this.http
+      .put<T>(`${this.API_BASE_URL}${path}`, body, { headers: this.getHeaders() })
       .pipe(catchError(this.handleError));
   }
 
   delete<T>(path: string): Observable<T> {
-    return this.http.delete<T>(`${this.API_BASE_URL}${path}`, {headers: this.getHeaders()})
+    return this.http
+      .delete<T>(`${this.API_BASE_URL}${path}`, { headers: this.getHeaders() })
       .pipe(catchError(this.handleError));
   }
 
   // Récupérer toutes les tâches
   getTasks(silent = false): Observable<Task[]> {
     const context = silent ? new HttpContext().set(SKIP_GLOBAL_LOADING, true) : new HttpContext();
-    return this.http.get<Task[]>(`${this.API_BASE_URL}/tasks`, {headers: this.getHeaders(), context})
-      .pipe(
-        tap(tasks => this.convertDates(tasks)),
-        catchError(this.handleError)
-      );
+    return this.http.get<Task[]>(`${this.API_BASE_URL}/tasks`, { headers: this.getHeaders(), context }).pipe(
+      tap((tasks) => this.convertDates(tasks)),
+      catchError(this.handleError),
+    );
   }
 
   // Créer une nouvelle tâche
   createTask(task: Omit<Task, 'id'>): Observable<Task> {
-    return this.http.post<Task>(`${this.API_BASE_URL}/tasks`, task, {headers: this.getHeaders()})
-      .pipe(
-        tap(task => this.convertDates([task])),
-        catchError(this.handleError)
-      );
+    return this.http.post<Task>(`${this.API_BASE_URL}/tasks`, task, { headers: this.getHeaders() }).pipe(
+      tap((task) => this.convertDates([task])),
+      catchError(this.handleError),
+    );
   }
 
   // Mettre à jour une tâche
   updateTask(task: Task): Observable<Task> {
-    return this.http.put<Task>(`${this.API_BASE_URL}/tasks/${task.id}`, task, {headers: this.getHeaders()})
-      .pipe(
-        tap(task => this.convertDates([task])),
-        catchError(this.handleError)
-      );
+    return this.http.put<Task>(`${this.API_BASE_URL}/tasks/${task.id}`, task, { headers: this.getHeaders() }).pipe(
+      tap((task) => this.convertDates([task])),
+      catchError(this.handleError),
+    );
   }
 
   // Supprimer une tâche
   deleteTask(taskId: string): Observable<void> {
-    return this.http.delete<void>(`${this.API_BASE_URL}/tasks/${taskId}`, {headers: this.getHeaders()})
-      .pipe(
-        catchError(this.handleError)
-      );
+    return this.http
+      .delete<void>(`${this.API_BASE_URL}/tasks/${taskId}`, { headers: this.getHeaders() })
+      .pipe(catchError(this.handleError));
   }
 
   // Marquer une tâche comme terminée
   completeTask(taskId: string): Observable<Task> {
-    return this.http.post<Task>(`${this.API_BASE_URL}/tasks/${taskId}/complete`, {}, {headers: this.getHeaders()})
+    return this.http
+      .post<Task>(`${this.API_BASE_URL}/tasks/${taskId}/complete`, {}, { headers: this.getHeaders() })
       .pipe(
-        tap(task => this.convertDates([task])),
-        catchError(this.handleError)
+        tap((task) => this.convertDates([task])),
+        catchError(this.handleError),
       );
   }
 
   // Récupérer les tâches en retard
   getOverdueTasks(): Observable<Task[]> {
-    return this.http.get<Task[]>(`${this.API_BASE_URL}/tasks/overdue`, {headers: this.getHeaders()})
-      .pipe(
-        tap(tasks => this.convertDates(tasks)),
-        catchError(this.handleError)
-      );
+    return this.http.get<Task[]>(`${this.API_BASE_URL}/tasks/overdue`, { headers: this.getHeaders() }).pipe(
+      tap((tasks) => this.convertDates(tasks)),
+      catchError(this.handleError),
+    );
   }
 
   // Récupérer les tâches par catégorie
   getTasksByCategory(category: string): Observable<Task[]> {
-    return this.http.get<Task[]>(`${this.API_BASE_URL}/tasks/category/${encodeURIComponent(category)}`, {headers: this.getHeaders()})
+    return this.http
+      .get<
+        Task[]
+      >(`${this.API_BASE_URL}/tasks/category/${encodeURIComponent(category)}`, { headers: this.getHeaders() })
       .pipe(
-        tap(tasks => this.convertDates(tasks)),
-        catchError(this.handleError)
+        tap((tasks) => this.convertDates(tasks)),
+        catchError(this.handleError),
       );
   }
 
@@ -203,7 +210,7 @@ export class ApiService {
   }
 
   createShoppingItem(name: string, category?: string): Observable<ShoppingItem> {
-    return this.post<ShoppingItem>('/shopping/items', {name, category});
+    return this.post<ShoppingItem>('/shopping/items', { name, category });
   }
 
   deleteShoppingItem(itemId: string): Observable<void> {
@@ -215,10 +222,13 @@ export class ApiService {
   }
 
   addShoppingEntry(itemId: string, quantity: number): Observable<ShoppingListEntry> {
-    return this.post<ShoppingListEntry>('/shopping/list', {itemId, quantity});
+    return this.post<ShoppingListEntry>('/shopping/list', { itemId, quantity });
   }
 
-  updateShoppingEntry(entryId: string, data: Partial<Pick<ShoppingListEntry, 'quantity' | 'checked'>>): Observable<ShoppingListEntry> {
+  updateShoppingEntry(
+    entryId: string,
+    data: Partial<Pick<ShoppingListEntry, 'quantity' | 'checked'>>,
+  ): Observable<ShoppingListEntry> {
     return this.put<ShoppingListEntry>(`/shopping/list/${entryId}`, data);
   }
 
@@ -259,7 +269,7 @@ export class ApiService {
 
   // Convertir les dates ISO en objets Date
   private convertDates(tasks: Task[]): void {
-    tasks.forEach(task => {
+    tasks.forEach((task) => {
       if (task.nextDueDate) {
         task.nextDueDate = new Date(task.nextDueDate);
       }
@@ -267,9 +277,9 @@ export class ApiService {
         task.lastCompleted = new Date(task.lastCompleted);
       }
       if (task.history && Array.isArray(task.history)) {
-        task.history = task.history.map(entry => ({
+        task.history = task.history.map((entry) => ({
           ...entry,
-          date: new Date(entry.date as unknown as string)
+          date: new Date(entry.date as unknown as string),
         }));
       }
     });

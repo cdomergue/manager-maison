@@ -1,16 +1,16 @@
-import {Component, OnInit, inject} from '@angular/core';
-import {CommonModule} from '@angular/common';
-import {FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators} from '@angular/forms';
-import {RouterModule} from '@angular/router';
-import {NotificationSettings} from '../../models/task.model';
-import {NotificationService} from '../../services/notification.service';
-import {SwPush} from '@angular/service-worker';
+import { Component, OnInit, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { RouterModule } from '@angular/router';
+import { NotificationSettings } from '../../models/task.model';
+import { NotificationService } from '../../services/notification.service';
+import { SwPush } from '@angular/service-worker';
 
 @Component({
   selector: 'app-notifications-config',
   imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterModule],
   templateUrl: './notifications-config.component.html',
-  styleUrls: ['./notifications-config.component.css']
+  styleUrls: ['./notifications-config.component.css'],
 })
 export class NotificationsConfigComponent implements OnInit {
   configForm: FormGroup;
@@ -24,7 +24,7 @@ export class NotificationsConfigComponent implements OnInit {
     this.configForm = this.fb.group({
       enabled: [true],
       reminderTime: ['09:00', [Validators.required, Validators.pattern(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/)]],
-      advanceNotice: [2, [Validators.required, Validators.min(0), Validators.max(24)]]
+      advanceNotice: [2, [Validators.required, Validators.min(0), Validators.max(24)]],
     });
   }
 
@@ -69,7 +69,7 @@ export class NotificationsConfigComponent implements OnInit {
   private checkNotificationPermission(): void {
     if (this.swPush.isEnabled) {
       // Vérifier si nous avons une subscription active
-      this.swPush.subscription.subscribe(subscription => {
+      this.swPush.subscription.subscribe((subscription) => {
         this.notificationPermission = subscription ? 'granted' : 'default';
       });
     } else if ('Notification' in window) {
@@ -79,17 +79,23 @@ export class NotificationsConfigComponent implements OnInit {
 
   get permissionStatusText(): string {
     switch (this.notificationPermission) {
-      case 'granted': return 'Autorisées';
-      case 'denied': return 'Refusées';
-      default: return 'Non définies';
+      case 'granted':
+        return 'Autorisées';
+      case 'denied':
+        return 'Refusées';
+      default:
+        return 'Non définies';
     }
   }
 
   get permissionStatusClass(): string {
     switch (this.notificationPermission) {
-      case 'granted': return 'text-green-600';
-      case 'denied': return 'text-red-600';
-      default: return 'text-yellow-600';
+      case 'granted':
+        return 'text-green-600';
+      case 'denied':
+        return 'text-red-600';
+      default:
+        return 'text-yellow-600';
     }
   }
 }

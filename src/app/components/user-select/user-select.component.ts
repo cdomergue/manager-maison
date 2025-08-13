@@ -17,7 +17,8 @@ import { User } from '../../models/user.model';
                 (click)="selectUser(user)"
                 class="w-full py-3 px-4 text-lg rounded-lg border-2 transition-all
                        hover:border-blue-500 hover:bg-blue-50
-                       focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                       focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              >
                 {{ user.displayName }}
               </button>
             }
@@ -25,7 +26,7 @@ import { User } from '../../models/user.model';
         </div>
       </div>
     }
-  `
+  `,
 })
 export class UserSelectComponent implements OnInit {
   isUserSelected = false;
@@ -35,9 +36,7 @@ export class UserSelectComponent implements OnInit {
 
   ngOnInit() {
     this.availableUsers = this.userService.getAvailableUsers();
-    this.userService.currentUser$.subscribe(
-      user => this.isUserSelected = !!user
-    );
+    this.userService.currentUser$.subscribe((user) => (this.isUserSelected = !!user));
   }
 
   selectUser(user: User) {

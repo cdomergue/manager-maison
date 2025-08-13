@@ -3,13 +3,13 @@ import { BehaviorSubject } from 'rxjs';
 import { User, UserType } from '../models/user.model';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class UserService {
   private readonly STORAGE_KEY = 'current_user';
   private readonly AVAILABLE_USERS: User[] = [
     { id: 'Christophe', displayName: 'Christophe' },
-    { id: 'Laurence', displayName: 'Laurence' }
+    { id: 'Laurence', displayName: 'Laurence' },
   ];
 
   private currentUserSubject = new BehaviorSubject<User | null>(null);
@@ -22,7 +22,7 @@ export class UserService {
   private loadStoredUser() {
     const storedUserId = localStorage.getItem(this.STORAGE_KEY);
     if (storedUserId) {
-      const user = this.AVAILABLE_USERS.find(u => u.id === storedUserId);
+      const user = this.AVAILABLE_USERS.find((u) => u.id === storedUserId);
       if (user) {
         this.currentUserSubject.next(user);
       }
@@ -30,7 +30,7 @@ export class UserService {
   }
 
   setCurrentUser(userId: UserType) {
-    const user = this.AVAILABLE_USERS.find(u => u.id === userId);
+    const user = this.AVAILABLE_USERS.find((u) => u.id === userId);
     if (user) {
       localStorage.setItem(this.STORAGE_KEY, user.id);
       this.currentUserSubject.next(user);

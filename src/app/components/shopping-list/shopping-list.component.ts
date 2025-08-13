@@ -1,13 +1,13 @@
-import {Component, computed, signal, inject} from '@angular/core';
-import {CommonModule} from '@angular/common';
-import {FormsModule} from '@angular/forms';
-import {ShoppingListService} from '../../services/shopping-list.service';
+import { Component, computed, signal, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { ShoppingListService } from '../../services/shopping-list.service';
 
 @Component({
   selector: 'app-shopping-list',
   imports: [CommonModule, FormsModule],
   templateUrl: 'shopping-list.component.html',
-  styleUrls: ['shopping-list.component.css']
+  styleUrls: ['shopping-list.component.css'],
 })
 export class ShoppingListComponent {
   newItemName = signal<string>('');
@@ -21,7 +21,7 @@ export class ShoppingListComponent {
     const term = this.search().toLowerCase().trim();
     const items = this.shopping.items();
     if (!term) return items;
-    return items.filter(i => i.name.toLowerCase().includes(term) || i.category?.toLowerCase().includes(term));
+    return items.filter((i) => i.name.toLowerCase().includes(term) || i.category?.toLowerCase().includes(term));
   });
 
   addCatalogItem(): void {
@@ -53,5 +53,3 @@ export class ShoppingListComponent {
     this.shopping.removeFromCurrentList(entryId);
   }
 }
-
-

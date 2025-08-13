@@ -1,7 +1,7 @@
-import {inject, Injectable, signal, computed} from '@angular/core';
-import {StorageService} from './storage.service';
-import {ShoppingItem, ShoppingListEntry} from '../models/shopping-item.model';
-import {ApiService} from './api.service';
+import { inject, Injectable, signal, computed } from '@angular/core';
+import { StorageService } from './storage.service';
+import { ShoppingItem, ShoppingListEntry } from '../models/shopping-item.model';
+import { ApiService } from './api.service';
 
 @Injectable({ providedIn: 'root' })
 export class ShoppingListService {
@@ -17,11 +17,11 @@ export class ShoppingListService {
 
   readonly items = this.itemsSignal.asReadonly();
   readonly currentList = this.currentListSignal.asReadonly();
-  readonly uncheckedCount = computed(() => this.currentListSignal().filter(e => !e.checked).length);
+  readonly uncheckedCount = computed(() => this.currentListSignal().filter((e) => !e.checked).length);
 
   constructor() {
     // Décider du mode de synchronisation en fonction de l'API
-    this.api.getConnectionStatus().subscribe(isConnected => {
+    this.api.getConnectionStatus().subscribe((isConnected) => {
       this.useLocalStorageSignal.set(!isConnected);
       if (isConnected) {
         this.loadFromApi();
@@ -44,8 +44,8 @@ export class ShoppingListService {
   }
 
   private loadFromApi(): void {
-    this.api.getShoppingItems().subscribe(items => this.itemsSignal.set(items));
-    this.api.getShoppingList().subscribe(list => this.currentListSignal.set(list));
+    this.api.getShoppingItems().subscribe((items) => this.itemsSignal.set(items));
+    this.api.getShoppingList().subscribe((list) => this.currentListSignal.set(list));
   }
 
   addCatalogItem(name: string, category?: string): ShoppingItem {
@@ -56,43 +56,45 @@ export class ShoppingListService {
       const newItem: ShoppingItem = {
         id: Date.now().toString(36) + Math.random().toString(36).slice(2),
         name: trimmed,
-        category: category?.trim() || undefined
+        category: category?.trim() || undefined,
       };
       this.itemsSignal.set([newItem, ...this.itemsSignal()]);
       this.persist();
       return newItem;
     } else {
       let created: ShoppingItem | null = null;
-      this.api.createShoppingItem(trimmed, category).subscribe(item => {
+      this.api.createShoppingItem(trimmed, category).subscribe((item) => {
         created = item;
         this.itemsSignal.set([item, ...this.itemsSignal()]);
       });
       // Retour optimiste si besoin
-      return created || { id: 'pending', name: trimmed, category } as ShoppingItem;
+      return created || ({ id: 'pending', name: trimmed, category } as ShoppingItem);
     }
   }
 
   removeCatalogItem(itemId: string): void {
     if (this.useLocalStorageSignal()) {
-      this.itemsSignal.set(this.itemsSignal().filter(i => i.id !== itemId));
-      this.currentListSignal.set(this.currentListSignal().filter(e => e.itemId !== itemId));
+      this.itemsSignal.set(this.itemsSignal().filter((i) => i.id !== itemId));
+      this.currentListSignal.set(this.currentListSignal().filter((e) => e.itemId !== itemId));
       this.persist();
     } else {
       this.api.deleteShoppingItem(itemId).subscribe(() => {
-        this.itemsSignal.set(this.itemsSignal().filter(i => i.id !== itemId));
-        this.currentListSignal.set(this.currentListSignal().filter(e => e.itemId !== itemId));
+        this.itemsSignal.set(this.itemsSignal().filter((i) => i.id !== itemId));
+        this.currentListSignal.set(this.currentListSignal().filter((e) => e.itemId !== itemId));
       });
     }
   }
 
   addToCurrentList(itemId: string, quantity = 1): void {
-    const item = this.itemsSignal().find(i => i.id === itemId);
+    const item = this.itemsSignal().find((i) => i.id === itemId);
     if (!item) return;
 
     if (this.useLocalStorageSignal()) {
-      const existing = this.currentListSignal().find(e => e.itemId === itemId && !e.checked);
+      const existing = this.currentListSignal().find((e) => e.itemId === itemId && !e.checked);
       if (existing) {
-        const updated = this.currentListSignal().map(e => e.id === existing.id ? { ...e, quantity: e.quantity + quantity } : e);
+        const updated = this.currentListSignal().map((e) =>
+          e.id === existing.id ? { ...e, quantity: e.quantity + quantity } : e,
+        );
         this.currentListSignal.set(updated);
       } else {
         const entry: ShoppingListEntry = {
@@ -100,15 +102,15 @@ export class ShoppingListService {
           itemId: item.id,
           name: item.name,
           quantity: Math.max(1, quantity),
-          checked: false
+          checked: false,
         };
         this.currentListSignal.set([entry, ...this.currentListSignal()]);
       }
       this.persist();
     } else {
-      this.api.addShoppingEntry(itemId, quantity).subscribe(entry => {
+      this.api.addShoppingEntry(itemId, quantity).subscribe((entry) => {
         // Si l'API a agrégé, remplacer/mettre à jour l'entrée
-        const idx = this.currentListSignal().findIndex(e => e.id === entry.id);
+        const idx = this.currentListSignal().findIndex((e) => e.id === entry.id);
         if (idx !== -1) {
           const updated = [...this.currentListSignal()];
           updated[idx] = entry;
@@ -121,32 +123,32 @@ export class ShoppingListService {
   }
 
   updateQuantity(entryId: string, delta: number): void {
-    const entry = this.currentListSignal().find(e => e.id === entryId);
+    const entry = this.currentListSignal().find((e) => e.id === entryId);
     if (!entry) return;
     const newQty = Math.max(1, entry.quantity + delta);
     if (this.useLocalStorageSignal()) {
-      const updated = this.currentListSignal().map(e => e.id === entryId ? { ...e, quantity: newQty } : e);
+      const updated = this.currentListSignal().map((e) => (e.id === entryId ? { ...e, quantity: newQty } : e));
       this.currentListSignal.set(updated);
       this.persist();
     } else {
-      this.api.updateShoppingEntry(entryId, { quantity: newQty }).subscribe(updatedEntry => {
-        const updated = this.currentListSignal().map(e => e.id === entryId ? updatedEntry : e);
+      this.api.updateShoppingEntry(entryId, { quantity: newQty }).subscribe((updatedEntry) => {
+        const updated = this.currentListSignal().map((e) => (e.id === entryId ? updatedEntry : e));
         this.currentListSignal.set(updated);
       });
     }
   }
 
   toggleChecked(entryId: string): void {
-    const entry = this.currentListSignal().find(e => e.id === entryId);
+    const entry = this.currentListSignal().find((e) => e.id === entryId);
     if (!entry) return;
     const newChecked = !entry.checked;
     if (this.useLocalStorageSignal()) {
-      const updated = this.currentListSignal().map(e => e.id === entryId ? { ...e, checked: newChecked } : e);
+      const updated = this.currentListSignal().map((e) => (e.id === entryId ? { ...e, checked: newChecked } : e));
       this.currentListSignal.set(updated);
       this.persist();
     } else {
-      this.api.updateShoppingEntry(entryId, { checked: newChecked }).subscribe(updatedEntry => {
-        const updated = this.currentListSignal().map(e => e.id === entryId ? updatedEntry : e);
+      this.api.updateShoppingEntry(entryId, { checked: newChecked }).subscribe((updatedEntry) => {
+        const updated = this.currentListSignal().map((e) => (e.id === entryId ? updatedEntry : e));
         this.currentListSignal.set(updated);
       });
     }
@@ -154,22 +156,22 @@ export class ShoppingListService {
 
   removeFromCurrentList(entryId: string): void {
     if (this.useLocalStorageSignal()) {
-      this.currentListSignal.set(this.currentListSignal().filter(e => e.id !== entryId));
+      this.currentListSignal.set(this.currentListSignal().filter((e) => e.id !== entryId));
       this.persist();
     } else {
       this.api.deleteShoppingEntry(entryId).subscribe(() => {
-        this.currentListSignal.set(this.currentListSignal().filter(e => e.id !== entryId));
+        this.currentListSignal.set(this.currentListSignal().filter((e) => e.id !== entryId));
       });
     }
   }
 
   clearChecked(): void {
     if (this.useLocalStorageSignal()) {
-      this.currentListSignal.set(this.currentListSignal().filter(e => !e.checked));
+      this.currentListSignal.set(this.currentListSignal().filter((e) => !e.checked));
       this.persist();
     } else {
       this.api.clearCheckedShoppingList().subscribe(() => {
-        this.currentListSignal.set(this.currentListSignal().filter(e => !e.checked));
+        this.currentListSignal.set(this.currentListSignal().filter((e) => !e.checked));
       });
     }
   }
@@ -185,5 +187,3 @@ export class ShoppingListService {
     }
   }
 }
-
-

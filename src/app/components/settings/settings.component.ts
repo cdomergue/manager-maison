@@ -10,7 +10,7 @@ import { BackgroundCheckService } from '../../services/background-check.service'
   selector: 'app-settings',
   imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './settings.component.html',
-  styleUrl: './settings.component.css'
+  styleUrl: './settings.component.css',
 })
 export class SettingsComponent implements OnInit {
   storageSize = signal(0);
@@ -37,12 +37,12 @@ export class SettingsComponent implements OnInit {
   }
 
   private checkServerStatus(): void {
-    this.apiService.getConnectionStatus().subscribe(isConnected => {
+    this.apiService.getConnectionStatus().subscribe((isConnected) => {
       this.isServerConnected.set(isConnected);
       this.connectionStatus.set(isConnected ? 'Connecté' : 'Non connecté');
     });
 
-    this.apiService.getServerStatus().subscribe(status => {
+    this.apiService.getServerStatus().subscribe((status) => {
       this.serverStatus.set(status as ServerStatus | null);
     });
   }

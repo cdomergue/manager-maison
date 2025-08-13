@@ -1,16 +1,16 @@
-import {Component, computed, inject} from '@angular/core';
-import {RouterLink, RouterLinkActive, RouterOutlet} from '@angular/router';
-import {UserSelectComponent} from './components/user-select/user-select.component';
-import {LoadingService} from './services/loading.service';
-import {BackgroundCheckService} from './services/background-check.service';
-import {DatePipe, NgOptimizedImage} from '@angular/common';
-import {PwaUpdateService} from './services/pwa-update.service';
+import { Component, computed, inject } from '@angular/core';
+import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { UserSelectComponent } from './components/user-select/user-select.component';
+import { LoadingService } from './services/loading.service';
+import { BackgroundCheckService } from './services/background-check.service';
+import { DatePipe, NgOptimizedImage } from '@angular/common';
+import { PwaUpdateService } from './services/pwa-update.service';
 
 @Component({
   selector: 'app-root',
   imports: [RouterOutlet, RouterLink, RouterLinkActive, UserSelectComponent, DatePipe, NgOptimizedImage],
   templateUrl: './app.html',
-  styleUrl: './app.css'
+  styleUrl: './app.css',
 })
 export class App {
   protected readonly loading = inject(LoadingService);

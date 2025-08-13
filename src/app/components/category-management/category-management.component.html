@@ -4,14 +4,13 @@
       <h2 class="text-2xl font-bold">Gestion des catégories</h2>
       @if (!showForm) {
         <div class="flex space-x-2">
-          <button
-            (click)="goBack()"
-            class="bg-gray-300 hover:bg-gray-400 text-gray-700 font-bold py-2 px-4 rounded">
+          <button (click)="goBack()" class="bg-gray-300 hover:bg-gray-400 text-gray-700 font-bold py-2 px-4 rounded">
             Retour
           </button>
           <button
             (click)="showForm = true"
-            class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+            class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+          >
             Nouvelle catégorie
           </button>
         </div>
@@ -22,68 +21,66 @@
   @if (showForm) {
     <div class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
       <h3 class="text-xl font-semibold mb-4">
-        {{ editingCategory ? 'Modifier la catégorie' : 'Nouvelle catégorie' }}
+        {{ editingCategory ? "Modifier la catégorie" : "Nouvelle catégorie" }}
       </h3>
       <form [formGroup]="categoryForm" (ngSubmit)="onSubmit()">
         <div class="mb-4">
-          <label class="block text-gray-700 text-sm font-bold mb-2" for="name">
-            Nom
-          </label>
+          <label class="block text-gray-700 text-sm font-bold mb-2" for="name"> Nom </label>
           <input
             class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
             id="name"
             type="text"
             formControlName="name"
-            placeholder="Nom de la catégorie">
+            placeholder="Nom de la catégorie"
+          />
         </div>
 
         <div class="mb-4">
-          <label class="block text-gray-700 text-sm font-bold mb-2" for="description">
-            Description
-          </label>
+          <label class="block text-gray-700 text-sm font-bold mb-2" for="description"> Description </label>
           <textarea
             class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
             id="description"
             formControlName="description"
             placeholder="Description de la catégorie"
-            rows="3"></textarea>
+            rows="3"
+          ></textarea>
         </div>
 
         <div class="mb-4">
-          <label class="block text-gray-700 text-sm font-bold mb-2" for="color">
-            Couleur
-          </label>
+          <label class="block text-gray-700 text-sm font-bold mb-2" for="color"> Couleur </label>
           <input
             class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
             id="color"
             type="color"
-            formControlName="color">
+            formControlName="color"
+          />
         </div>
 
         <div class="mb-4">
-          <label class="block text-gray-700 text-sm font-bold mb-2" for="icon">
-            Icône
-          </label>
+          <label class="block text-gray-700 text-sm font-bold mb-2" for="icon"> Icône </label>
           <input
             class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
             id="icon"
             type="text"
             formControlName="icon"
-            placeholder="Nom de l'icône">
+            placeholder="Nom de l'icône"
+          />
         </div>
 
         <div class="flex items-center justify-end gap-2">
           <button
             type="button"
             (click)="cancelEdit()"
-            class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+            class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+          >
             Annuler
           </button>
           <button
             type="submit"
             [disabled]="categoryForm.invalid"
-            class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline disabled:opacity-50">
-            {{ editingCategory ? 'Mettre à jour' : 'Créer' }}
+            class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline disabled:opacity-50"
+          >
+            {{ editingCategory ? "Mettre à jour" : "Créer" }}
           </button>
         </div>
       </form>
@@ -98,14 +95,10 @@
             <h3 class="text-lg font-semibold">{{ category.name }}</h3>
             @if (!category.isDefault) {
               <div class="flex gap-2">
-                <button
-                  (click)="startEdit(category)"
-                  class="text-blue-500 hover:text-blue-700">
+                <button (click)="startEdit(category)" class="text-blue-500 hover:text-blue-700">
                   <i class="fas fa-edit"></i>
                 </button>
-                <button
-                  (click)="deleteCategory(category)"
-                  class="text-red-500 hover:text-red-700">
+                <button (click)="deleteCategory(category)" class="text-red-500 hover:text-red-700">
                   <i class="fas fa-trash"></i>
                 </button>
               </div>
@@ -117,9 +110,7 @@
           }
 
           @if (category.isDefault) {
-            <span class="absolute top-2 right-2 bg-gray-200 text-gray-700 text-xs px-2 py-1 rounded">
-              Par défaut
-            </span>
+            <span class="absolute top-2 right-2 bg-gray-200 text-gray-700 text-xs px-2 py-1 rounded"> Par défaut </span>
           }
 
           @if (category.color) {

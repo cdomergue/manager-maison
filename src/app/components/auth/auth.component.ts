@@ -1,8 +1,8 @@
-import {Component, inject} from '@angular/core';
-import {FormsModule} from '@angular/forms';
-import {Router} from '@angular/router';
-import {AuthService} from '../../services/auth.service';
-import {CommonModule} from '@angular/common';
+import { Component, inject } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
+import { AuthService } from '../../services/auth.service';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-auth',
@@ -20,7 +20,7 @@ import {CommonModule} from '@angular/common';
               class="w-full px-4 py-3 border rounded-lg"
               placeholder="Mot de passe"
               required
-             >
+            />
           </div>
           @if (error) {
             <div class="text-red-500 mb-4 text-center">
@@ -30,13 +30,14 @@ import {CommonModule} from '@angular/common';
           <button
             type="submit"
             class="w-full bg-blue-500 text-white py-3 px-4 rounded-lg hover:bg-blue-600 transition-colors"
-            [disabled]="!password">
+            [disabled]="!password"
+          >
             Valider
           </button>
         </form>
       </div>
     </div>
-  `
+  `,
 })
 export class AuthComponent {
   password = '';
@@ -47,7 +48,7 @@ export class AuthComponent {
   private router = inject(Router);
 
   constructor() {
-    this.authService.isAuthenticated$.subscribe(isAuth => {
+    this.authService.isAuthenticated$.subscribe((isAuth) => {
       this.isAuthenticated = isAuth;
       if (isAuth) {
         this.router.navigate(['/']);

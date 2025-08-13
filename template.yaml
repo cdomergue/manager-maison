@@ -1,6 +1,6 @@
-AWSTemplateFormatVersion: '2010-09-09'
+AWSTemplateFormatVersion: "2010-09-09"
 Transform: AWS::Serverless-2016-10-31
-Description: 'Gestion de la Maison - API Backend'
+Description: "Gestion de la Maison - API Backend"
 
 Globals:
   Function:
@@ -535,13 +535,13 @@ Outputs:
     Value: !Sub "https://${Api}.execute-api.${AWS::Region}.amazonaws.com/prod/"
     Export:
       Name: !Sub "${AWS::StackName}-ApiUrl"
-  
+
   TasksTableName:
     Description: "DynamoDB table name"
     Value: !Ref TasksTable
     Export:
       Name: !Sub "${AWS::StackName}-TableName"
-  
+
   CategoriesTableName:
     Description: "Categories DynamoDB table name"
     Value: !Ref CategoriesTable

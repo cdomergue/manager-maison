@@ -1,20 +1,21 @@
-import {Injectable, inject} from '@angular/core';
-import {NotificationSettings, Task} from '../models/task.model';
-import {UserService} from './user.service';
-import {SwPush} from '@angular/service-worker';
+import { Injectable, inject } from '@angular/core';
+import { NotificationSettings, Task } from '../models/task.model';
+import { UserService } from './user.service';
+import { SwPush } from '@angular/service-worker';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class NotificationService {
   private readonly SETTINGS_KEY = 'notification_settings';
   private settings: NotificationSettings = {
     enabled: true,
     reminderTime: '09:00',
-    advanceNotice: 2
+    advanceNotice: 2,
   };
 
-  private readonly VAPID_PUBLIC_KEY = 'BMB8LZ-B0Fin4W_pYzumsB6L6Rqoh1CfO-V3giCPRSy954jXVcE4Sdj99O5epl5Z8cbBY-IkG_IJjIoIYDo8Iss';
+  private readonly VAPID_PUBLIC_KEY =
+    'BMB8LZ-B0Fin4W_pYzumsB6L6Rqoh1CfO-V3giCPRSy954jXVcE4Sdj99O5epl5Z8cbBY-IkG_IJjIoIYDo8Iss';
 
   private userService = inject(UserService);
   private swPush = inject(SwPush);
@@ -47,7 +48,7 @@ export class NotificationService {
     // En mode production, utiliser les notifications push avec Service Worker
     try {
       const subscription = await this.swPush.requestSubscription({
-        serverPublicKey: this.VAPID_PUBLIC_KEY
+        serverPublicKey: this.VAPID_PUBLIC_KEY,
       });
 
       if (subscription) {
@@ -82,7 +83,7 @@ export class NotificationService {
       parseInt(this.settings.reminderTime.split(':')[0]),
       parseInt(this.settings.reminderTime.split(':')[1]),
       0,
-      0
+      0,
     );
     reminderDate.setHours(reminderDate.getHours() - this.settings.advanceNotice);
 
@@ -103,26 +104,30 @@ export class NotificationService {
         const notification = new Notification('Tâche ménagère à faire', {
           body: `Il est temps de faire : ${task.name}`,
           icon: '/icons/icon-192x192.png',
-          tag: `task-${task.id}`
+          tag: `task-${task.id}`,
         });
 
         notification.onclick = () => {
           window.focus();
           notification.close();
-          window.dispatchEvent(new CustomEvent('taskCompleted', {
-            detail: {taskId: task.id}
-          }));
+          window.dispatchEvent(
+            new CustomEvent('taskCompleted', {
+              detail: { taskId: task.id },
+            }),
+          );
         };
       }
       return;
     }
 
     try {
-      await this.swPush.notificationClicks.subscribe(action => {
+      await this.swPush.notificationClicks.subscribe((action) => {
         if (action.notification.tag === `task-${task.id}`) {
-          window.dispatchEvent(new CustomEvent('taskCompleted', {
-            detail: {taskId: task.id}
-          }));
+          window.dispatchEvent(
+            new CustomEvent('taskCompleted', {
+              detail: { taskId: task.id },
+            }),
+          );
         }
       });
 
@@ -133,7 +138,7 @@ export class NotificationService {
         icon: '/icons/icon-192x192.png',
         badge: '/icons/icon-72x72.png',
         tag: `task-${task.id}`,
-        requireInteraction: true
+        requireInteraction: true,
       });
     } catch (error) {
       console.error('Error showing notification:', error);
@@ -143,15 +148,17 @@ export class NotificationService {
         const notification = new Notification('Tâche ménagère à faire', {
           body: `Il est temps de faire : ${task.name}`,
           icon: '/icons/icon-192x192.png',
-          tag: `task-${task.id}`
+          tag: `task-${task.id}`,
         });
 
         notification.onclick = () => {
           window.focus();
           notification.close();
-          window.dispatchEvent(new CustomEvent('taskCompleted', {
-            detail: {taskId: task.id}
-          }));
+          window.dispatchEvent(
+            new CustomEvent('taskCompleted', {
+              detail: { taskId: task.id },
+            }),
+          );
         };
       }
     }
@@ -162,7 +169,7 @@ export class NotificationService {
       return;
     }
 
-    const userTasks = tasks.filter(task => this.isTaskForCurrentUser(task));
+    const userTasks = tasks.filter((task) => this.isTaskForCurrentUser(task));
 
     await this.sendNotificationToServiceWorker({
       title: 'Tâches en retard',
@@ -170,7 +177,7 @@ export class NotificationService {
       icon: '/icons/icon-192x192.png',
       badge: '/icons/icon-72x72.png',
       tag: 'overdue-tasks',
-      requireInteraction: true
+      requireInteraction: true,
     });
   }
 
@@ -185,7 +192,7 @@ export class NotificationService {
       icon: '/icons/icon-192x192.png',
       badge: '/icons/icon-72x72.png',
       tag: `new-task-${task.id}`,
-      requireInteraction: false
+      requireInteraction: false,
     });
   }
 
@@ -194,7 +201,7 @@ export class NotificationService {
       return;
     }
 
-    const userTasks = tasks.filter(task => this.isTaskForCurrentUser(task));
+    const userTasks = tasks.filter((task) => this.isTaskForCurrentUser(task));
     if (userTasks.length === 0) {
       return;
     }
@@ -205,7 +212,7 @@ export class NotificationService {
       icon: '/icons/icon-192x192.png',
       badge: '/icons/icon-72x72.png',
       tag: 'multiple-new-tasks',
-      requireInteraction: false
+      requireInteraction: false,
     });
   }
 
@@ -250,10 +257,10 @@ export class NotificationService {
           badge: notificationData.badge,
           tag: notificationData.tag,
           requireInteraction: notificationData.requireInteraction,
-          data: notificationData
+          data: notificationData,
         } as NotificationOptions);
       } catch (error) {
-        console.error('Erreur lors de l\'affichage de la notification:', error);
+        console.error("Erreur lors de l'affichage de la notification:", error);
       }
     }
   }
@@ -264,7 +271,7 @@ export class NotificationService {
       if ('Notification' in window && Notification.permission === 'granted') {
         new Notification('Test de notification', {
           body: 'Ceci est un test de notification pour vos tâches ménagères',
-          icon: '/icons/icon-192x192.png'
+          icon: '/icons/icon-192x192.png',
         });
         return;
       } else {
@@ -280,7 +287,7 @@ export class NotificationService {
         icon: '/icons/icon-192x192.png',
         badge: '/icons/icon-72x72.png',
         tag: 'test-notification',
-        requireInteraction: false
+        requireInteraction: false,
       });
     } catch (error) {
       console.error('Erreur avec Service Worker, fallback vers API native:', error);
@@ -289,7 +296,7 @@ export class NotificationService {
       if ('Notification' in window && Notification.permission === 'granted') {
         new Notification('Test de notification', {
           body: 'Ceci est un test de notification pour vos tâches ménagères',
-          icon: '/icons/icon-192x192.png'
+          icon: '/icons/icon-192x192.png',
         });
       } else {
         throw new Error('Les notifications ne sont pas autorisées');

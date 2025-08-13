@@ -1,16 +1,16 @@
-import {Component, OnInit, inject} from '@angular/core';
-import {FormBuilder, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
+import { Component, OnInit, inject } from '@angular/core';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 
-import {CommonModule} from '@angular/common';
-import {CategoryService} from '../../services/category.service';
-import {Category} from '../../models/category.model';
-import {Router} from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { CategoryService } from '../../services/category.service';
+import { Category } from '../../models/category.model';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-category-management',
   templateUrl: './category-management.component.html',
   styleUrls: ['./category-management.component.css'],
-  imports: [CommonModule, ReactiveFormsModule]
+  imports: [CommonModule, ReactiveFormsModule],
 })
 export class CategoryManagementComponent implements OnInit {
   categories: Category[] = [];
@@ -35,14 +35,12 @@ export class CategoryManagementComponent implements OnInit {
       name: ['', [Validators.required, Validators.minLength(2)]],
       description: [''],
       color: [''],
-      icon: ['']
+      icon: [''],
     });
   }
 
   private loadCategories(): void {
-    this.categoryService.getCategories().subscribe(
-      categories => this.categories = categories
-    );
+    this.categoryService.getCategories().subscribe((categories) => (this.categories = categories));
   }
 
   startEdit(category: Category): void {
@@ -51,7 +49,7 @@ export class CategoryManagementComponent implements OnInit {
       name: category.name,
       description: category.description,
       color: category.color,
-      icon: category.icon
+      icon: category.icon,
     });
     this.showForm = true;
   }
@@ -76,7 +74,7 @@ export class CategoryManagementComponent implements OnInit {
         error: (error) => {
           console.error('Erreur lors de la suppression de la catégorie:', error);
           alert('Erreur lors de la suppression de la catégorie');
-        }
+        },
       });
     }
   }
@@ -97,7 +95,7 @@ export class CategoryManagementComponent implements OnInit {
         error: (error) => {
           console.error('Erreur lors de la mise à jour de la catégorie:', error);
           alert('Erreur lors de la mise à jour de la catégorie');
-        }
+        },
       });
     } else {
       this.categoryService.createCategory(formValue).subscribe({
@@ -108,7 +106,7 @@ export class CategoryManagementComponent implements OnInit {
         error: (error) => {
           console.error('Erreur lors de la création de la catégorie:', error);
           alert('Erreur lors de la création de la catégorie');
-        }
+        },
       });
     }
   }

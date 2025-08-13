@@ -1,12 +1,43 @@
-.note-content h1 { font-size: 1.5rem; line-height: 2rem; font-weight: 700; margin: 0.5rem 0; }
-.note-content h2 { font-size: 1.25rem; line-height: 1.75rem; font-weight: 700; margin: 0.5rem 0; }
-.note-content h3 { font-size: 1.125rem; line-height: 1.5rem; font-weight: 600; margin: 0.5rem 0; }
-.note-content p { margin: 0.25rem 0; }
-.note-content ul { list-style: disc inside; margin: 0.25rem 0; }
-.note-content ol { list-style: decimal inside; margin: 0.25rem 0; }
-.note-content a { color: #2563eb; text-decoration: underline; word-break: break-word; }
-.btn { transition: background-color .15s ease; }
-.btn.active { background-color: #e0e7ff; }
+.note-content h1 {
+  font-size: 1.5rem;
+  line-height: 2rem;
+  font-weight: 700;
+  margin: 0.5rem 0;
+}
+.note-content h2 {
+  font-size: 1.25rem;
+  line-height: 1.75rem;
+  font-weight: 700;
+  margin: 0.5rem 0;
+}
+.note-content h3 {
+  font-size: 1.125rem;
+  line-height: 1.5rem;
+  font-weight: 600;
+  margin: 0.5rem 0;
+}
+.note-content p {
+  margin: 0.25rem 0;
+}
+.note-content ul {
+  list-style: disc inside;
+  margin: 0.25rem 0;
+}
+.note-content ol {
+  list-style: decimal inside;
+  margin: 0.25rem 0;
+}
+.note-content a {
+  color: #2563eb;
+  text-decoration: underline;
+  word-break: break-word;
+}
+.btn {
+  transition: background-color 0.15s ease;
+}
+.btn.active {
+  background-color: #e0e7ff;
+}
 
 /* Eviter que les boutons d'action s'étirent en pleine hauteur en mode mobile */
 .note-actions button {
@@ -21,8 +52,16 @@
 
 @media (max-width: 640px) {
   /* Sur mobile, actions AU-DESSUS du contenu */
-  .note-row { flex-direction: column; }
-  .note-actions { align-items: flex-start; order: 1; margin-top: 0; margin-bottom: .25rem; }
-  .note-body { order: 2; }
+  .note-row {
+    flex-direction: column;
+  }
+  .note-actions {
+    align-items: flex-start;
+    order: 1;
+    margin-top: 0;
+    margin-bottom: 0.25rem;
+  }
+  .note-body {
+    order: 2;
+  }
 }
-

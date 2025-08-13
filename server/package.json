@@ -18,7 +18,12 @@
   "devDependencies": {
     "nodemon": "^3.0.1"
   },
-  "keywords": ["taches", "menageres", "api", "json"],
+  "keywords": [
+    "taches",
+    "menageres",
+    "api",
+    "json"
+  ],
   "author": "Christophe & Laurence",
   "license": "MIT"
-} 
+}

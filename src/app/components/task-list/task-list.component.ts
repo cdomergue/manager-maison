@@ -1,19 +1,19 @@
-import {Component, computed, OnDestroy, OnInit, output, signal, inject} from '@angular/core';
-import {CommonModule} from '@angular/common';
-import {FormsModule} from '@angular/forms';
-import {Task} from '../../models/task.model';
-import {Category} from '../../models/category.model';
-import {CategoryService} from '../../services/category.service';
-import {TaskService} from '../../services/task.service';
+import { Component, computed, OnDestroy, OnInit, output, signal, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { Task } from '../../models/task.model';
+import { Category } from '../../models/category.model';
+import { CategoryService } from '../../services/category.service';
+import { TaskService } from '../../services/task.service';
 // import {NotificationService} from '../../services/notification.service';
-import {Subscription} from 'rxjs';
-import {TaskDetailComponent} from '../task-detail/task-detail.component';
+import { Subscription } from 'rxjs';
+import { TaskDetailComponent } from '../task-detail/task-detail.component';
 
 @Component({
   selector: 'app-task-list',
   imports: [CommonModule, FormsModule, TaskDetailComponent],
   templateUrl: './task-list.component.html',
-  styleUrls: ['./task-list.component.css']
+  styleUrls: ['./task-list.component.css'],
 })
 export class TaskListComponent implements OnInit, OnDestroy {
   selectedTask = signal<Task | null>(null);
@@ -40,15 +40,14 @@ export class TaskListComponent implements OnInit, OnDestroy {
     const priority = this.selectedPriority();
     const search = this.searchTerm();
 
-
     // Filtrer d'abord les tâches
-    const filtered = tasks.filter(task => {
+    const filtered = tasks.filter((task) => {
       const matchesCategory = category === 'all' || (task.category && task.category === category);
       const matchesPriority = priority === 'all' || task.priority === priority;
-      const matchesSearch = !search ||
+      const matchesSearch =
+        !search ||
         task.name.toLowerCase().includes(search.toLowerCase()) ||
         (task.description && task.description.toLowerCase().includes(search.toLowerCase()));
-
 
       return matchesCategory && matchesPriority && matchesSearch;
     });
@@ -82,7 +81,7 @@ export class TaskListComponent implements OnInit, OnDestroy {
   priorities = [
     { value: 'low', label: 'Basse', color: 'text-green-600' },
     { value: 'medium', label: 'Moyenne', color: 'text-yellow-600' },
-    { value: 'high', label: 'Haute', color: 'text-red-600' }
+    { value: 'high', label: 'Haute', color: 'text-red-600' },
   ];
 
   private subscription: Subscription = new Subscription();
@@ -92,9 +91,7 @@ export class TaskListComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     // Charger les catégories
-    this.categoryService.getCategories().subscribe(
-      categories => this.categories = categories
-    );
+    this.categoryService.getCategories().subscribe((categories) => (this.categories = categories));
 
     // Écouter les événements de notification
     window.addEventListener('taskCompleted', ((event: CustomEvent) => {
@@ -134,12 +131,12 @@ export class TaskListComponent implements OnInit, OnDestroy {
   }
 
   getPriorityColor(priority: string): string {
-    const priorityObj = this.priorities.find(p => p.value === priority);
+    const priorityObj = this.priorities.find((p) => p.value === priority);
     return priorityObj ? priorityObj.color : 'text-gray-600';
   }
 
   getPriorityLabel(priority: string): string {
-    const priorityObj = this.priorities.find(p => p.value === priority);
+    const priorityObj = this.priorities.find((p) => p.value === priority);
     return priorityObj ? priorityObj.label : 'Inconnue';
   }
 
@@ -163,7 +160,7 @@ export class TaskListComponent implements OnInit, OnDestroy {
     if (diffDays < 0) {
       return `En retard de ${Math.abs(diffDays)} jour(s)`;
     } else if (diffDays === 0) {
-      return 'Aujourd\'hui';
+      return "Aujourd'hui";
     } else if (diffDays === 1) {
       return 'Demain';
     } else {
@@ -175,7 +172,7 @@ export class TaskListComponent implements OnInit, OnDestroy {
     return new Date(date).toLocaleDateString('fr-FR', {
       day: '2-digit',
       month: '2-digit',
-      year: 'numeric'
+      year: 'numeric',
     });
   }
 
@@ -200,7 +197,7 @@ export class TaskListComponent implements OnInit, OnDestroy {
   showTaskDetails(task: Task): void {
     this.selectedTask.set(task);
     // Ajouter un état dans l'historique pour la modale
-    history.pushState({modal: true}, '');
+    history.pushState({ modal: true }, '');
   }
 
   closeTaskDetails(): void {
@@ -217,7 +214,7 @@ export class TaskListComponent implements OnInit, OnDestroy {
   }
 
   getCategoryName(categoryId: string): string {
-    const category = this.categories.find(cat => cat.id === categoryId);
+    const category = this.categories.find((cat) => cat.id === categoryId);
     return category ? category.name : categoryId;
   }
 }

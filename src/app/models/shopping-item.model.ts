@@ -11,5 +11,3 @@ export interface ShoppingListEntry {
   quantity: number;
   checked: boolean;
 }
-
-

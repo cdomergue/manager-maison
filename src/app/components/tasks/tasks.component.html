@@ -7,23 +7,34 @@
     <div class="container mx-auto py-3">
       <!-- Mobile -->
       <div class="sm:hidden flex items-center justify-between gap-2">
-        <button (click)="showAddTaskForm()"
-                class="flex-1 bg-blue-600 text-white px-4 py-3 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 text-base font-medium">
+        <button
+          (click)="showAddTaskForm()"
+          class="flex-1 bg-blue-600 text-white px-4 py-3 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 text-base font-medium"
+        >
           <span class="text-lg">+</span><span>Nouvelle tâche</span>
         </button>
-        <a routerLink="/categories" class="p-3 text-gray-600 hover:text-blue-600 transition-colors rounded-lg"
-           title="Gestion des catégories">📑</a>
+        <a
+          routerLink="/categories"
+          class="p-3 text-gray-600 hover:text-blue-600 transition-colors rounded-lg"
+          title="Gestion des catégories"
+          >📑</a
+        >
       </div>
 
       <!-- Desktop -->
       <div class="hidden sm:flex items-center justify-between pb-2">
-        <button (click)="showAddTaskForm()"
-                class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2">
+        <button
+          (click)="showAddTaskForm()"
+          class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+        >
           <span>+</span><span>Nouvelle tâche</span>
         </button>
-        <a routerLink="/categories"
-           class="px-3 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-md transition-colors"
-           title="Gestion des catégories">📑</a>
+        <a
+          routerLink="/categories"
+          class="px-3 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-md transition-colors"
+          title="Gestion des catégories"
+          >📑</a
+        >
       </div>
     </div>
   </header>
@@ -33,7 +44,11 @@
     @if (showTaskForm()) {
       <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
         <div class="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-          <app-task-form [task]="editingTask()" (taskSaved)="onTaskSaved($event)" (cancelled)="onTaskFormCancelled()"></app-task-form>
+          <app-task-form
+            [task]="editingTask()"
+            (taskSaved)="onTaskSaved($event)"
+            (cancelled)="onTaskFormCancelled()"
+          ></app-task-form>
         </div>
       </div>
     }
@@ -41,5 +56,3 @@
     <app-task-list (editTaskEvent)="editTask($event)"></app-task-list>
   </main>
 </div>
-
-

@@ -1,16 +1,16 @@
-import {Component, computed, OnDestroy, OnInit, signal, inject} from '@angular/core';
-import {RouterModule} from '@angular/router';
-import {TaskListComponent} from '../task-list/task-list.component';
-import {TaskFormComponent} from '../task-form/task-form.component';
-import {Task} from '../../models/task.model';
-import {TaskService} from '../../services/task.service';
-import {NotificationService} from '../../services/notification.service';
+import { Component, computed, OnDestroy, OnInit, signal, inject } from '@angular/core';
+import { RouterModule } from '@angular/router';
+import { TaskListComponent } from '../task-list/task-list.component';
+import { TaskFormComponent } from '../task-form/task-form.component';
+import { Task } from '../../models/task.model';
+import { TaskService } from '../../services/task.service';
+import { NotificationService } from '../../services/notification.service';
 
 @Component({
   selector: 'app-tasks',
   imports: [RouterModule, TaskListComponent, TaskFormComponent],
   templateUrl: './tasks.component.html',
-  styleUrls: ['./tasks.component.css']
+  styleUrls: ['./tasks.component.css'],
 })
 export class TasksComponent implements OnInit, OnDestroy {
   showTaskForm = signal(false);
@@ -39,14 +39,14 @@ export class TasksComponent implements OnInit, OnDestroy {
     this.editingTask.set(undefined);
     this.showTaskForm.set(true);
     // Ajouter un état dans l'historique pour la modale
-    history.pushState({modal: true}, '');
+    history.pushState({ modal: true }, '');
   }
 
   showEditTaskForm(task: Task): void {
     this.editingTask.set(task);
     this.showTaskForm.set(true);
     // Ajouter un état dans l'historique pour la modale
-    history.pushState({modal: true}, '');
+    history.pushState({ modal: true }, '');
   }
 
   onTaskSaved(task: Task): void {
@@ -84,4 +84,3 @@ export class TasksComponent implements OnInit, OnDestroy {
     window.removeEventListener('popstate', this.popstateHandler);
   }
 }
-

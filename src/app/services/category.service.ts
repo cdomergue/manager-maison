@@ -1,10 +1,10 @@
-import {Injectable, inject} from '@angular/core';
-import {ApiService} from './api.service';
-import {Category} from '../models/category.model';
-import {BehaviorSubject, map, Observable, tap} from 'rxjs';
+import { Injectable, inject } from '@angular/core';
+import { ApiService } from './api.service';
+import { Category } from '../models/category.model';
+import { BehaviorSubject, map, Observable, tap } from 'rxjs';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class CategoryService {
   private categories = new BehaviorSubject<Category[]>([]);
@@ -16,9 +16,7 @@ export class CategoryService {
   }
 
   private loadCategories(): void {
-    this.api.get<Category[]>('/categories').subscribe(
-      categories => this.categories.next(categories)
-    );
+    this.api.get<Category[]>('/categories').subscribe((categories) => this.categories.next(categories));
   }
 
   getCategories(): Observable<Category[]> {
@@ -26,30 +24,28 @@ export class CategoryService {
   }
 
   getCategory(id: string): Observable<Category | undefined> {
-    return this.categories$.pipe(
-      map(categories => categories.find(cat => cat.id === id))
-    );
+    return this.categories$.pipe(map((categories) => categories.find((cat) => cat.id === id)));
   }
 
   createCategory(category: Omit<Category, 'id'>): Observable<Category> {
     return this.api.post<Category>('/categories', category).pipe(
-      tap(newCategory => {
+      tap((newCategory) => {
         const currentCategories = this.categories.value;
         this.categories.next([...currentCategories, newCategory]);
-      })
+      }),
     );
   }
 
   updateCategory(id: string, category: Partial<Category>): Observable<Category> {
     return this.api.put<Category>(`/categories/${id}`, category).pipe(
-      tap(updatedCategory => {
+      tap((updatedCategory) => {
         const currentCategories = this.categories.value;
-        const index = currentCategories.findIndex(cat => cat.id === id);
+        const index = currentCategories.findIndex((cat) => cat.id === id);
         if (index !== -1) {
           currentCategories[index] = updatedCategory;
           this.categories.next([...currentCategories]);
         }
-      })
+      }),
     );
   }
 
@@ -57,8 +53,8 @@ export class CategoryService {
     return this.api.delete<void>(`/categories/${id}`).pipe(
       tap(() => {
         const currentCategories = this.categories.value;
-        this.categories.next(currentCategories.filter(cat => cat.id !== id));
-      })
+        this.categories.next(currentCategories.filter((cat) => cat.id !== id));
+      }),
     );
   }
 }

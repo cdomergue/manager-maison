@@ -1,9 +1,7 @@
 <div class="settings-container">
   <!-- En-tête avec bouton de retour -->
   <div class="header-with-back">
-    <button class="back-btn" routerLink="/" title="Retour à l'accueil">
-      ← Retour
-    </button>
+    <button class="back-btn" routerLink="/" title="Retour à l'accueil">← Retour</button>
     <h2>Paramètres</h2>
   </div>
 
@@ -16,7 +14,11 @@
         <span class="value" [class.connected]="isServerConnected()" [class.disconnected]="!isServerConnected()">
           {{ connectionStatus() }}
         </span>
-        <button class="refresh-btn" (click)="refreshServerStatus()" [disabled]="connectionStatus() === 'Vérification...'">
+        <button
+          class="refresh-btn"
+          (click)="refreshServerStatus()"
+          [disabled]="connectionStatus() === 'Vérification...'"
+        >
           🔄
         </button>
       </div>
@@ -29,12 +31,12 @@
 
         <div class="status-item">
           <span class="label">Dernière mise à jour :</span>
-          <span class="value">{{ serverStatus()?.lastUpdated | date:'dd/MM/yyyy HH:mm' }}</span>
+          <span class="value">{{ serverStatus()?.lastUpdated | date: "dd/MM/yyyy HH:mm" }}</span>
         </div>
 
         <div class="status-item">
           <span class="label">Heure du serveur :</span>
-          <span class="value">{{ serverStatus()?.serverTime | date:'dd/MM/yyyy HH:mm:ss' }}</span>
+          <span class="value">{{ serverStatus()?.serverTime | date: "dd/MM/yyyy HH:mm:ss" }}</span>
         </div>
       }
     </div>
@@ -47,17 +49,15 @@
       <div class="status-item">
         <span class="label">Statut :</span>
         <span class="value" [class.connected]="!isCheckingBackground()" [class.disconnected]="isCheckingBackground()">
-          {{ isCheckingBackground() ? 'Vérification en cours...' : 'Actif' }}
+          {{ isCheckingBackground() ? "Vérification en cours..." : "Actif" }}
         </span>
-        <button class="refresh-btn" (click)="forceBackgroundCheck()" [disabled]="isCheckingBackground()">
-          🔍
-        </button>
+        <button class="refresh-btn" (click)="forceBackgroundCheck()" [disabled]="isCheckingBackground()">🔍</button>
       </div>
 
       @if (lastBackgroundCheck()) {
         <div class="status-item">
           <span class="label">Dernière vérification :</span>
-          <span class="value">{{ lastBackgroundCheck() | date:'HH:mm:ss' }}</span>
+          <span class="value">{{ lastBackgroundCheck() | date: "HH:mm:ss" }}</span>
         </div>
       }
 
@@ -73,9 +73,7 @@
     <h3>Stockage local</h3>
     <div class="storage-info">
       <p>Taille utilisée : {{ storageSize() | number }} octets</p>
-      <button class="danger-btn" (click)="clearLocalStorage()">
-        Effacer toutes les données locales
-      </button>
+      <button class="danger-btn" (click)="clearLocalStorage()">Effacer toutes les données locales</button>
     </div>
   </div>
 
@@ -87,8 +85,7 @@
       <ul>
         @if (isServerConnected()) {
           <li>✅ Mode serveur : Les données sont synchronisées avec le serveur local</li>
-        }
-        @else {
+        } @else {
           <li>⚠️ Mode local : Les données sont stockées uniquement dans le navigateur</li>
         }
       </ul>
@@ -97,8 +94,7 @@
       <ul>
         @if (isServerConnected()) {
           <li>✅ Les tâches sont partagées entre tous les utilisateurs connectés au serveur</li>
-        }
-        @else {
+        } @else {
           <li>❌ Les tâches ne sont pas partagées (mode hors ligne)</li>
         }
       </ul>

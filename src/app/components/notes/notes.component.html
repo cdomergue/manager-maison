@@ -4,41 +4,88 @@
     <form class="space-y-3 p-4 pt-2" (ngSubmit)="create()">
       <div>
         <label for="title-input" class="block text-sm text-gray-600 mb-1">Titre</label>
-        <input id="title-input" [(ngModel)]="title" name="title" class="w-full px-3 py-2 border rounded" placeholder="Titre"/>
+        <input
+          id="title-input"
+          [(ngModel)]="title"
+          name="title"
+          class="w-full px-3 py-2 border rounded"
+          placeholder="Titre"
+        />
       </div>
       <div>
         <div class="block text-sm text-gray-600 mb-1">Contenu</div>
         <div class="flex flex-wrap items-center gap-2 mb-2 text-sm">
-          <select class="px-2 py-1 border rounded"
-                  [value]="toolbar.block"
-                  (change)="format(getCurrentEditor(), 'formatBlock', $any($event.target).value); onEditorInput(getCurrentEditor())">
+          <select
+            class="px-2 py-1 border rounded"
+            [value]="toolbar.block"
+            (change)="
+              format(getCurrentEditor(), 'formatBlock', $any($event.target).value); onEditorInput(getCurrentEditor())
+            "
+          >
             <option value="P">Paragraphe</option>
             <option value="H1">Titre 1</option>
             <option value="H2">Titre 2</option>
             <option value="H3">Titre 3</option>
           </select>
-          <button type="button" class="btn px-2 py-1 border rounded" [class.active]="toolbar.bold"
-                  (click)="format(getCurrentEditor(),'bold'); onEditorInput(getCurrentEditor())"><b>B</b></button>
-          <button type="button" class="btn px-2 py-1 border rounded italic" [class.active]="toolbar.italic"
-                  (click)="format(getCurrentEditor(),'italic'); onEditorInput(getCurrentEditor())">I
+          <button
+            type="button"
+            class="btn px-2 py-1 border rounded"
+            [class.active]="toolbar.bold"
+            (click)="format(getCurrentEditor(), 'bold'); onEditorInput(getCurrentEditor())"
+          >
+            <b>B</b>
           </button>
-          <button type="button" class="btn px-2 py-1 border rounded" [class.active]="toolbar.strike"
-                  (click)="format(getCurrentEditor(),'strikeThrough'); onEditorInput(getCurrentEditor())"><span
-            class="line-through">S</span></button>
-          <button type="button" class="btn px-2 py-1 border rounded" [class.active]="toolbar.ul"
-                  (click)="format(getCurrentEditor(),'insertUnorderedList'); onEditorInput(getCurrentEditor())">• Liste
+          <button
+            type="button"
+            class="btn px-2 py-1 border rounded italic"
+            [class.active]="toolbar.italic"
+            (click)="format(getCurrentEditor(), 'italic'); onEditorInput(getCurrentEditor())"
+          >
+            I
           </button>
-          <button type="button" class="btn px-2 py-1 border rounded" [class.active]="toolbar.ol"
-                  (click)="format(getCurrentEditor(),'insertOrderedList'); onEditorInput(getCurrentEditor())">1. Liste
+          <button
+            type="button"
+            class="btn px-2 py-1 border rounded"
+            [class.active]="toolbar.strike"
+            (click)="format(getCurrentEditor(), 'strikeThrough'); onEditorInput(getCurrentEditor())"
+          >
+            <span class="line-through">S</span>
+          </button>
+          <button
+            type="button"
+            class="btn px-2 py-1 border rounded"
+            [class.active]="toolbar.ul"
+            (click)="format(getCurrentEditor(), 'insertUnorderedList'); onEditorInput(getCurrentEditor())"
+          >
+            • Liste
+          </button>
+          <button
+            type="button"
+            class="btn px-2 py-1 border rounded"
+            [class.active]="toolbar.ol"
+            (click)="format(getCurrentEditor(), 'insertOrderedList'); onEditorInput(getCurrentEditor())"
+          >
+            1. Liste
           </button>
           <span class="mx-1 h-4 w-px bg-gray-300 inline-block align-middle"></span>
-          <button type="button" class="btn px-2 py-1 border rounded" [class.active]="toolbar.link"
-                  title="Insérer un lien"
-                  (click)="insertLink(getCurrentEditor())">Lien</button>
-          <button type="button" class="btn px-2 py-1 border rounded"
-                  [disabled]="!toolbar.link"
-                  title="Supprimer le lien"
-                  (click)="unlink(getCurrentEditor())">Retirer lien</button>
+          <button
+            type="button"
+            class="btn px-2 py-1 border rounded"
+            [class.active]="toolbar.link"
+            title="Insérer un lien"
+            (click)="insertLink(getCurrentEditor())"
+          >
+            Lien
+          </button>
+          <button
+            type="button"
+            class="btn px-2 py-1 border rounded"
+            [disabled]="!toolbar.link"
+            title="Supprimer le lien"
+            (click)="unlink(getCurrentEditor())"
+          >
+            Retirer lien
+          </button>
         </div>
         <div
           #createEditor
@@ -65,25 +112,86 @@
         <div class="border rounded p-4">
           @if (editingId === n.id) {
             <div class="space-y-3">
-              <label for="edit-title-{{n.id}}" class="sr-only">Titre</label>
-              <input id="edit-title-{{n.id}}" [(ngModel)]="editTitle" name="editTitle" class="w-full px-3 py-2 border rounded" />
+              <label for="edit-title-{{ n.id }}" class="sr-only">Titre</label>
+              <input
+                id="edit-title-{{ n.id }}"
+                [(ngModel)]="editTitle"
+                name="editTitle"
+                class="w-full px-3 py-2 border rounded"
+              />
               <div class="flex flex-wrap items-center gap-2 mb-2 text-sm">
-                <select class="px-2 py-1 border rounded"
-                        [value]="toolbar.block"
-                        (change)="format(getCurrentEditor(), 'formatBlock', $any($event.target).value); onEditorInput(getCurrentEditor())">
+                <select
+                  class="px-2 py-1 border rounded"
+                  [value]="toolbar.block"
+                  (change)="
+                    format(getCurrentEditor(), 'formatBlock', $any($event.target).value);
+                    onEditorInput(getCurrentEditor())
+                  "
+                >
                   <option value="P">Paragraphe</option>
                   <option value="H1">Titre 1</option>
                   <option value="H2">Titre 2</option>
                   <option value="H3">Titre 3</option>
                 </select>
-                <button type="button" class="btn px-2 py-1 border rounded" [class.active]="toolbar.bold" (click)="format(getCurrentEditor(),'bold'); onEditorInput(getCurrentEditor())"><b>B</b></button>
-                <button type="button" class="btn px-2 py-1 border rounded italic" [class.active]="toolbar.italic" (click)="format(getCurrentEditor(),'italic'); onEditorInput(getCurrentEditor())">I</button>
-                <button type="button" class="btn px-2 py-1 border rounded" [class.active]="toolbar.strike" (click)="format(getCurrentEditor(),'strikeThrough'); onEditorInput(getCurrentEditor())"><span class="line-through">S</span></button>
-                <button type="button" class="btn px-2 py-1 border rounded" [class.active]="toolbar.ul" (click)="format(getCurrentEditor(),'insertUnorderedList'); onEditorInput(getCurrentEditor())">• Liste</button>
-                <button type="button" class="btn px-2 py-1 border rounded" [class.active]="toolbar.ol" (click)="format(getCurrentEditor(),'insertOrderedList'); onEditorInput(getCurrentEditor())">1. Liste</button>
+                <button
+                  type="button"
+                  class="btn px-2 py-1 border rounded"
+                  [class.active]="toolbar.bold"
+                  (click)="format(getCurrentEditor(), 'bold'); onEditorInput(getCurrentEditor())"
+                >
+                  <b>B</b>
+                </button>
+                <button
+                  type="button"
+                  class="btn px-2 py-1 border rounded italic"
+                  [class.active]="toolbar.italic"
+                  (click)="format(getCurrentEditor(), 'italic'); onEditorInput(getCurrentEditor())"
+                >
+                  I
+                </button>
+                <button
+                  type="button"
+                  class="btn px-2 py-1 border rounded"
+                  [class.active]="toolbar.strike"
+                  (click)="format(getCurrentEditor(), 'strikeThrough'); onEditorInput(getCurrentEditor())"
+                >
+                  <span class="line-through">S</span>
+                </button>
+                <button
+                  type="button"
+                  class="btn px-2 py-1 border rounded"
+                  [class.active]="toolbar.ul"
+                  (click)="format(getCurrentEditor(), 'insertUnorderedList'); onEditorInput(getCurrentEditor())"
+                >
+                  • Liste
+                </button>
+                <button
+                  type="button"
+                  class="btn px-2 py-1 border rounded"
+                  [class.active]="toolbar.ol"
+                  (click)="format(getCurrentEditor(), 'insertOrderedList'); onEditorInput(getCurrentEditor())"
+                >
+                  1. Liste
+                </button>
                 <span class="mx-1 h-4 w-px bg-gray-300 inline-block align-middle"></span>
-                <button type="button" class="btn px-2 py-1 border rounded" [class.active]="toolbar.link" title="Insérer un lien" (click)="insertLink(getCurrentEditor())">Lien</button>
-                <button type="button" class="btn px-2 py-1 border rounded" [disabled]="!toolbar.link" title="Supprimer le lien" (click)="unlink(getCurrentEditor())">Retirer lien</button>
+                <button
+                  type="button"
+                  class="btn px-2 py-1 border rounded"
+                  [class.active]="toolbar.link"
+                  title="Insérer un lien"
+                  (click)="insertLink(getCurrentEditor())"
+                >
+                  Lien
+                </button>
+                <button
+                  type="button"
+                  class="btn px-2 py-1 border rounded"
+                  [disabled]="!toolbar.link"
+                  title="Supprimer le lien"
+                  (click)="unlink(getCurrentEditor())"
+                >
+                  Retirer lien
+                </button>
               </div>
               <div
                 #editEditor
@@ -102,23 +210,29 @@
           } @else {
             <div class="note-row flex items-start sm:justify-between gap-2 sm:gap-4">
               <div class="note-body order-2 sm:order-1">
-                <div class="font-medium">{{ n.title || '(Sans titre)' }}</div>
+                <div class="font-medium">{{ n.title || "(Sans titre)" }}</div>
                 <div class="note-content text-gray-700 mt-1" [innerHTML]="n.content"></div>
                 <div class="text-xs text-gray-500 mt-2">Propriétaire: {{ n.ownerId }}</div>
               </div>
-              <div class="note-actions order-1 sm:order-2 shrink-0 self-start flex items-center sm:items-start gap-2 mt-2 sm:mt-0">
-                <button class="h-auto px-2 py-1 text-sm border rounded hover:bg-gray-50" (click)="startEdit(n.id, n.title, n.content)">Modifier</button>
-                <button class="h-auto px-2 py-1 text-sm border rounded hover:bg-gray-50" (click)="remove(n.id)">Supprimer</button>
+              <div
+                class="note-actions order-1 sm:order-2 shrink-0 self-start flex items-center sm:items-start gap-2 mt-2 sm:mt-0"
+              >
+                <button
+                  class="h-auto px-2 py-1 text-sm border rounded hover:bg-gray-50"
+                  (click)="startEdit(n.id, n.title, n.content)"
+                >
+                  Modifier
+                </button>
+                <button class="h-auto px-2 py-1 text-sm border rounded hover:bg-gray-50" (click)="remove(n.id)">
+                  Supprimer
+                </button>
               </div>
             </div>
           }
         </div>
-      }
-      @empty {
+      } @empty {
         <div class="text-sm text-gray-500">Aucune note.</div>
       }
     </div>
   </div>
 </div>
-
-

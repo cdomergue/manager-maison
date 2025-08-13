@@ -1,34 +1,32 @@
 <div class="bg-white rounded-lg shadow-lg p-6 max-w-2xl mx-auto">
   <div class="mb-6">
     <h2 class="text-2xl font-bold text-gray-800">
-      {{ task ? 'Modifier la tâche' : 'Nouvelle tâche ménagère' }}
+      {{ task ? "Modifier la tâche" : "Nouvelle tâche ménagère" }}
     </h2>
     <p class="text-gray-600 mt-1">
-      {{ task ? 'Modifiez les détails de votre tâche' : 'Ajoutez une nouvelle tâche à votre planning' }}
+      {{ task ? "Modifiez les détails de votre tâche" : "Ajoutez une nouvelle tâche à votre planning" }}
     </p>
   </div>
 
   <form [formGroup]="taskForm" (ngSubmit)="onSubmit()" class="space-y-6">
-    @let nameControl = taskForm.get('name');
+    @let nameControl = taskForm.get("name");
     <!-- Nom de la tâche -->
     <div>
-      <label for="name" class="block text-sm font-medium text-gray-700 mb-1">
-        Nom de la tâche *
-      </label>
+      <label for="name" class="block text-sm font-medium text-gray-700 mb-1"> Nom de la tâche * </label>
       <input
         id="name"
         type="text"
         formControlName="name"
         placeholder="Ex: Faire la vaisselle"
         class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-        [ngClass]="{'border-red-500': nameControl?.invalid && nameControl?.touched}"
-      >
+        [ngClass]="{ 'border-red-500': nameControl?.invalid && nameControl?.touched }"
+      />
       @if (nameControl?.invalid && nameControl?.touched) {
         <div class="text-red-500 text-sm mt-1">
-          @if (nameControl?.errors?.['required']) {
+          @if (nameControl?.errors?.["required"]) {
             <span>Le nom est requis</span>
           }
-          @if (nameControl?.errors?.['minlength']) {
+          @if (nameControl?.errors?.["minlength"]) {
             <span>Le nom doit contenir au moins 2 caractères</span>
           }
         </div>
@@ -37,9 +35,7 @@
 
     <!-- Description -->
     <div>
-      <label for="description" class="block text-sm font-medium text-gray-700 mb-1">
-        Description (optionnel)
-      </label>
+      <label for="description" class="block text-sm font-medium text-gray-700 mb-1"> Description (optionnel) </label>
       <textarea
         id="description"
         formControlName="description"
@@ -51,9 +47,7 @@
 
     <!-- Catégorie -->
     <div>
-      <label for="category" class="block text-sm font-medium text-gray-700 mb-1">
-        Catégorie
-      </label>
+      <label for="category" class="block text-sm font-medium text-gray-700 mb-1"> Catégorie </label>
       <select
         id="category"
         formControlName="category"
@@ -70,9 +64,7 @@
 
     <!-- Fréquence -->
     <div>
-      <label for="frequency" class="block text-sm font-medium text-gray-700 mb-1">
-        Fréquence *
-      </label>
+      <label for="frequency" class="block text-sm font-medium text-gray-700 mb-1"> Fréquence * </label>
       <select
         id="frequency"
         formControlName="frequency"
@@ -99,15 +91,13 @@
           min="1"
           max="365"
           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
+        />
       </div>
     }
 
     <!-- Priorité -->
     <div>
-      <label for="priority" class="block text-sm font-medium text-gray-700 mb-1">
-        Priorité *
-      </label>
+      <label for="priority" class="block text-sm font-medium text-gray-700 mb-1"> Priorité * </label>
       <select
         id="priority"
         formControlName="priority"
@@ -123,28 +113,22 @@
 
     <!-- Date d'échéance -->
     <div>
-      <label for="nextDueDate" class="block text-sm font-medium text-gray-700 mb-1">
-        Prochaine échéance *
-      </label>
+      <label for="nextDueDate" class="block text-sm font-medium text-gray-700 mb-1"> Prochaine échéance * </label>
       <input
         id="nextDueDate"
         type="date"
         formControlName="nextDueDate"
         class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-        [ngClass]="{'border-red-500': taskForm.get('nextDueDate')?.invalid && taskForm.get('nextDueDate')?.touched}"
-      >
-      @if (taskForm.get('nextDueDate')?.invalid && taskForm.get('nextDueDate')?.touched) {
-        <div class="text-red-500 text-sm mt-1">
-          La date d'échéance est requise
-        </div>
+        [ngClass]="{ 'border-red-500': taskForm.get('nextDueDate')?.invalid && taskForm.get('nextDueDate')?.touched }"
+      />
+      @if (taskForm.get("nextDueDate")?.invalid && taskForm.get("nextDueDate")?.touched) {
+        <div class="text-red-500 text-sm mt-1">La date d'échéance est requise</div>
       }
     </div>
 
     <!-- Assigné -->
     <div>
-      <label for="assignee" class="block text-sm font-medium text-gray-700 mb-1">
-        Assigné
-      </label>
+      <label for="assignee" class="block text-sm font-medium text-gray-700 mb-1"> Assigné </label>
       <select
         id="assignee"
         formControlName="assignee"
@@ -166,7 +150,7 @@
         [disabled]="!isFormValid"
         class="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
       >
-        {{ task ? 'Modifier' : 'Créer' }} la tâche
+        {{ task ? "Modifier" : "Créer" }} la tâche
       </button>
 
       <button

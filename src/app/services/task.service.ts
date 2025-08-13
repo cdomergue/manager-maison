@@ -1,12 +1,12 @@
-import {computed, inject, Injectable, signal} from '@angular/core';
-import {toObservable} from '@angular/core/rxjs-interop';
-import {Observable, of} from 'rxjs';
-import {Assignee, Task, TaskHistoryEntry} from '../models/task.model';
-import {ApiService} from './api.service';
-import {StorageService} from './storage.service';
+import { computed, inject, Injectable, signal } from '@angular/core';
+import { toObservable } from '@angular/core/rxjs-interop';
+import { Observable, of } from 'rxjs';
+import { Assignee, Task, TaskHistoryEntry } from '../models/task.model';
+import { ApiService } from './api.service';
+import { StorageService } from './storage.service';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class TaskService {
   // Signaux pour la gestion des tâches
@@ -18,15 +18,11 @@ export class TaskService {
   readonly useLocalStorage = this.useLocalStorageSignal.asReadonly();
 
   // Signaux calculés pour les filtres
-  readonly activeTasks = computed(() =>
-    this.tasksSignal().filter(task => task.isActive)
-  );
+  readonly activeTasks = computed(() => this.tasksSignal().filter((task) => task.isActive));
 
   readonly overdueTasks = computed(() => {
     const now = new Date();
-    return this.tasksSignal().filter(task =>
-      task.isActive && new Date(task.nextDueDate) < now
-    );
+    return this.tasksSignal().filter((task) => task.isActive && new Date(task.nextDueDate) < now);
   });
 
   // Observable pour la compatibilité avec le code existant
@@ -43,7 +39,7 @@ export class TaskService {
   private initializeService(): void {
     // Vérifier d'abord si le serveur est disponible avec un délai
     setTimeout(() => {
-      this.apiService.getConnectionStatus().subscribe(isConnected => {
+      this.apiService.getConnectionStatus().subscribe((isConnected) => {
         if (isConnected) {
           this.useLocalStorageSignal.set(false);
           // Charger les données depuis l'API
@@ -64,11 +60,11 @@ export class TaskService {
         this.tasksSignal.set(tasks);
       },
       error: (error) => {
-        console.error('Erreur lors du chargement depuis l\'API:', error);
+        console.error("Erreur lors du chargement depuis l'API:", error);
         // Fallback vers localStorage
         this.useLocalStorageSignal.set(true);
         this.loadTasksFromLocalStorage();
-      }
+      },
     });
   }
 
@@ -80,7 +76,7 @@ export class TaskService {
           ...task,
           nextDueDate: new Date(task.nextDueDate),
           lastCompleted: task.lastCompleted ? new Date(task.lastCompleted) : undefined,
-          history: this.parseHistory((task as unknown as { history?: { date: string; author: Assignee }[] }).history)
+          history: this.parseHistory((task as unknown as { history?: { date: string; author: Assignee }[] }).history),
         }));
         this.tasksSignal.set(tasks);
       } catch (error) {
@@ -118,7 +114,7 @@ export class TaskService {
       const newTask: Task = {
         ...task,
         id: this.generateId(),
-        isActive: true
+        isActive: true,
       };
 
       const currentTasks = this.tasksSignal();
@@ -135,7 +131,7 @@ export class TaskService {
           // Fallback vers localStorage en cas d'erreur
           this.useLocalStorageSignal.set(true);
           this.addTask(task);
-        }
+        },
       });
     }
   }
@@ -143,7 +139,7 @@ export class TaskService {
   updateTask(task: Task): void {
     if (this.useLocalStorageSignal()) {
       const currentTasks = this.tasksSignal();
-      const index = currentTasks.findIndex(t => t.id === task.id);
+      const index = currentTasks.findIndex((t) => t.id === task.id);
 
       if (index !== -1) {
         const updatedTasks = [...currentTasks];
@@ -155,7 +151,7 @@ export class TaskService {
       this.apiService.updateTask(task).subscribe({
         next: (updatedTask) => {
           const currentTasks = this.tasksSignal();
-          const index = currentTasks.findIndex(t => t.id === task.id);
+          const index = currentTasks.findIndex((t) => t.id === task.id);
           if (index !== -1) {
             const updatedTasks = [...currentTasks];
             updatedTasks[index] = updatedTask;
@@ -167,7 +163,7 @@ export class TaskService {
           // Fallback vers localStorage
           this.useLocalStorageSignal.set(true);
           this.updateTask(task);
-        }
+        },
       });
     }
   }
@@ -175,14 +171,14 @@ export class TaskService {
   deleteTask(taskId: string): void {
     if (this.useLocalStorageSignal()) {
       const currentTasks = this.tasksSignal();
-      const filteredTasks = currentTasks.filter(t => t.id !== taskId);
+      const filteredTasks = currentTasks.filter((t) => t.id !== taskId);
       this.tasksSignal.set(filteredTasks);
       this.saveTasksToLocalStorage();
     } else {
       this.apiService.deleteTask(taskId).subscribe({
         next: () => {
           const currentTasks = this.tasksSignal();
-          const filteredTasks = currentTasks.filter(t => t.id !== taskId);
+          const filteredTasks = currentTasks.filter((t) => t.id !== taskId);
           this.tasksSignal.set(filteredTasks);
         },
         error: (error) => {
@@ -190,7 +186,7 @@ export class TaskService {
           // Fallback vers localStorage
           this.useLocalStorageSignal.set(true);
           this.deleteTask(taskId);
-        }
+        },
       });
     }
   }
@@ -198,7 +194,7 @@ export class TaskService {
   completeTask(taskId: string): void {
     if (this.useLocalStorageSignal()) {
       const currentTasks = this.tasksSignal();
-      const task = currentTasks.find(t => t.id === taskId);
+      const task = currentTasks.find((t) => t.id === taskId);
 
       if (task) {
         const author = (localStorage.getItem('current_user') as Assignee) || task.assignee;
@@ -207,9 +203,9 @@ export class TaskService {
           lastCompleted: new Date(),
           nextDueDate: this.calculateNextDueDate(task),
           isActive: true, // Réactiver la tâche
-          history: [...(task.history || []), { date: new Date(), author }]
+          history: [...(task.history || []), { date: new Date(), author }],
         };
-        const updatedTasks = currentTasks.map(t => t.id === taskId ? updatedTask : t);
+        const updatedTasks = currentTasks.map((t) => (t.id === taskId ? updatedTask : t));
         this.tasksSignal.set(updatedTasks);
         this.saveTasksToLocalStorage();
       }
@@ -217,7 +213,7 @@ export class TaskService {
       this.apiService.completeTask(taskId).subscribe({
         next: (updatedTask) => {
           const currentTasks = this.tasksSignal();
-          const index = currentTasks.findIndex(t => t.id === taskId);
+          const index = currentTasks.findIndex((t) => t.id === taskId);
           if (index !== -1) {
             const updatedTasks = [...currentTasks];
             updatedTasks[index] = updatedTask;
@@ -229,7 +225,7 @@ export class TaskService {
           // Fallback vers localStorage
           this.useLocalStorageSignal.set(true);
           this.completeTask(taskId);
-        }
+        },
       });
     }
   }
@@ -237,7 +233,7 @@ export class TaskService {
   // Méthodes pour les requêtes spécialisées (compatibilité)
   getTasksByCategory(category: string): Observable<Task[]> {
     if (this.useLocalStorageSignal()) {
-      return of(this.tasksSignal().filter(task => task.category === category));
+      return of(this.tasksSignal().filter((task) => task.category === category));
     } else {
       return this.apiService.getTasksByCategory(category);
     }
