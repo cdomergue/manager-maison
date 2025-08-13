@@ -4,6 +4,7 @@
 .note-content p { margin: 0.25rem 0; }
 .note-content ul { list-style: disc inside; margin: 0.25rem 0; }
 .note-content ol { list-style: decimal inside; margin: 0.25rem 0; }
+.note-content a { color: #2563eb; text-decoration: underline; word-break: break-word; }
 .btn { transition: background-color .15s ease; }
 .btn.active { background-color: #e0e7ff; }
 

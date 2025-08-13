@@ -32,7 +32,8 @@ export class NotesComponent {
     strike: false,
     ul: false,
     ol: false,
-    block: 'P'
+    block: 'P',
+    link: false
   };
 
   private activeEditor: 'create' | 'edit' = 'create';
@@ -113,6 +114,70 @@ export class NotesComponent {
     } catch {}
   }
 
+  insertLink(editor: HTMLElement | null): void {
+    if (!editor) return;
+    editor.focus();
+    const raw = window.prompt('URL du lien (http(s)://...)')?.trim();
+    if (!raw) return;
+    let href = raw;
+    if (!/^https?:\/\//i.test(href)) {
+      href = `https://${href}`;
+    }
+    try {
+      const url = new URL(href);
+      if (url.protocol !== 'http:' && url.protocol !== 'https:') return;
+      href = url.href;
+    } catch {
+      return;
+    }
+
+    const selection = window.getSelection();
+    const hasSelection = !!selection && selection.rangeCount > 0 && !selection.getRangeAt(0).collapsed;
+    try {
+      if (hasSelection) {
+        document.execCommand('createLink', false, href);
+      } else {
+        const anchorHtml = `<a href="${href}" target="_blank" rel="noopener noreferrer">${href}</a>`;
+        document.execCommand('insertHTML', false, anchorHtml);
+      }
+    } catch {}
+
+    this.sanitizeLinks(editor);
+    this.onEditorInput(editor);
+  }
+
+  unlink(editor: HTMLElement | null): void {
+    if (!editor) return;
+    editor.focus();
+    try {
+      document.execCommand('unlink');
+    } catch {}
+    this.onEditorInput(editor);
+  }
+
+  private sanitizeLinks(root: HTMLElement): void {
+    const anchors = Array.from(root.querySelectorAll('a')) as HTMLAnchorElement[];
+    for (const a of anchors) {
+      const href = a.getAttribute('href') || '';
+      if (!href) {
+        a.replaceWith(...Array.from(a.childNodes));
+        continue;
+      }
+      try {
+        const url = new URL(href, window.location.origin);
+        if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+          a.replaceWith(...Array.from(a.childNodes));
+          continue;
+        }
+        a.href = url.href;
+        a.target = '_blank';
+        a.rel = 'noopener noreferrer';
+      } catch {
+        a.replaceWith(...Array.from(a.childNodes));
+      }
+    }
+  }
+
   onEditorInput(editor: HTMLElement | null): void {
     if (!editor) return;
     // Sauvegarder le contenu dans le bon buffer
@@ -137,6 +202,18 @@ export class NotesComponent {
     } catch {
       // No-op
     }
+
+    // Déterminer si la sélection courante est dans un lien
+    try {
+      const sel = window.getSelection();
+      let node: Node | null | undefined = sel?.anchorNode || null;
+      let inLink = false;
+      while (node && node !== editor) {
+        if ((node as HTMLElement).nodeName === 'A') { inLink = true; break; }
+        node = node.parentNode;
+      }
+      this.toolbar.link = inLink;
+    } catch {}
   }
 }
 

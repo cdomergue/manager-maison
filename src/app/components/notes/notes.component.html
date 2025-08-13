@@ -31,6 +31,14 @@
           <button type="button" class="btn px-2 py-1 border rounded" [class.active]="toolbar.ol"
                   (click)="format(getCurrentEditor(),'insertOrderedList'); onEditorInput(getCurrentEditor())">1. Liste
           </button>
+          <span class="mx-1 h-4 w-px bg-gray-300 inline-block align-middle"></span>
+          <button type="button" class="btn px-2 py-1 border rounded" [class.active]="toolbar.link"
+                  title="Insérer un lien"
+                  (click)="insertLink(getCurrentEditor())">Lien</button>
+          <button type="button" class="btn px-2 py-1 border rounded"
+                  [disabled]="!toolbar.link"
+                  title="Supprimer le lien"
+                  (click)="unlink(getCurrentEditor())">Retirer lien</button>
         </div>
         <div
           #createEditor
@@ -72,6 +80,9 @@
                 <button type="button" class="btn px-2 py-1 border rounded" [class.active]="toolbar.strike" (click)="format(getCurrentEditor(),'strikeThrough'); onEditorInput(getCurrentEditor())"><span class="line-through">S</span></button>
                 <button type="button" class="btn px-2 py-1 border rounded" [class.active]="toolbar.ul" (click)="format(getCurrentEditor(),'insertUnorderedList'); onEditorInput(getCurrentEditor())">• Liste</button>
                 <button type="button" class="btn px-2 py-1 border rounded" [class.active]="toolbar.ol" (click)="format(getCurrentEditor(),'insertOrderedList'); onEditorInput(getCurrentEditor())">1. Liste</button>
+                <span class="mx-1 h-4 w-px bg-gray-300 inline-block align-middle"></span>
+                <button type="button" class="btn px-2 py-1 border rounded" [class.active]="toolbar.link" title="Insérer un lien" (click)="insertLink(getCurrentEditor())">Lien</button>
+                <button type="button" class="btn px-2 py-1 border rounded" [disabled]="!toolbar.link" title="Supprimer le lien" (click)="unlink(getCurrentEditor())">Retirer lien</button>
               </div>
               <div
                 #editEditor
