@@ -93,8 +93,8 @@
       </div>
 
       <!-- Priorité -->
-      <div>
-        <label for="desktop-priority" class="block text-sm font-medium text-gray-700 mb-1">Priorité</label>
+            <div>
+              <label for="desktop-priority" class="block text-sm font-medium text-gray-700 mb-1">Priorité</label>
         <select
           id="desktop-priority"
           [ngModel]="selectedPriority()"
@@ -147,6 +147,11 @@
               <div class="font-medium" [ngClass]="getDueDateClass(task)">
                 {{ getDueDateText(task) }}
               </div>
+                @if (task.rrule) {
+                  <div class="mt-1 text-[11px] text-gray-500 truncate max-w-[140px]" title="{{ task.rrule }}">
+                    RRULE: {{ task.rrule }}
+                  </div>
+                }
             </div>
           </div>
 
@@ -156,23 +161,25 @@
           }
 
           <!-- Info compacte mobile -->
-          <div class="text-xs text-gray-500 mb-4 space-y-1">
+            <div class="text-xs text-gray-500 mb-4 space-y-1">
             <div>
-              📅
-              @switch (task.frequency) {
-                @case ("custom") {
-                  <span>{{ task.customDays }} jours</span>
+                @if (!task.rrule) {
+                  📅
+                  @switch (task.frequency) {
+                    @case ("custom") {
+                      <span>{{ task.customDays }} jours</span>
+                    }
+                    @case ("daily") {
+                      <span>Quotidienne</span>
+                    }
+                    @case ("weekly") {
+                      <span>Hebdomadaire</span>
+                    }
+                    @case ("monthly") {
+                      <span>Mensuelle</span>
+                    }
+                  }
                 }
-                @case ("daily") {
-                  <span>Quotidienne</span>
-                }
-                @case ("weekly") {
-                  <span>Hebdomadaire</span>
-                }
-                @case ("monthly") {
-                  <span>Mensuelle</span>
-                }
-              }
             </div>
             @if (task.lastCompleted) {
               <div>🕐 Dernière: {{ formatDate(task.lastCompleted) }}</div>
@@ -248,22 +255,30 @@
             <!-- Informations desktop -->
             <div class="flex flex-wrap gap-4 text-sm text-gray-500 mb-3">
               <span>
-                <strong>Fréquence: </strong>
-                @switch (task.frequency) {
-                  @case ("custom") {
-                    <span>{{ task.customDays }} jours</span>
-                  }
-                  @case ("daily") {
-                    <span>Quotidienne</span>
-                  }
-                  @case ("weekly") {
-                    <span>Hebdomadaire</span>
-                  }
-                  @case ("monthly") {
-                    <span>Mensuelle</span>
+                @if (!task.rrule) {
+                  <strong>Fréquence: </strong>
+                  @switch (task.frequency) {
+                    @case ("custom") {
+                      <span>{{ task.customDays }} jours</span>
+                    }
+                    @case ("daily") {
+                      <span>Quotidienne</span>
+                    }
+                    @case ("weekly") {
+                      <span>Hebdomadaire</span>
+                    }
+                    @case ("monthly") {
+                      <span>Mensuelle</span>
+                    }
                   }
                 }
               </span>
+              @if (task.rrule) {
+                <span class="truncate">
+                  <strong>RRULE:</strong>
+                  <code class="bg-gray-100 border border-gray-200 px-1 py-0.5 rounded text-gray-700">{{ task.rrule }}</code>
+                </span>
+              }
               <span>
                 <strong>Prochaine échéance:</strong>
                 <span class="font-medium" [ngClass]="getDueDateClass(task)">

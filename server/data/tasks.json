@@ -1,28 +1,70 @@
 {
   "tasks": [
     {
-      "name": "test",
-      "category": "Cuisine",
-      "frequency": "daily",
+      "name": "Test rrule",
+      "category": "menage",
+      "frequency": "weekly",
+      "rrule": "RRULE:FREQ=YEARLY;BYMONTH=12;BYDAY=TU;BYSETPOS=3",
+      "exDates": [],
       "priority": "medium",
-      "nextDueDate": "2025-08-14T21:59:52.971Z",
+      "nextDueDate": "2025-12-16T23:26:41.000Z",
       "isActive": true,
-      "assignee": null,
-      "id": "mdt4ujws62h3iuqez1b",
-      "lastCompleted": "2025-08-13T21:59:52.971Z",
+      "assignee": "",
+      "id": "meal5szzrxc2zu24b8",
+      "lastCompleted": "2025-08-13T23:26:41.413Z",
       "history": [
         {
-          "date": "2025-08-13T21:57:59.619Z",
+          "date": "2025-08-13T23:12:52.501Z",
           "author": "Christophe"
         },
         {
-          "date": "2025-08-13T21:59:52.971Z",
+          "date": "2025-08-13T23:20:09.803Z",
+          "author": "Christophe"
+        },
+        {
+          "date": "2025-08-13T23:26:36.500Z",
+          "author": "Christophe"
+        },
+        {
+          "date": "2025-08-13T23:26:41.413Z",
+          "author": "Christophe"
+        }
+      ]
+    },
+    {
+      "name": "Déposer encombrants",
+      "description": "A partir de 21h dehors. Les encombrants passent le lendemain",
+      "category": "menage",
+      "frequency": "weekly",
+      "rrule": "RRULE:FREQ=MONTHLY;BYDAY=WE;BYSETPOS=3",
+      "exDates": [],
+      "priority": "medium",
+      "nextDueDate": "2025-08-19T22:00:00.000Z",
+      "isActive": true,
+      "assignee": "",
+      "id": "mealeehh8a3g0ndcqwb",
+      "lastCompleted": "2025-08-13T23:20:41.857Z",
+      "history": [
+        {
+          "date": "2025-08-13T23:20:00.995Z",
+          "author": "Christophe"
+        },
+        {
+          "date": "2025-08-13T23:20:05.505Z",
+          "author": "Christophe"
+        },
+        {
+          "date": "2025-08-13T23:20:11.121Z",
+          "author": "Christophe"
+        },
+        {
+          "date": "2025-08-13T23:20:41.857Z",
           "author": "Christophe"
         }
       ]
     }
   ],
-  "lastUpdated": "2025-08-13T21:59:52.971Z",
+  "lastUpdated": "2025-08-13T23:26:41.414Z",
   "shoppingItems": [
     {
       "id": "me1ugcejd8u37lf652f",

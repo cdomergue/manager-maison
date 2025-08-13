@@ -38,23 +38,36 @@
       <!-- Informations détaillées -->
       <div class="space-y-4">
         <div>
-          <h3 class="text-sm font-medium text-gray-700 mb-2">Fréquence</h3>
-          <p class="text-gray-600">
-            @switch (task.frequency) {
-              @case ("custom") {
-                {{ task.customDays }} jours
+          @if (!task.rrule) {
+            <h3 class="text-sm font-medium text-gray-700 mb-2">Fréquence</h3>
+            <p class="text-gray-600">
+              @switch (task.frequency) {
+                @case ("custom") {
+                  {{ task.customDays }} jours
+                }
+                @case ("daily") {
+                  Quotidienne
+                }
+                @case ("weekly") {
+                  Hebdomadaire
+                }
+                @case ("monthly") {
+                  Mensuelle
+                }
               }
-              @case ("daily") {
-                Quotidienne
-              }
-              @case ("weekly") {
-                Hebdomadaire
-              }
-              @case ("monthly") {
-                Mensuelle
-              }
-            }
-          </p>
+            </p>
+          }
+          @if (task.rrule) {
+            <div class="mt-2 text-sm">
+              <span class="text-gray-700 font-medium">Récurrence avancée (RRULE):</span>
+              <code class="ml-1 bg-gray-100 border border-gray-200 px-1 py-0.5 rounded text-gray-800">{{ task.rrule }}</code>
+            </div>
+          }
+          @if (task.exDates && task.exDates.length) {
+            <div class="mt-1 text-xs text-gray-500">
+              Exceptions: {{ task.exDates.length }} date(s) exclue(s)
+            </div>
+          }
         </div>
 
         <div>

@@ -43,6 +43,8 @@ export class TaskFormComponent implements OnInit {
       category: [''],
       frequency: ['weekly', Validators.required],
       customDays: [7],
+      rrule: [''],
+      exDates: [''], // CSV de dates (YYYY-MM-DD)
       priority: ['medium', Validators.required],
       nextDueDate: ['', Validators.required],
       assignee: [''],
@@ -60,6 +62,8 @@ export class TaskFormComponent implements OnInit {
         category: this.task.category || '',
         frequency: this.task.frequency,
         customDays: this.task.customDays || 7,
+        rrule: this.task.rrule || '',
+        exDates: (this.task.exDates || []).map((d) => d.split('T')[0]).join(','),
         priority: this.task.priority,
         nextDueDate: this.formatDateForInput(this.task.nextDueDate),
       });
@@ -92,6 +96,12 @@ export class TaskFormComponent implements OnInit {
         category: formValue.category || undefined,
         frequency: formValue.frequency,
         customDays: formValue.frequency === 'custom' ? formValue.customDays : undefined,
+        rrule: (formValue.rrule || '').trim() || undefined,
+        exDates: (formValue.exDates || '')
+          .split(',')
+          .map((s: string) => s.trim())
+          .filter((s: string) => s)
+          .map((d: string) => new Date(d).toISOString()),
         priority: formValue.priority,
         nextDueDate: new Date(formValue.nextDueDate),
         isActive: true,

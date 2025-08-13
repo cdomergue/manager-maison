@@ -7,6 +7,7 @@ const config = require("./config");
 const categoriesRoutes = require("./routes/categories");
 
 const app = express();
+const { RRule, RRuleSet, rrulestr } = require('rrule');
 const PORT = process.env.PORT || config.port;
 const DB_PATH = path.join(__dirname, config.database.path);
 
@@ -488,9 +489,14 @@ app.get("*", (req, res) => {
 
 // Fonction pour calculer la prochaine date d'échéance
 function calculateNextDueDate(task) {
-  const now = new Date();
-  const nextDate = new Date(now);
+  const base = new Date();
 
+  if (task.rrule) {
+    const next = computeNextWithRRule(task, base);
+    return next.toISOString();
+  }
+
+  const nextDate = new Date(base);
   switch (task.frequency) {
     case "daily":
       nextDate.setDate(nextDate.getDate() + 1);
@@ -506,7 +512,97 @@ function calculateNextDueDate(task) {
       break;
   }
 
-  return nextDate.toISOString();
+  return skipExcludedDates(nextDate, task).toISOString();
+}
+
+function computeNextWithRRule(task, fromDate) {
+  try {
+    const set = new RRuleSet();
+    const rule = rrulestr(task.rrule, { forceset: false });
+    const after = task.lastCompleted ? new Date(task.lastCompleted) : new Date(fromDate);
+    after.setSeconds(after.getSeconds() + 1);
+
+    set.rrule(rule);
+    (task.exDates || []).forEach((iso) => {
+      const d = new Date(iso);
+      if (!isNaN(d.getTime())) set.exdate(d);
+    });
+
+    const startYear = after.getFullYear() - 1;
+    const endYear = after.getFullYear() + 2;
+    for (let y = startYear; y <= endYear; y++) {
+      [
+        `${y}-01-01`,
+        `${y}-05-01`,
+        `${y}-05-08`,
+        `${y}-07-14`,
+        `${y}-08-15`,
+        `${y}-11-01`,
+        `${y}-11-11`,
+        `${y}-12-25`,
+      ].forEach((s) => set.exdate(new Date(`${s}T00:00:00.000Z`)));
+    }
+
+    const next = set.after(after, true);
+    return next ? next : skipExcludedDates(new Date(fromDate), task);
+  } catch {
+    return skipExcludedDates(new Date(fromDate), task);
+  }
+}
+
+// parseRRule supprimé (remplacé par rrule)
+
+function nextByDayAfter(from, byDays, includeToday = false) {
+  const start = new Date(from);
+  start.setHours(0, 0, 0, 0);
+  if (!includeToday) {
+    start.setDate(start.getDate() + 1);
+  }
+  for (let i = 0; i < 14; i++) {
+    const d = new Date(start);
+    d.setDate(start.getDate() + i);
+    if (byDays.includes(d.getDay())) {
+      return d;
+    }
+  }
+  return new Date(from.getTime() + 7 * 24 * 60 * 60 * 1000);
+}
+
+function skipExcludedDates(date, task) {
+  let d = new Date(date);
+  while (isExcluded(d, task)) {
+    d.setDate(d.getDate() + 1);
+  }
+  return d;
+}
+
+// nthWeekdayOfMonth supprimé (remplacé par rrule)
+
+function isExcluded(date, task) {
+  return isHolidayFrance(date) || isExceptionDate(date, task.exDates || []);
+}
+
+function isExceptionDate(date, exceptions) {
+  if (!exceptions || exceptions.length === 0) return false;
+  const yyyyMmDd = date.toISOString().split('T')[0];
+  return exceptions.some((iso) => typeof iso === 'string' && iso.startsWith(yyyyMmDd));
+}
+
+function isHolidayFrance(date) {
+  const [ymd] = date.toISOString().split('T');
+  const [, mm, dd] = ymd.split('-');
+  const mmdd = `${mm}-${dd}`;
+  const fixed = new Set([
+    '01-01',
+    '05-01',
+    '05-08',
+    '07-14',
+    '08-15',
+    '11-01',
+    '11-11',
+    '12-25',
+  ]);
+  return fixed.has(mmdd);
 }
 
 // Démarrage du serveur

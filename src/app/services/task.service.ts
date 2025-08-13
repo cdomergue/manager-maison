@@ -2,6 +2,7 @@ import { computed, inject, Injectable, signal } from '@angular/core';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { Observable, of } from 'rxjs';
 import { Assignee, Task, TaskHistoryEntry } from '../models/task.model';
+import { RRule, RRuleSet, rrulestr } from 'rrule';
 import { ApiService } from './api.service';
 import { StorageService } from './storage.service';
 
@@ -253,9 +254,15 @@ export class TaskService {
   }
 
   private calculateNextDueDate(task: Task): Date {
-    const now = new Date();
-    const nextDate = new Date(now);
+    const base = new Date();
 
+    // Si une RRULE est définie, elle prime sur la fréquence simple
+    if (task.rrule) {
+      return this.computeNextWithRRule(task, base);
+    }
+
+    // Sinon, logique simple existante
+    const nextDate = new Date(base);
     switch (task.frequency) {
       case 'daily':
         nextDate.setDate(nextDate.getDate() + 1);
@@ -271,6 +278,109 @@ export class TaskService {
         break;
     }
 
-    return nextDate;
+    return this.skipExcludedDates(nextDate, task);
+  }
+
+  private computeNextWithRRule(task: Task, fromDate: Date): Date {
+    try {
+      const set = new RRuleSet();
+      // Base: parser la RRULE utilisateur
+      const rule = rrulestr(task.rrule!, { forceset: false }) as RRule;
+      // Ancrer l'itération après la dernière complétion (si dispo) sinon après fromDate
+      const after = task.lastCompleted ? new Date(task.lastCompleted) : new Date(fromDate);
+      after.setSeconds(after.getSeconds() + 1);
+
+      set.rrule(rule);
+      // Exceptions explicites
+      (task.exDates || []).forEach((iso) => {
+        const d = new Date(iso);
+        if (!isNaN(d.getTime())) set.exdate(d);
+      });
+
+      // Exclure jours fériés connus
+      // On exclut pour +/- 2 ans autour de la date de départ
+      const startYear = after.getFullYear() - 1;
+      const endYear = after.getFullYear() + 2;
+      for (let y = startYear; y <= endYear; y++) {
+        [
+          `${y}-01-01`,
+          `${y}-05-01`,
+          `${y}-05-08`,
+          `${y}-07-14`,
+          `${y}-08-15`,
+          `${y}-11-01`,
+          `${y}-11-11`,
+          `${y}-12-25`,
+        ].forEach((s) => set.exdate(new Date(`${s}T00:00:00.000Z`)));
+      }
+
+      const next = set.after(after, true);
+      return next ? next : this.skipExcludedDates(new Date(fromDate), task);
+    } catch {
+      return this.skipExcludedDates(new Date(fromDate), task);
+    }
+  }
+
+  // Ancien parser conservé uniquement si besoin futur
+  // private parseRRule(...) supprimé au profit de rrule
+
+  private nextByDayAfter(from: Date, byDays: number[], includeToday = false): Date {
+    const start = new Date(from);
+    start.setHours(0, 0, 0, 0);
+    if (!includeToday) {
+      start.setDate(start.getDate() + 1);
+    }
+
+    for (let i = 0; i < 14; i++) {
+      const d = new Date(start);
+      d.setDate(start.getDate() + i);
+      if (byDays.includes(d.getDay())) {
+        return d;
+      }
+    }
+    return new Date(from.getTime() + 7 * 24 * 60 * 60 * 1000);
+  }
+
+  private nthWeekdayOfMonth(year: number, monthIndex0: number, weekday: number, n: number): Date {
+    const firstOfMonth = new Date(year, monthIndex0, 1);
+    const firstWeekday = firstOfMonth.getDay();
+    const offset = (weekday - firstWeekday + 7) % 7;
+    const day = 1 + offset + (n - 1) * 7;
+    return new Date(year, monthIndex0, day);
+  }
+
+  private skipExcludedDates(date: Date, task: Task): Date {
+    const d = new Date(date);
+    while (this.isExcluded(d, task)) {
+      d.setDate(d.getDate() + 1);
+    }
+    return d;
+  }
+
+  private isExcluded(date: Date, task: Task): boolean {
+    return this.isHolidayFrance(date) || this.isExceptionDate(date, task.exDates || []);
+  }
+
+  private isExceptionDate(date: Date, exceptions: string[]): boolean {
+    if (!exceptions || exceptions.length === 0) return false;
+    const yyyyMmDd = date.toISOString().split('T')[0];
+    return exceptions.some((iso) => iso.startsWith(yyyyMmDd));
+  }
+
+  private isHolidayFrance(date: Date): boolean {
+    const [, monthStr, dayStr] = date.toISOString().split('T')[0].split('-');
+    const mmdd = `${monthStr}-${dayStr}`;
+    const fixed = new Set([
+      '01-01',
+      '05-01',
+      '05-08',
+      '07-14',
+      '08-15',
+      '11-01',
+      '11-11',
+      '12-25',
+    ]);
+    if (fixed.has(mmdd)) return true;
+    return false;
   }
 }

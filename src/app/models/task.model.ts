@@ -20,6 +20,9 @@ export interface Task {
   description?: string;
   frequency: Frequency;
   customDays?: number;
+  // Récurrence avancée (prioritaire si défini)
+  rrule?: string; // ex: "FREQ=WEEKLY;INTERVAL=2;BYDAY=MO"
+  exDates?: string[]; // Dates ISO à exclure (exceptions)
   nextDueDate: Date;
   lastCompleted?: Date;
   isActive: boolean;
