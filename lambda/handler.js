@@ -1,4 +1,5 @@
 const AWS = require("aws-sdk");
+const {RRule, RRuleSet, rrulestr} = require('rrule');
 
 // Configuration DynamoDB
 const dynamodb = new AWS.DynamoDB.DocumentClient();
@@ -802,25 +803,119 @@ exports.deleteCategory = async (event) => {
 
 // Fonction utilitaire pour calculer la prochaine date
 function calculateNextDueDate(task) {
-  const lastCompleted = new Date(task.lastCompleted);
-  let nextDue = new Date(lastCompleted);
+  const base = new Date();
 
-  switch (task.frequency) {
-    case "daily":
-      nextDue.setDate(nextDue.getDate() + 1);
-      break;
-    case "weekly":
-      nextDue.setDate(nextDue.getDate() + 7);
-      break;
-    case "monthly":
-      nextDue.setMonth(nextDue.getMonth() + 1);
-      break;
-    case "custom":
-      nextDue.setDate(nextDue.getDate() + (task.customDays || 7));
-      break;
-    default:
-      nextDue.setDate(nextDue.getDate() + 7);
+  if (task.rrule) {
+    return computeNextWithRRule(task, base);
   }
 
-  return nextDue;
+  const nextDate = new Date(base);
+  switch (task.frequency) {
+    case "daily":
+      nextDate.setDate(nextDate.getDate() + 1);
+      break;
+    case "weekly":
+      nextDate.setDate(nextDate.getDate() + 7);
+      break;
+    case "monthly":
+      nextDate.setMonth(nextDate.getMonth() + 1);
+      break;
+    case "custom":
+      nextDate.setDate(nextDate.getDate() + (task.customDays || 7));
+      break;
+    default:
+      nextDate.setDate(nextDate.getDate() + 7);
+  }
+
+  return skipExcludedDates(nextDate, task);
+}
+
+function computeNextWithRRule(task, fromDate) {
+  try {
+    const set = new RRuleSet();
+    const rule = rrulestr(task.rrule, {forceset: false});
+    const after = task.lastCompleted ? new Date(task.lastCompleted) : new Date(fromDate);
+    after.setSeconds(after.getSeconds() + 1);
+
+    set.rrule(rule);
+    (task.exDates || []).forEach((iso) => {
+      const d = new Date(iso);
+      if (!isNaN(d.getTime())) set.exdate(d);
+    });
+
+    const startYear = after.getFullYear() - 1;
+    const endYear = after.getFullYear() + 2;
+    for (let y = startYear; y <= endYear; y++) {
+      [
+        `${y}-01-01`,
+        `${y}-05-01`,
+        `${y}-05-08`,
+        `${y}-07-14`,
+        `${y}-08-15`,
+        `${y}-11-01`,
+        `${y}-11-11`,
+        `${y}-12-25`,
+      ].forEach((s) => set.exdate(new Date(`${s}T00:00:00.000Z`)));
+    }
+
+    const next = set.after(after, true);
+    return next ? next : skipExcludedDates(new Date(fromDate), task);
+  } catch {
+    return skipExcludedDates(new Date(fromDate), task);
+  }
+}
+
+// parseRRule supprimé (remplacé par rrule)
+
+function nextByDayAfter(from, byDays, includeToday = false) {
+  const start = new Date(from);
+  start.setHours(0, 0, 0, 0);
+  if (!includeToday) {
+    start.setDate(start.getDate() + 1);
+  }
+  for (let i = 0; i < 14; i++) {
+    const d = new Date(start);
+    d.setDate(start.getDate() + i);
+    if (byDays.includes(d.getDay())) {
+      return d;
+    }
+  }
+  return new Date(from.getTime() + 7 * 24 * 60 * 60 * 1000);
+}
+
+// nthWeekdayOfMonth supprimé (remplacé par rrule)
+
+function skipExcludedDates(date, task) {
+  let d = new Date(date);
+  while (isExcluded(d, task)) {
+    d.setDate(d.getDate() + 1);
+  }
+  return d;
+}
+
+function isExcluded(date, task) {
+  return isHolidayFrance(date) || isExceptionDate(date, task.exDates || []);
+}
+
+function isExceptionDate(date, exceptions) {
+  if (!exceptions || exceptions.length === 0) return false;
+  const yyyyMmDd = date.toISOString().split('T')[0];
+  return exceptions.some((iso) => typeof iso === 'string' && iso.startsWith(yyyyMmDd));
+}
+
+function isHolidayFrance(date) {
+  const [ymd] = date.toISOString().split('T');
+  const [, mm, dd] = ymd.split('-');
+  const mmdd = `${mm}-${dd}`;
+  const fixed = new Set([
+    '01-01',
+    '05-01',
+    '05-08',
+    '07-14',
+    '08-15',
+    '11-01',
+    '11-11',
+    '12-25',
+  ]);
+  return fixed.has(mmdd);
 }
