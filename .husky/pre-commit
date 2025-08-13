@@ -1,3 +1,4 @@
+ng lint --fix
 npx --no -- lint-staged
 
 
