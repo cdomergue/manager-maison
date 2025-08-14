@@ -22,8 +22,11 @@ const envProdPath = path.join(__dirname, "src/environments/environment.prod.ts")
 // Lire le fichier d'environnement de production
 const envProdContent = fs.readFileSync(envProdPath, "utf8");
 
-// Remplacer le placeholder par la vraie URL
-const updatedContent = envProdContent.replace("API_URL_TO_BE_REPLACED", API_URL);
+// Remplacer le placeholder par la vraie URL avec le préfixe /api
+// Si l'URL se termine par '/', on l'enlève avant d'ajouter '/api'
+const cleanApiUrl = API_URL.endsWith("/") ? API_URL.slice(0, -1) : API_URL;
+const fullApiUrl = `${cleanApiUrl}/api`;
+const updatedContent = envProdContent.replace("API_URL_TO_BE_REPLACED", fullApiUrl);
 
 // Écrire le fichier mis à jour
 fs.writeFileSync(envProdPath, updatedContent);

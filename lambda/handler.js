@@ -1,5 +1,5 @@
 const AWS = require("aws-sdk");
-const {RRule, RRuleSet, rrulestr} = require('rrule');
+const { RRule, RRuleSet, rrulestr } = require("rrule");
 
 // Configuration DynamoDB
 const dynamodb = new AWS.DynamoDB.DocumentClient();
@@ -13,11 +13,14 @@ const NOTES_TABLE_NAME = process.env.NOTES_TABLE_NAME || "gestion-maison-notes";
 const YOU_KNOW_WHAT = "21cdf2c38551";
 
 // Headers CORS pour toutes les réponses
+// Note: Les en-têtes CORS principaux sont configurés dans API Gateway (template.yaml)
+// Nous ajoutons seulement les en-têtes spécifiques nécessaires ici
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
     "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Secret-Key,X-User-Id",
   "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
+  "Access-Control-Max-Age": "86400", // Cache preflight pour 24h
 };
 
 // Fonction de vérification d'accès
@@ -237,9 +240,17 @@ exports.completeTask = async (event) => {
   }
 };
 
-// OPTIONS pour CORS
+// OPTIONS pour CORS - Gestion des requêtes preflight
 exports.options = async (event) => {
-  return response(200, {});
+  // Retourner une réponse OPTIONS complète pour les requêtes preflight
+  return {
+    statusCode: 200,
+    headers: {
+      ...corsHeaders,
+      "Access-Control-Allow-Credentials": "false", // Explicitement false pour * origin
+    },
+    body: JSON.stringify({ message: "CORS preflight response" }),
+  };
 };
 
 // ========== GESTION DES NOTES ==========
@@ -833,7 +844,7 @@ function calculateNextDueDate(task) {
 function computeNextWithRRule(task, fromDate) {
   try {
     const set = new RRuleSet();
-    const rule = rrulestr(task.rrule, {forceset: false});
+    const rule = rrulestr(task.rrule, { forceset: false });
     const after = task.lastCompleted ? new Date(task.lastCompleted) : new Date(fromDate);
     after.setSeconds(after.getSeconds() + 1);
 
@@ -899,23 +910,14 @@ function isExcluded(date, task) {
 
 function isExceptionDate(date, exceptions) {
   if (!exceptions || exceptions.length === 0) return false;
-  const yyyyMmDd = date.toISOString().split('T')[0];
-  return exceptions.some((iso) => typeof iso === 'string' && iso.startsWith(yyyyMmDd));
+  const yyyyMmDd = date.toISOString().split("T")[0];
+  return exceptions.some((iso) => typeof iso === "string" && iso.startsWith(yyyyMmDd));
 }
 
 function isHolidayFrance(date) {
-  const [ymd] = date.toISOString().split('T');
-  const [, mm, dd] = ymd.split('-');
+  const [ymd] = date.toISOString().split("T");
+  const [, mm, dd] = ymd.split("-");
   const mmdd = `${mm}-${dd}`;
-  const fixed = new Set([
-    '01-01',
-    '05-01',
-    '05-08',
-    '07-14',
-    '08-15',
-    '11-01',
-    '11-11',
-    '12-25',
-  ]);
+  const fixed = new Set(["01-01", "05-01", "05-08", "07-14", "08-15", "11-01", "11-11", "12-25"]);
   return fixed.has(mmdd);
 }

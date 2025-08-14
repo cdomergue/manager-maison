@@ -16,8 +16,9 @@ Globals:
   Api:
     Cors:
       AllowMethods: "'GET,POST,PUT,DELETE,OPTIONS'"
-      AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Secret-Key,X-User-Id'"
+      AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Secret-Key,X-User-Id,Accept,Cache-Control'"
       AllowOrigin: "'*'"
+      MaxAge: "'86400'"
 
 Resources:
   # Tables DynamoDB
@@ -88,8 +89,9 @@ Resources:
       StageName: prod
       Cors:
         AllowMethods: "'GET,POST,PUT,DELETE,OPTIONS'"
-        AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Secret-Key,X-User-Id'"
+        AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Secret-Key,X-User-Id,Accept,Cache-Control'"
         AllowOrigin: "'*'"
+        MaxAge: "'86400'"
 
   # Lambda Functions
   GetStatusFunction:
@@ -522,11 +524,17 @@ Resources:
       CodeUri: lambda/
       Handler: handler.options
       Events:
-        OptionsApi:
+        OptionsApiProxy:
           Type: Api
           Properties:
             RestApiId: !Ref Api
             Path: /api/{proxy+}
+            Method: options
+        OptionsApiRoot:
+          Type: Api
+          Properties:
+            RestApiId: !Ref Api
+            Path: /api
             Method: options
 
 Outputs:
