@@ -6,8 +6,8 @@ echo "======================================"
 
 # Configuration
 STACK_NAME="gestion-maison-backend"
-S3_BUCKET="gestion-maison-sam-artifacts"
-AWS_REGION="eu-west-1"
+S3_BUCKET="gestion-maison-sam-artifacts-eu-west-3"
+AWS_REGION="eu-west-3"
 
 # Couleurs
 GREEN='\033[0;32m'

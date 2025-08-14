@@ -62,3 +62,6 @@ samconfig.toml
 src/environments/environment.prod.local.ts
 local-build.sh
 .env.local
+
+# Migration backups
+dynamodb-backup-*

@@ -21,7 +21,7 @@ Ce projet utilise désormais des variables d'environnement pour masquer l'URL de
 Dans la console AWS Amplify, ajoutez la variable d'environnement suivante :
 
 ```
-API_URL = https://4cj8nou7ce.execute-api.eu-west-1.amazonaws.com/prod/api
+API_URL = votre.api.aws
 ```
 
 ### Processus de Déploiement

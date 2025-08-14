@@ -29,7 +29,7 @@ echo -e "${BLUE}📦 Installation des dépendances Angular...${NC}"
 npm install
 
 echo -e "${BLUE}🔨 Construction de l'application Angular...${NC}"
-npm run build
+npm run build -- --configuration=development
 
 if [ $? -ne 0 ]; then
     echo -e "${RED}❌ Erreur lors de la construction de l'application${NC}"
