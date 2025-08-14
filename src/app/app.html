@@ -1,11 +1,11 @@
-<div class="min-h-screen bg-gray-100">
-  <header class="bg-white shadow">
+<div class="min-h-screen bg-gray-100 dark:bg-gray-900 transition-colors">
+  <header class="bg-white dark:bg-gray-800 shadow">
     <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
       <div class="flex items-center justify-between gap-4">
-        <h1 class="text-3xl font-bold text-gray-900 flex items-center">
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-white flex items-center">
           <img ngSrc="/assets/maison.png" alt="Maison" width="72" height="72" />Maison
         </h1>
-        <div class="flex items-center gap-4 text-sm text-gray-600">
+        <div class="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-300">
           <div class="flex items-center gap-2">
             <div
               class="w-2.5 h-2.5 rounded-full"
@@ -18,40 +18,52 @@
             }
           </div>
           <div class="flex items-center gap-2">
+            <button
+              (click)="themeService.toggleTheme()"
+              class="px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              [title]="isDarkMode() ? 'Passer en mode clair' : 'Passer en mode sombre'"
+            >
+              {{ isDarkMode() ? "☀️" : "🌙" }}
+            </button>
             <a
               routerLink="/notifications"
-              class="px-3 py-2 rounded-md hover:bg-gray-100"
+              class="px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
               title="Configuration des notifications"
               >🔔</a
             >
-            <a routerLink="/settings" class="px-3 py-2 rounded-md hover:bg-gray-100" title="Paramètres">⚙️</a>
+            <a
+              routerLink="/settings"
+              class="px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              title="Paramètres"
+              >⚙️</a
+            >
           </div>
         </div>
       </div>
     </div>
   </header>
-  <nav class="bg-white border-b">
+  <nav class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex gap-2 py-3 text-sm">
         <a
           routerLink="/"
           routerLinkActive="active"
           [routerLinkActiveOptions]="{ exact: true }"
-          class="px-3 py-2 rounded-md border transition-colors text-gray-700 hover:text-blue-600 hover:border-blue-200"
+          class="px-3 py-2 rounded-md border transition-colors text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:border-blue-200 dark:hover:border-blue-600 border-gray-300 dark:border-gray-600"
         >
           Tâches
         </a>
         <a
           routerLink="/shopping"
           routerLinkActive="active"
-          class="px-3 py-2 rounded-md border transition-colors text-gray-700 hover:text-blue-600 hover:border-blue-200"
+          class="px-3 py-2 rounded-md border transition-colors text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:border-blue-200 dark:hover:border-blue-600 border-gray-300 dark:border-gray-600"
         >
           Liste de courses
         </a>
         <a
           routerLink="/notes"
           routerLinkActive="active"
-          class="px-3 py-2 rounded-md border transition-colors text-gray-700 hover:text-blue-600 hover:border-blue-200"
+          class="px-3 py-2 rounded-md border transition-colors text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:border-blue-200 dark:hover:border-blue-600 border-gray-300 dark:border-gray-600"
         >
           Notes
         </a>
@@ -59,20 +71,22 @@
     </div>
   </nav>
   <main class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-    <div class="bg-white shadow rounded-lg p-6">
+    <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
       <router-outlet />
     </div>
   </main>
   <app-user-select />
   @if (loading.isLoading()) {
-    <div class="fixed inset-0 z-50 grid place-items-center bg-black/20 pointer-events-none">
-      <div class="h-12 w-12 rounded-full border-4 border-blue-500 border-t-transparent animate-spin"></div>
+    <div class="fixed inset-0 z-50 grid place-items-center bg-black/20 dark:bg-black/40 pointer-events-none">
+      <div
+        class="h-12 w-12 rounded-full border-4 border-blue-500 dark:border-blue-400 border-t-transparent animate-spin"
+      ></div>
     </div>
   }
-  <footer class="bg-white border-t mt-12">
+  <footer class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 mt-12">
     <div class="container mx-auto px-4 py-6">
-      <div class="text-center text-gray-600">
-        <p>Créer par Christophe & Laurence</p>
+      <div class="text-center text-gray-600 dark:text-gray-300">
+        <p>Créer par Christophe, GTP5 et Claude 4 Sonnet pour Christophe & Laurence</p>
         <p class="text-sm mt-1">Application de gestion de la maison</p>
       </div>
     </div>

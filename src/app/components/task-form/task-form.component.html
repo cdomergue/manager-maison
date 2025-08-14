@@ -1,9 +1,9 @@
-<div class="bg-white rounded-lg shadow-lg p-6 max-w-2xl mx-auto">
+<div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 max-w-2xl mx-auto">
   <div class="mb-6">
-    <h2 class="text-2xl font-bold text-gray-800">
+    <h2 class="text-2xl font-bold text-gray-800 dark:text-white">
       {{ task ? "Modifier la tâche" : "Nouvelle tâche ménagère" }}
     </h2>
-    <p class="text-gray-600 mt-1">
+    <p class="text-gray-600 dark:text-gray-300 mt-1">
       {{ task ? "Modifiez les détails de votre tâche" : "Ajoutez une nouvelle tâche à votre planning" }}
     </p>
   </div>
@@ -12,13 +12,15 @@
     @let nameControl = taskForm.get("name");
     <!-- Nom de la tâche -->
     <div>
-      <label for="name" class="block text-sm font-medium text-gray-700 mb-1"> Nom de la tâche * </label>
+      <label for="name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        Nom de la tâche *
+      </label>
       <input
         id="name"
         type="text"
         formControlName="name"
         placeholder="Ex: Faire la vaisselle"
-        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
         [ngClass]="{ 'border-red-500': nameControl?.invalid && nameControl?.touched }"
       />
       @if (nameControl?.invalid && nameControl?.touched) {
@@ -35,23 +37,25 @@
 
     <!-- Description -->
     <div>
-      <label for="description" class="block text-sm font-medium text-gray-700 mb-1"> Description (optionnel) </label>
+      <label for="description" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        Description (optionnel)
+      </label>
       <textarea
         id="description"
         formControlName="description"
         rows="3"
         placeholder="Détails supplémentaires..."
-        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
       ></textarea>
     </div>
 
     <!-- Catégorie -->
     <div>
-      <label for="category" class="block text-sm font-medium text-gray-700 mb-1"> Catégorie </label>
+      <label for="category" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"> Catégorie </label>
       <select
         id="category"
         formControlName="category"
-        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
       >
         <option value="">Aucune catégorie</option>
         @for (category of categories; track category.id) {
@@ -64,11 +68,13 @@
 
     <!-- Fréquence -->
     <div>
-      <label for="frequency" class="block text-sm font-medium text-gray-700 mb-1"> Fréquence * </label>
+      <label for="frequency" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        Fréquence *
+      </label>
       <select
         id="frequency"
         formControlName="frequency"
-        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
       >
         @for (freq of frequencies; track freq.value) {
           <option [value]="freq.value">
@@ -81,7 +87,7 @@
     <!-- Jours personnalisés -->
     @if (isCustomFrequency) {
       <div>
-        <label for="customDays" class="block text-sm font-medium text-gray-700 mb-1">
+        <label for="customDays" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           Nombre de jours entre chaque tâche
         </label>
         <input
@@ -90,20 +96,22 @@
           formControlName="customDays"
           min="1"
           max="365"
-          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
         />
       </div>
     }
 
     <!-- Règle RRULE (optionnel) -->
     <div>
-      <label for="rrule" class="block text-sm font-medium text-gray-700 mb-1"> Récurrence avancée (RRULE) </label>
+      <label for="rrule" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        Récurrence avancée (RRULE)
+      </label>
       <input
         id="rrule"
         type="text"
         formControlName="rrule"
         placeholder="Ex: FREQ=WEEKLY;INTERVAL=2;BYDAY=MO"
-        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
       />
       <p class="text-gray-500 text-xs mt-1">Si renseigné, la RRULE prime sur la fréquence simple.</p>
 
@@ -155,24 +163,26 @@
 
     <!-- Dates d'exception (CSV) -->
     <div>
-      <label for="exDates" class="block text-sm font-medium text-gray-700 mb-1"> Exceptions (dates à exclure) </label>
+      <label for="exDates" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        Exceptions (dates à exclure)
+      </label>
       <input
         id="exDates"
         type="text"
         formControlName="exDates"
         placeholder="YYYY-MM-DD, YYYY-MM-DD, ..."
-        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
       />
       <p class="text-gray-500 text-xs mt-1">Dates exclues (jours fériés, vacances, etc.).</p>
     </div>
 
     <!-- Priorité -->
     <div>
-      <label for="priority" class="block text-sm font-medium text-gray-700 mb-1"> Priorité * </label>
+      <label for="priority" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"> Priorité * </label>
       <select
         id="priority"
         formControlName="priority"
-        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
       >
         @for (priority of priorities; track priority.value) {
           <option [value]="priority.value">
@@ -184,12 +194,14 @@
 
     <!-- Date d'échéance -->
     <div>
-      <label for="nextDueDate" class="block text-sm font-medium text-gray-700 mb-1"> Prochaine échéance * </label>
+      <label for="nextDueDate" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        Prochaine échéance *
+      </label>
       <input
         id="nextDueDate"
         type="date"
         formControlName="nextDueDate"
-        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
         [ngClass]="{ 'border-red-500': taskForm.get('nextDueDate')?.invalid && taskForm.get('nextDueDate')?.touched }"
       />
       @if (taskForm.get("nextDueDate")?.invalid && taskForm.get("nextDueDate")?.touched) {
@@ -199,11 +211,11 @@
 
     <!-- Assigné -->
     <div>
-      <label for="assignee" class="block text-sm font-medium text-gray-700 mb-1"> Assigné </label>
+      <label for="assignee" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"> Assigné </label>
       <select
         id="assignee"
         formControlName="assignee"
-        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
       >
         <option value="">Aucun assigné</option>
         @for (assignee of assignees; track assignee) {
@@ -227,7 +239,7 @@
       <button
         type="button"
         (click)="onCancel()"
-        class="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-400 transition-colors"
+        class="flex-1 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-200 py-2 px-4 rounded-md hover:bg-gray-400 dark:hover:bg-gray-500 transition-colors"
       >
         Annuler
       </button>

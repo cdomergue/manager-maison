@@ -5,6 +5,7 @@ import { RouterModule } from '@angular/router';
 import { StorageService } from '../../services/storage.service';
 import { ApiService } from '../../services/api.service';
 import { BackgroundCheckService } from '../../services/background-check.service';
+import { ThemeService, Theme } from '../../services/theme.service';
 
 @Component({
   selector: 'app-settings',
@@ -23,9 +24,22 @@ export class SettingsComponent implements OnInit {
   lastBackgroundCheck = computed(() => this.backgroundCheckService.lastCheck());
   backgroundCheckInterval = computed(() => this.backgroundCheckService.checkIntervalMs());
 
+  // Signaux pour le thème
+  currentTheme = computed(() => this.themeService.selectedTheme());
+  isDarkMode = computed(() => this.themeService.isDarkMode());
+  effectiveTheme = computed(() => this.themeService.effectiveTheme());
+
+  // Options de thèmes disponibles
+  themeOptions: { value: Theme; label: string; icon: string }[] = [
+    { value: 'light', label: 'Clair', icon: '☀️' },
+    { value: 'dark', label: 'Sombre', icon: '🌙' },
+    { value: 'auto', label: 'Automatique', icon: '🔄' },
+  ];
+
   private storageService = inject(StorageService);
   private apiService = inject(ApiService);
   private backgroundCheckService = inject(BackgroundCheckService);
+  private themeService = inject(ThemeService);
 
   ngOnInit(): void {
     this.updateStorageInfo();
@@ -62,6 +76,22 @@ export class SettingsComponent implements OnInit {
 
   async forceBackgroundCheck(): Promise<void> {
     await this.backgroundCheckService.forceCheck();
+  }
+
+  onThemeChange(theme: Theme): void {
+    this.themeService.setTheme(theme);
+  }
+
+  toggleTheme(): void {
+    this.themeService.toggleTheme();
+  }
+
+  getThemeDisplayName(theme: Theme): string {
+    return this.themeService.getThemeDisplayName(theme);
+  }
+
+  getThemeIcon(theme: Theme): string {
+    return this.themeService.getThemeIcon(theme);
   }
 }
 

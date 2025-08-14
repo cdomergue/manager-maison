@@ -1,8 +1,8 @@
 <div class="container mx-auto p-4 max-w-4xl">
   <!-- En-tête avec statistiques -->
   <div class="mb-6">
-    <h1 class="text-3xl font-bold text-gray-800 mb-2">Mes Tâches Ménagères</h1>
-    <div class="flex flex-wrap gap-4 text-sm text-gray-600">
+    <h1 class="text-3xl font-bold text-gray-800 dark:text-white mb-2">Mes Tâches Ménagères</h1>
+    <div class="flex flex-wrap gap-4 text-sm text-gray-600 dark:text-gray-300">
       <span>Total: {{ totalTasks() }} tâches</span>
       <span>Actives: {{ activeTasksCount() }}</span>
       <span>En retard: {{ overdueTasksCount() }}</span>
@@ -10,12 +10,16 @@
   </div>
 
   <!-- Filtres et recherche - Mobile Optimized -->
-  <div class="bg-white rounded-lg shadow-sm border p-3 sm:p-4 mb-6">
+  <div
+    class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-3 sm:p-4 mb-6"
+  >
     <!-- Mobile Layout -->
     <div class="sm:hidden space-y-4">
       <!-- Recherche principale -->
       <div>
-        <label for="mobile-search" class="block text-sm font-medium text-gray-700 mb-2">🔍 Rechercher</label>
+        <label for="mobile-search" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+          >🔍 Rechercher</label
+        >
         <input
           id="mobile-search"
           type="text"
@@ -23,7 +27,7 @@
           (ngModelChange)="searchTerm.set($event)"
           (input)="onFilterChange()"
           placeholder="Nom ou description..."
-          class="w-full px-4 py-3 text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          class="w-full px-4 py-3 text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
         />
       </div>
 
@@ -35,7 +39,7 @@
           [ngModel]="selectedCategory()"
           (ngModelChange)="selectedCategory.set($event)"
           (change)="onFilterChange()"
-          class="flex-1 min-w-0 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          class="flex-1 min-w-0 px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
         >
           <option value="all">📂 Toutes catégories</option>
           @for (category of categories; track category.id) {
@@ -49,7 +53,7 @@
           [ngModel]="selectedPriority()"
           (ngModelChange)="selectedPriority.set($event)"
           (change)="onFilterChange()"
-          class="flex-1 min-w-0 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          class="flex-1 min-w-0 px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
         >
           <option value="all">⭐ Toutes priorités</option>
           <option value="high">🔴 Haute</option>
@@ -63,7 +67,9 @@
     <div class="hidden sm:grid grid-cols-2 lg:grid-cols-5 gap-4">
       <!-- Recherche -->
       <div class="lg:col-span-2">
-        <label for="desktop-search" class="block text-sm font-medium text-gray-700 mb-1">Rechercher</label>
+        <label for="desktop-search" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+          >Rechercher</label
+        >
         <input
           id="desktop-search"
           type="text"
@@ -71,19 +77,21 @@
           (ngModelChange)="searchTerm.set($event)"
           (input)="onFilterChange()"
           placeholder="Nom ou description..."
-          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
         />
       </div>
 
       <!-- Catégorie -->
       <div>
-        <label for="desktop-category" class="block text-sm font-medium text-gray-700 mb-1">Catégorie</label>
+        <label for="desktop-category" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+          >Catégorie</label
+        >
         <select
           id="desktop-category"
           [ngModel]="selectedCategory()"
           (ngModelChange)="selectedCategory.set($event)"
           (change)="onFilterChange()"
-          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
         >
           <option value="all">Toutes</option>
           @for (category of categories; track category.id) {
@@ -93,14 +101,16 @@
       </div>
 
       <!-- Priorité -->
-            <div>
-              <label for="desktop-priority" class="block text-sm font-medium text-gray-700 mb-1">Priorité</label>
+      <div>
+        <label for="desktop-priority" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+          >Priorité</label
+        >
         <select
           id="desktop-priority"
           [ngModel]="selectedPriority()"
           (ngModelChange)="selectedPriority.set($event)"
           (change)="onFilterChange()"
-          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
         >
           <option value="all">Toutes</option>
           <option value="low">Basse</option>
@@ -115,7 +125,7 @@
   <div class="space-y-4">
     @for (task of filteredTasks(); track task.id) {
       <div
-        class="bg-white rounded-lg shadow-sm border p-3 sm:p-4 transition-all duration-200 hover:shadow-md cursor-pointer"
+        class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-3 sm:p-4 transition-all duration-200 hover:shadow-md cursor-pointer"
         [ngClass]="getStatusClass(task)"
         (click)="showTaskDetails(task)"
         role="button"
@@ -129,13 +139,15 @@
           <!-- En-tête mobile -->
           <div class="flex items-start justify-between mb-3">
             <div class="flex-1 min-w-0">
-              <h3 class="text-lg font-semibold text-gray-800 truncate">{{ task.name }}</h3>
+              <h3 class="text-lg font-semibold text-gray-800 dark:text-white truncate">{{ task.name }}</h3>
               <div class="flex flex-wrap gap-1 mt-1">
                 <span class="px-2 py-1 text-xs font-medium rounded-full" [ngClass]="getPriorityColor(task.priority)">
                   {{ getPriorityLabel(task.priority) }}
                 </span>
                 @if (task.category) {
-                  <span class="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
+                  <span
+                    class="px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full"
+                  >
                     {{ getCategoryName(task.category) }}
                   </span>
                 }
@@ -147,39 +159,42 @@
               <div class="font-medium" [ngClass]="getDueDateClass(task)">
                 {{ getDueDateText(task) }}
               </div>
-                @if (task.rrule) {
-                  <div class="mt-1 text-[11px] text-gray-500 truncate max-w-[140px]" title="{{ task.rrule }}">
-                    RRULE: {{ task.rrule }}
-                  </div>
-                }
+              @if (task.rrule) {
+                <div
+                  class="mt-1 text-[11px] text-gray-500 dark:text-gray-400 truncate max-w-[140px]"
+                  title="{{ task.rrule }}"
+                >
+                  RRULE: {{ task.rrule }}
+                </div>
+              }
             </div>
           </div>
 
           <!-- Description mobile -->
           @if (task.description) {
-            <p class="text-gray-600 text-sm mb-3 line-clamp-2">{{ task.description }}</p>
+            <p class="text-gray-600 dark:text-gray-300 text-sm mb-3 line-clamp-2">{{ task.description }}</p>
           }
 
           <!-- Info compacte mobile -->
-            <div class="text-xs text-gray-500 mb-4 space-y-1">
+          <div class="text-xs text-gray-500 dark:text-gray-400 mb-4 space-y-1">
             <div>
-                @if (!task.rrule) {
-                  📅
-                  @switch (task.frequency) {
-                    @case ("custom") {
-                      <span>{{ task.customDays }} jours</span>
-                    }
-                    @case ("daily") {
-                      <span>Quotidienne</span>
-                    }
-                    @case ("weekly") {
-                      <span>Hebdomadaire</span>
-                    }
-                    @case ("monthly") {
-                      <span>Mensuelle</span>
-                    }
+              @if (!task.rrule) {
+                📅
+                @switch (task.frequency) {
+                  @case ("custom") {
+                    <span>{{ task.customDays }} jours</span>
+                  }
+                  @case ("daily") {
+                    <span>Quotidienne</span>
+                  }
+                  @case ("weekly") {
+                    <span>Hebdomadaire</span>
+                  }
+                  @case ("monthly") {
+                    <span>Mensuelle</span>
                   }
                 }
+              }
             </div>
             @if (task.lastCompleted) {
               <div>🕐 Dernière: {{ formatDate(task.lastCompleted) }}</div>
@@ -205,7 +220,7 @@
               (click)="$event.stopPropagation(); editTask(task)"
               (keyup.enter)="$event.stopPropagation(); editTask(task)"
               (keyup.space)="$event.stopPropagation(); editTask(task)"
-              class="px-4 py-3 border border-blue-300 text-blue-600 rounded-lg hover:bg-blue-50 transition-colors text-sm"
+              class="px-4 py-3 border border-blue-300 dark:border-blue-600 text-blue-600 dark:text-blue-400 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900 transition-colors text-sm"
               title="Éditer"
             >
               ✏️
@@ -215,7 +230,7 @@
               (click)="$event.stopPropagation(); toggleTaskActive(task)"
               (keyup.enter)="$event.stopPropagation(); toggleTaskActive(task)"
               (keyup.space)="$event.stopPropagation(); toggleTaskActive(task)"
-              class="px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm"
+              class="px-4 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm"
             >
               {{ task.isActive ? "⏸️" : "▶️" }}
             </button>
@@ -224,7 +239,7 @@
               (click)="$event.stopPropagation(); deleteTask(task.id)"
               (keyup.enter)="$event.stopPropagation(); deleteTask(task.id)"
               (keyup.space)="$event.stopPropagation(); deleteTask(task.id)"
-              class="px-4 py-3 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition-colors text-sm"
+              class="px-4 py-3 border border-red-300 dark:border-red-600 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-50 dark:hover:bg-red-900 transition-colors text-sm"
             >
               🗑️
             </button>
@@ -236,12 +251,14 @@
           <div class="flex-1">
             <!-- En-tête desktop -->
             <div class="flex items-center gap-3 mb-2">
-              <h3 class="text-lg font-semibold text-gray-800">{{ task.name }}</h3>
+              <h3 class="text-lg font-semibold text-gray-800 dark:text-white">{{ task.name }}</h3>
               <span class="px-2 py-1 text-xs font-medium rounded-full" [ngClass]="getPriorityColor(task.priority)">
                 {{ getPriorityLabel(task.priority) }}
               </span>
               @if (task.category) {
-                <span class="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
+                <span
+                  class="px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full"
+                >
                   {{ getCategoryName(task.category) }}
                 </span>
               }
@@ -249,11 +266,11 @@
 
             <!-- Description desktop -->
             @if (task.description) {
-              <p class="text-gray-600 mb-3">{{ task.description }}</p>
+              <p class="text-gray-600 dark:text-gray-300 mb-3">{{ task.description }}</p>
             }
 
             <!-- Informations desktop -->
-            <div class="flex flex-wrap gap-4 text-sm text-gray-500 mb-3">
+            <div class="flex flex-wrap gap-4 text-sm text-gray-500 dark:text-gray-400 mb-3">
               <span>
                 @if (!task.rrule) {
                   <strong>Fréquence: </strong>
@@ -276,7 +293,10 @@
               @if (task.rrule) {
                 <span class="truncate">
                   <strong>RRULE:</strong>
-                  <code class="bg-gray-100 border border-gray-200 px-1 py-0.5 rounded text-gray-700">{{ task.rrule }}</code>
+                  <code
+                    class="bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 px-1 py-0.5 rounded text-gray-700 dark:text-gray-300"
+                    >{{ task.rrule }}</code
+                  >
                 </span>
               }
               <span>
@@ -311,21 +331,21 @@
 
             <button
               (click)="$event.stopPropagation(); editTask(task)"
-              class="px-4 py-2 border border-blue-300 text-blue-600 rounded-md hover:bg-blue-50 transition-colors text-sm"
+              class="px-4 py-2 border border-blue-300 dark:border-blue-600 text-blue-600 dark:text-blue-400 rounded-md hover:bg-blue-50 dark:hover:bg-blue-900 transition-colors text-sm"
             >
               ✏️ Éditer
             </button>
 
             <button
               (click)="$event.stopPropagation(); toggleTaskActive(task)"
-              class="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors text-sm"
+              class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm"
             >
               {{ task.isActive ? "⏸️ Pause" : "▶️ Activer" }}
             </button>
 
             <button
               (click)="$event.stopPropagation(); deleteTask(task.id)"
-              class="px-4 py-2 border border-red-300 text-red-600 rounded-md hover:bg-red-50 transition-colors text-sm"
+              class="px-4 py-2 border border-red-300 dark:border-red-600 text-red-600 dark:text-red-400 rounded-md hover:bg-red-50 dark:hover:bg-red-900 transition-colors text-sm"
             >
               🗑️ Supprimer
             </button>
@@ -334,9 +354,9 @@
       </div>
     } @empty {
       <div class="text-center py-12">
-        <div class="text-gray-400 text-6xl mb-4">📝</div>
-        <h3 class="text-lg font-medium text-gray-600 mb-2">Aucune tâche trouvée</h3>
-        <p class="text-gray-500">Ajoutez votre première tâche ménagère pour commencer !</p>
+        <div class="text-gray-400 dark:text-gray-500 text-6xl mb-4">📝</div>
+        <h3 class="text-lg font-medium text-gray-600 dark:text-gray-300 mb-2">Aucune tâche trouvée</h3>
+        <p class="text-gray-500 dark:text-gray-400">Ajoutez votre première tâche ménagère pour commencer !</p>
       </div>
     }
   </div>

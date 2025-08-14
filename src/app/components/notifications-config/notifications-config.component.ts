@@ -91,11 +91,11 @@ export class NotificationsConfigComponent implements OnInit {
   get permissionStatusClass(): string {
     switch (this.notificationPermission) {
       case 'granted':
-        return 'text-green-600';
+        return 'text-green-600 dark:text-green-400';
       case 'denied':
-        return 'text-red-600';
+        return 'text-red-600 dark:text-red-400';
       default:
-        return 'text-yellow-600';
+        return 'text-yellow-600 dark:text-yellow-400';
     }
   }
 }

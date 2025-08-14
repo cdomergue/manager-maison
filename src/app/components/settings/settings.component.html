@@ -1,21 +1,37 @@
-<div class="settings-container">
+<div class="max-w-4xl mx-auto p-5 space-y-6">
   <!-- En-tête avec bouton de retour -->
-  <div class="header-with-back">
-    <button class="back-btn" routerLink="/" title="Retour à l'accueil">← Retour</button>
-    <h2>Paramètres</h2>
+  <div class="flex items-center gap-4 mb-8">
+    <button
+      class="bg-gray-500 dark:bg-gray-600 text-white hover:bg-gray-600 dark:hover:bg-gray-500 px-4 py-2 rounded-lg transition-colors inline-flex items-center font-medium"
+      routerLink="/"
+      title="Retour à l'accueil"
+    >
+      ← Retour
+    </button>
+    <h2 class="text-3xl font-bold text-gray-800 dark:text-white flex-1">Paramètres</h2>
   </div>
 
   <!-- Statut du serveur -->
-  <div class="section">
-    <h3>Statut du serveur</h3>
-    <div class="status-card">
-      <div class="status-item">
-        <span class="label">Connexion :</span>
-        <span class="value" [class.connected]="isServerConnected()" [class.disconnected]="!isServerConnected()">
+  <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
+    <h3
+      class="text-xl font-semibold text-gray-800 dark:text-white mb-4 pb-2 border-b-2 border-gray-200 dark:border-gray-600"
+    >
+      Statut du serveur
+    </h3>
+    <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 space-y-3">
+      <div class="flex items-center justify-between py-2 border-b border-gray-200 dark:border-gray-600 last:border-b-0">
+        <span class="font-medium text-gray-700 dark:text-gray-300 min-w-[150px]">Connexion :</span>
+        <span
+          class="font-semibold flex-1 text-right mr-2"
+          [ngClass]="{
+            'text-green-600 dark:text-green-400': isServerConnected(),
+            'text-red-600 dark:text-red-400': !isServerConnected(),
+          }"
+        >
           {{ connectionStatus() }}
         </span>
         <button
-          class="refresh-btn"
+          class="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-2 py-1 rounded text-sm transition-colors disabled:cursor-not-allowed"
           (click)="refreshServerStatus()"
           [disabled]="connectionStatus() === 'Vérification...'"
         >
@@ -24,80 +40,189 @@
       </div>
 
       @if (serverStatus()) {
-        <div class="status-item">
-          <span class="label">Tâches totales :</span>
-          <span class="value">{{ serverStatus()?.totalTasks }}</span>
+        <div
+          class="flex items-center justify-between py-2 border-b border-gray-200 dark:border-gray-600 last:border-b-0"
+        >
+          <span class="font-medium text-gray-700 dark:text-gray-300 min-w-[150px]">Tâches totales :</span>
+          <span class="font-semibold text-gray-900 dark:text-white">{{ serverStatus()?.totalTasks }}</span>
         </div>
 
-        <div class="status-item">
-          <span class="label">Dernière mise à jour :</span>
-          <span class="value">{{ serverStatus()?.lastUpdated | date: "dd/MM/yyyy HH:mm" }}</span>
+        <div
+          class="flex items-center justify-between py-2 border-b border-gray-200 dark:border-gray-600 last:border-b-0"
+        >
+          <span class="font-medium text-gray-700 dark:text-gray-300 min-w-[150px]">Dernière mise à jour :</span>
+          <span class="font-semibold text-gray-900 dark:text-white">{{
+            serverStatus()?.lastUpdated | date: "dd/MM/yyyy HH:mm"
+          }}</span>
         </div>
 
-        <div class="status-item">
-          <span class="label">Heure du serveur :</span>
-          <span class="value">{{ serverStatus()?.serverTime | date: "dd/MM/yyyy HH:mm:ss" }}</span>
+        <div
+          class="flex items-center justify-between py-2 border-b border-gray-200 dark:border-gray-600 last:border-b-0"
+        >
+          <span class="font-medium text-gray-700 dark:text-gray-300 min-w-[150px]">Heure du serveur :</span>
+          <span class="font-semibold text-gray-900 dark:text-white">{{
+            serverStatus()?.serverTime | date: "dd/MM/yyyy HH:mm:ss"
+          }}</span>
         </div>
       }
     </div>
   </div>
 
   <!-- Vérification en arrière-plan -->
-  <div class="section">
-    <h3>Vérification en arrière-plan</h3>
-    <div class="status-card">
-      <div class="status-item">
-        <span class="label">Statut :</span>
-        <span class="value" [class.connected]="!isCheckingBackground()" [class.disconnected]="isCheckingBackground()">
+  <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
+    <h3
+      class="text-xl font-semibold text-gray-800 dark:text-white mb-4 pb-2 border-b-2 border-gray-200 dark:border-gray-600"
+    >
+      Vérification en arrière-plan
+    </h3>
+    <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 space-y-3">
+      <div class="flex items-center justify-between py-2 border-b border-gray-200 dark:border-gray-600 last:border-b-0">
+        <span class="font-medium text-gray-700 dark:text-gray-300 min-w-[150px]">Statut :</span>
+        <span
+          class="font-semibold flex-1 text-right mr-2"
+          [ngClass]="{
+            'text-green-600 dark:text-green-400': !isCheckingBackground(),
+            'text-red-600 dark:text-red-400': isCheckingBackground(),
+          }"
+        >
           {{ isCheckingBackground() ? "Vérification en cours..." : "Actif" }}
         </span>
-        <button class="refresh-btn" (click)="forceBackgroundCheck()" [disabled]="isCheckingBackground()">🔍</button>
+        <button
+          class="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-2 py-1 rounded text-sm transition-colors disabled:cursor-not-allowed"
+          (click)="forceBackgroundCheck()"
+          [disabled]="isCheckingBackground()"
+        >
+          🔍
+        </button>
       </div>
 
       @if (lastBackgroundCheck()) {
-        <div class="status-item">
-          <span class="label">Dernière vérification :</span>
-          <span class="value">{{ lastBackgroundCheck() | date: "HH:mm:ss" }}</span>
+        <div
+          class="flex items-center justify-between py-2 border-b border-gray-200 dark:border-gray-600 last:border-b-0"
+        >
+          <span class="font-medium text-gray-700 dark:text-gray-300 min-w-[150px]">Dernière vérification :</span>
+          <span class="font-semibold text-gray-900 dark:text-white">{{
+            lastBackgroundCheck() | date: "HH:mm:ss"
+          }}</span>
         </div>
       }
 
-      <div class="status-item">
-        <span class="label">Intervalle :</span>
-        <span class="value">{{ backgroundCheckInterval() / 1000 }} secondes</span>
+      <div class="flex items-center justify-between py-2 border-b border-gray-200 dark:border-gray-600 last:border-b-0">
+        <span class="font-medium text-gray-700 dark:text-gray-300 min-w-[150px]">Intervalle :</span>
+        <span class="font-semibold text-gray-900 dark:text-white">{{ backgroundCheckInterval() / 1000 }} secondes</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Apparence -->
+  <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
+    <h3
+      class="text-xl font-semibold text-gray-800 dark:text-white mb-4 pb-2 border-b-2 border-gray-200 dark:border-gray-600"
+    >
+      Apparence
+    </h3>
+    <div class="flex flex-col gap-4">
+      <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+        <div class="flex items-center gap-2 flex-wrap">
+          <span class="font-medium text-gray-700 dark:text-gray-300 min-w-[120px]">Thème actuel :</span>
+          <span class="font-semibold text-gray-900 dark:text-white">
+            {{ getThemeDisplayName(currentTheme()) }}
+            {{ getThemeIcon(currentTheme()) }}
+          </span>
+          @if (currentTheme() === "auto") {
+            <span class="text-sm text-gray-600 dark:text-gray-400 italic"
+              >({{ effectiveTheme() === "dark" ? "Sombre" : "Clair" }} détecté)</span
+            >
+          }
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        @for (option of themeOptions; track option.value) {
+          <button
+            class="bg-white dark:bg-gray-700 border-2 rounded-lg p-4 cursor-pointer transition-all duration-200 flex flex-col items-center gap-2 text-center hover:border-blue-500 hover:-translate-y-1 hover:shadow-lg"
+            [ngClass]="{
+              'border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300':
+                currentTheme() === option.value,
+              'border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300': currentTheme() !== option.value,
+            }"
+            (click)="onThemeChange(option.value)"
+          >
+            <span class="text-2xl">{{ option.icon }}</span>
+            <span class="font-semibold text-sm">{{ option.label }}</span>
+            @if (option.value === "auto") {
+              <span class="text-xs text-gray-600 dark:text-gray-400 mt-1">Suit les préférences système</span>
+            }
+          </button>
+        }
+      </div>
+
+      <div class="flex justify-center">
+        <button
+          class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-lg font-semibold text-sm transition-all duration-200 shadow-md hover:-translate-y-1 hover:shadow-lg"
+          (click)="toggleTheme()"
+        >
+          {{ isDarkMode() ? "☀️" : "🌙" }} Basculer le thème
+        </button>
       </div>
     </div>
   </div>
 
   <!-- Stockage local -->
-  <div class="section">
-    <h3>Stockage local</h3>
-    <div class="storage-info">
-      <p>Taille utilisée : {{ storageSize() | number }} octets</p>
-      <button class="danger-btn" (click)="clearLocalStorage()">Effacer toutes les données locales</button>
+  <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
+    <h3
+      class="text-xl font-semibold text-gray-800 dark:text-white mb-4 pb-2 border-b-2 border-gray-200 dark:border-gray-600"
+    >
+      Stockage local
+    </h3>
+    <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 space-y-4">
+      <p class="text-gray-700 dark:text-gray-300 font-medium">Taille utilisée : {{ storageSize() | number }} octets</p>
+      <button
+        class="bg-red-600 hover:bg-red-700 text-white px-4 py-3 rounded-lg font-medium transition-colors"
+        (click)="clearLocalStorage()"
+      >
+        Effacer toutes les données locales
+      </button>
     </div>
   </div>
 
   <!-- Informations -->
-  <div class="section">
-    <h3>Informations</h3>
-    <div class="info-card">
-      <p><strong>Mode de fonctionnement :</strong></p>
-      <ul>
-        @if (isServerConnected()) {
-          <li>✅ Mode serveur : Les données sont synchronisées avec le serveur local</li>
-        } @else {
-          <li>⚠️ Mode local : Les données sont stockées uniquement dans le navigateur</li>
-        }
-      </ul>
+  <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
+    <h3
+      class="text-xl font-semibold text-gray-800 dark:text-white mb-4 pb-2 border-b-2 border-gray-200 dark:border-gray-600"
+    >
+      Informations
+    </h3>
+    <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 space-y-4">
+      <div>
+        <p class="font-semibold text-gray-700 dark:text-gray-300 mb-2">Mode de fonctionnement :</p>
+        <ul class="list-none pl-0 space-y-1">
+          @if (isServerConnected()) {
+            <li class="text-gray-600 dark:text-gray-400 text-sm">
+              ✅ Mode serveur : Les données sont synchronisées avec le serveur local
+            </li>
+          } @else {
+            <li class="text-gray-600 dark:text-gray-400 text-sm">
+              ⚠️ Mode local : Les données sont stockées uniquement dans le navigateur
+            </li>
+          }
+        </ul>
+      </div>
 
-      <p><strong>Partage des données :</strong></p>
-      <ul>
-        @if (isServerConnected()) {
-          <li>✅ Les tâches sont partagées entre tous les utilisateurs connectés au serveur</li>
-        } @else {
-          <li>❌ Les tâches ne sont pas partagées (mode hors ligne)</li>
-        }
-      </ul>
+      <div>
+        <p class="font-semibold text-gray-700 dark:text-gray-300 mb-2">Partage des données :</p>
+        <ul class="list-none pl-0 space-y-1">
+          @if (isServerConnected()) {
+            <li class="text-gray-600 dark:text-gray-400 text-sm">
+              ✅ Les tâches sont partagées entre tous les utilisateurs connectés au serveur
+            </li>
+          } @else {
+            <li class="text-gray-600 dark:text-gray-400 text-sm">
+              ❌ Les tâches ne sont pas partagées (mode hors ligne)
+            </li>
+          }
+        </ul>
+      </div>
     </div>
   </div>
 </div>
