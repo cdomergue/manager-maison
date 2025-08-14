@@ -10,7 +10,6 @@ import { SwPush } from '@angular/service-worker';
   selector: 'app-notifications-config',
   imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterModule],
   templateUrl: './notifications-config.component.html',
-  styleUrls: ['./notifications-config.component.css'],
 })
 export class NotificationsConfigComponent implements OnInit {
   configForm: FormGroup;

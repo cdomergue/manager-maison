@@ -5,6 +5,7 @@ import { catchError, tap } from 'rxjs/operators';
 import { Task } from '../models/task.model';
 import { ShoppingItem, ShoppingListEntry } from '../models/shopping-item.model';
 import { SKIP_GLOBAL_LOADING } from '../http/http-context.tokens';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root',
@@ -43,12 +44,7 @@ export class ApiService {
 
   // Déterminer l'URL de l'API selon l'environnement
   private getApiBaseUrl(): string {
-    // En local (localhost), utiliser l'API relative vers le serveur local
-    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-      return '/api';
-    }
-    // En production (Amplify ou autre), utiliser Lambda
-    return 'https://4cj8nou7ce.execute-api.eu-west-1.amazonaws.com/prod/api';
+    return environment.apiUrl;
   }
 
   // Vérifier le statut du serveur

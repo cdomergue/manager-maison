@@ -6,7 +6,6 @@ import { Task } from '../../models/task.model';
   selector: 'app-task-detail',
   imports: [CommonModule],
   templateUrl: './task-detail.component.html',
-  styleUrls: ['./task-detail.component.css'],
 })
 export class TaskDetailComponent {
   @Input() task!: Task;

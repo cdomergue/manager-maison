@@ -10,7 +10,6 @@ import { NotificationService } from '../../services/notification.service';
   selector: 'app-tasks',
   imports: [RouterModule, TaskListComponent, TaskFormComponent],
   templateUrl: './tasks.component.html',
-  styleUrls: ['./tasks.component.css'],
 })
 export class TasksComponent implements OnInit, OnDestroy {
   showTaskForm = signal(false);

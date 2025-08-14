@@ -57,3 +57,8 @@ certs/
 .aws-sam/
 samconfig.toml
 /lambda/node_modules/
+
+# Environment files with sensitive URLs
+src/environments/environment.prod.local.ts
+local-build.sh
+.env.local

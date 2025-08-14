@@ -10,7 +10,6 @@ import { TaskService } from '../../services/task.service';
   selector: 'app-task-form',
   imports: [CommonModule, FormsModule, ReactiveFormsModule],
   templateUrl: './task-form.component.html',
-  styleUrls: ['./task-form.component.css'],
 })
 export class TaskFormComponent implements OnInit {
   @Input() task?: Task;

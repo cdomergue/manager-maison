@@ -11,7 +11,6 @@ import { ThemeService, Theme } from '../../services/theme.service';
   selector: 'app-settings',
   imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './settings.component.html',
-  styleUrl: './settings.component.css',
 })
 export class SettingsComponent implements OnInit {
   storageSize = signal(0);

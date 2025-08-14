@@ -13,7 +13,6 @@ import { TaskDetailComponent } from '../task-detail/task-detail.component';
   selector: 'app-task-list',
   imports: [CommonModule, FormsModule, TaskDetailComponent],
   templateUrl: './task-list.component.html',
-  styleUrls: ['./task-list.component.css'],
 })
 export class TaskListComponent implements OnInit, OnDestroy {
   selectedTask = signal<Task | null>(null);
