@@ -7,17 +7,6 @@
         </h1>
         <div class="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-300">
           <div class="flex items-center gap-2">
-            <div
-              class="w-2.5 h-2.5 rounded-full"
-              [class]="isCheckingBackground() ? 'bg-yellow-400 animate-pulse' : 'bg-green-500'"
-              [title]="isCheckingBackground() ? 'Vérification en cours…' : 'Connecté'"
-            ></div>
-            <span>{{ isCheckingBackground() ? "Vérification…" : "En ligne" }}</span>
-            @if (lastBackgroundCheck()) {
-              <span>• {{ lastBackgroundCheck() | date: "HH:mm" }}</span>
-            }
-          </div>
-          <div class="flex items-center gap-2">
             <button
               (click)="themeService.toggleTheme()"
               class="px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
