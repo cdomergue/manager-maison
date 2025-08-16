@@ -6,8 +6,20 @@ const path = require("path");
 const config = require("./config");
 const categoriesRoutes = require("./routes/categories");
 
+// Modules partagés
+const {
+  generateId,
+  sanitizeString,
+  validateName,
+  validateQuantity,
+  formatDateISO,
+  getUserId,
+  isDefined,
+} = require("../shared/utils");
+const { calculateNextDueDate } = require("../shared/dates");
+const { DEFAULT_CATEGORIES, ERROR_MESSAGES, DEFAULT_DATABASE_STRUCTURE } = require("../shared/constants");
+
 const app = express();
-const { RRule, RRuleSet, rrulestr } = require("rrule");
 const PORT = process.env.PORT || config.port;
 const DB_PATH = path.join(__dirname, config.database.path);
 
@@ -26,13 +38,7 @@ fs.ensureDirSync(path.dirname(DB_PATH));
 
 // Initialiser la base de données si elle n'existe pas
 if (!fs.existsSync(DB_PATH)) {
-  fs.writeJsonSync(DB_PATH, {
-    tasks: [],
-    shoppingItems: [],
-    shoppingList: [],
-    notes: [],
-    lastUpdated: new Date().toISOString(),
-  });
+  fs.writeJsonSync(DB_PATH, DEFAULT_DATABASE_STRUCTURE);
 }
 
 // Fonction utilitaire pour lire la base de données
@@ -46,7 +52,7 @@ function readDatabase() {
     return data;
   } catch (error) {
     console.error("Erreur lors de la lecture de la base de données:", error);
-    return { tasks: [], shoppingItems: [], shoppingList: [], notes: [], lastUpdated: new Date().toISOString() };
+    return { ...DEFAULT_DATABASE_STRUCTURE };
   }
 }
 
@@ -74,7 +80,7 @@ app.get("/api/shopping/items", (req, res) => {
     const db = readDatabase();
     res.json(db.shoppingItems);
   } catch (error) {
-    res.status(500).json({ error: "Erreur lors de la récupération du catalogue" });
+    res.status(500).json({ error: ERROR_MESSAGES.SHOPPING_CATALOG_ERROR });
   }
 });
 
@@ -82,12 +88,12 @@ app.get("/api/shopping/items", (req, res) => {
 app.post("/api/shopping/items", (req, res) => {
   try {
     const db = readDatabase();
-    const name = (req.body.name || "").trim();
-    const category = (req.body.category || "").trim();
-    if (!name) return res.status(400).json({ error: "Nom requis" });
+    const name = sanitizeString(req.body.name);
+    const category = sanitizeString(req.body.category);
+    if (!validateName(name)) return res.status(400).json({ error: ERROR_MESSAGES.SHOPPING_NAME_REQUIRED });
 
     const newItem = {
-      id: Date.now().toString(36) + Math.random().toString(36).substr(2),
+      id: generateId(),
       name,
       category: category || undefined,
     };
@@ -95,10 +101,10 @@ app.post("/api/shopping/items", (req, res) => {
     if (writeDatabase(db)) {
       res.status(201).json(newItem);
     } else {
-      res.status(500).json({ error: "Erreur lors de la sauvegarde" });
+      res.status(500).json({ error: ERROR_MESSAGES.SAVE_ERROR });
     }
   } catch (error) {
-    res.status(400).json({ error: "Données invalides" });
+    res.status(400).json({ error: ERROR_MESSAGES.INVALID_DATA });
   }
 });
 
@@ -279,8 +285,8 @@ app.post("/api/notes", (req, res) => {
     const userId = req.header("X-User-Id");
     const { title, content } = req.body || {};
     const note = {
-      id: Date.now().toString(36) + Math.random().toString(36).substr(2),
-      title: (title || "").trim(),
+      id: generateId(),
+      title: sanitizeString(title),
       content: content || "",
       ownerId: userId || "anonymous",
       createdAt: new Date().toISOString(),
@@ -352,9 +358,9 @@ app.post("/api/tasks", (req, res) => {
     const db = readDatabase();
     const newTask = {
       ...req.body,
-      id: Date.now().toString(36) + Math.random().toString(36).substr(2),
-      nextDueDate: new Date(req.body.nextDueDate).toISOString(),
-      lastCompleted: req.body.lastCompleted ? new Date(req.body.lastCompleted).toISOString() : undefined,
+      id: generateId(),
+      nextDueDate: formatDateISO(req.body.nextDueDate),
+      lastCompleted: formatDateISO(req.body.lastCompleted),
       isActive: true,
     };
 
@@ -437,9 +443,9 @@ app.post("/api/tasks/:id/complete", (req, res) => {
 
     const task = db.tasks[taskIndex];
     const nowIso = new Date().toISOString();
-    const author = req.header("X-User-Id") || task.assignee || "unknown";
+    const author = getUserId(req.headers) || task.assignee || "unknown";
     task.lastCompleted = nowIso;
-    task.nextDueDate = calculateNextDueDate(task);
+    task.nextDueDate = calculateNextDueDate(task).toISOString();
     task.history = Array.isArray(task.history) ? task.history : [];
     task.history.push({ date: nowIso, author });
     task.isActive = true; // Réactiver la tâche
@@ -519,114 +525,7 @@ app.get("*", (req, res) => {
   }
 });
 
-// Fonction pour calculer la prochaine date d'échéance
-function calculateNextDueDate(task) {
-  const base = new Date();
-
-  if (task.rrule) {
-    const next = computeNextWithRRule(task, base);
-    return next.toISOString();
-  }
-
-  const nextDate = new Date(base);
-  switch (task.frequency) {
-    case "daily":
-      nextDate.setDate(nextDate.getDate() + 1);
-      break;
-    case "weekly":
-      nextDate.setDate(nextDate.getDate() + 7);
-      break;
-    case "monthly":
-      nextDate.setMonth(nextDate.getMonth() + 1);
-      break;
-    case "custom":
-      nextDate.setDate(nextDate.getDate() + (task.customDays || 1));
-      break;
-  }
-
-  return skipExcludedDates(nextDate, task).toISOString();
-}
-
-function computeNextWithRRule(task, fromDate) {
-  try {
-    const set = new RRuleSet();
-    const rule = rrulestr(task.rrule, { forceset: false });
-    const after = task.lastCompleted ? new Date(task.lastCompleted) : new Date(fromDate);
-    after.setSeconds(after.getSeconds() + 1);
-
-    set.rrule(rule);
-    (task.exDates || []).forEach((iso) => {
-      const d = new Date(iso);
-      if (!isNaN(d.getTime())) set.exdate(d);
-    });
-
-    const startYear = after.getFullYear() - 1;
-    const endYear = after.getFullYear() + 2;
-    for (let y = startYear; y <= endYear; y++) {
-      [
-        `${y}-01-01`,
-        `${y}-05-01`,
-        `${y}-05-08`,
-        `${y}-07-14`,
-        `${y}-08-15`,
-        `${y}-11-01`,
-        `${y}-11-11`,
-        `${y}-12-25`,
-      ].forEach((s) => set.exdate(new Date(`${s}T00:00:00.000Z`)));
-    }
-
-    const next = set.after(after, true);
-    return next ? next : skipExcludedDates(new Date(fromDate), task);
-  } catch {
-    return skipExcludedDates(new Date(fromDate), task);
-  }
-}
-
-// parseRRule supprimé (remplacé par rrule)
-
-function nextByDayAfter(from, byDays, includeToday = false) {
-  const start = new Date(from);
-  start.setHours(0, 0, 0, 0);
-  if (!includeToday) {
-    start.setDate(start.getDate() + 1);
-  }
-  for (let i = 0; i < 14; i++) {
-    const d = new Date(start);
-    d.setDate(start.getDate() + i);
-    if (byDays.includes(d.getDay())) {
-      return d;
-    }
-  }
-  return new Date(from.getTime() + 7 * 24 * 60 * 60 * 1000);
-}
-
-function skipExcludedDates(date, task) {
-  let d = new Date(date);
-  while (isExcluded(d, task)) {
-    d.setDate(d.getDate() + 1);
-  }
-  return d;
-}
-
-// nthWeekdayOfMonth supprimé (remplacé par rrule)
-
-function isExcluded(date, task) {
-  return isHolidayFrance(date) || isExceptionDate(date, task.exDates || []);
-}
-
-function isExceptionDate(date, exceptions) {
-  if (!exceptions || exceptions.length === 0) return false;
-  const yyyyMmDd = date.toISOString().split("T")[0];
-  return exceptions.some((iso) => typeof iso === "string" && iso.startsWith(yyyyMmDd));
-}
-
-function isHolidayFrance(date) {
-  const [ymd] = date.toISOString().split("T");
-  const [, mm, dd] = ymd.split("-");
-  const mmdd = `${mm}-${dd}`;
-  const fixed = new Set(["01-01", "05-01", "05-08", "07-14", "08-15", "11-01", "11-11", "12-25"]);
-  return fixed.has(mmdd);
-}
+// Les fonctions de calcul de dates sont maintenant dans le module partagé shared/dates.js
 
 // Démarrage du serveur
 app.listen(PORT, () => {

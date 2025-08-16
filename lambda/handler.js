@@ -1,5 +1,17 @@
 const AWS = require("aws-sdk");
-const { RRule, RRuleSet, rrulestr } = require("rrule");
+
+// Modules partagés
+const {
+  generateId,
+  sanitizeString,
+  validateName,
+  validateQuantity,
+  formatDateISO,
+  getUserId,
+  isDefined,
+} = require("../shared/utils");
+const { calculateNextDueDate } = require("../shared/dates");
+const { DEFAULT_CATEGORIES, ERROR_MESSAGES, DEFAULT_CORS_HEADERS } = require("../shared/constants");
 
 // Configuration DynamoDB
 const dynamodb = new AWS.DynamoDB.DocumentClient();
@@ -15,13 +27,7 @@ const YOU_KNOW_WHAT = "21cdf2c38551";
 // Headers CORS pour toutes les réponses
 // Note: Les en-têtes CORS principaux sont configurés dans API Gateway (template.yaml)
 // Nous ajoutons seulement les en-têtes spécifiques nécessaires ici
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Secret-Key,X-User-Id",
-  "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
-  "Access-Control-Max-Age": "86400", // Cache preflight pour 24h
-};
+const corsHeaders = DEFAULT_CORS_HEADERS;
 
 // Fonction de vérification d'accès
 const authenticate = (event) => {
@@ -69,7 +75,7 @@ exports.getStatus = async (event) => {
     });
   } catch (error) {
     console.error("Error in getStatus:", error);
-    return response(500, { error: "Erreur lors de la récupération du statut" });
+    return response(500, { error: ERROR_MESSAGES.STATUS_ERROR });
   }
 };
 
@@ -89,7 +95,7 @@ exports.getTasks = async (event) => {
     return response(200, result.Items || []);
   } catch (error) {
     console.error("Error in getTasks:", error);
-    return response(500, { error: "Erreur lors de la récupération des tâches" });
+    return response(500, { error: ERROR_MESSAGES.TASK_RETRIEVE_ERROR });
   }
 };
 
@@ -104,9 +110,9 @@ exports.createTask = async (event) => {
 
     const newTask = {
       ...body,
-      id: Date.now().toString(36) + Math.random().toString(36).substr(2),
-      nextDueDate: new Date(body.nextDueDate).toISOString(),
-      lastCompleted: body.lastCompleted ? new Date(body.lastCompleted).toISOString() : undefined,
+      id: generateId(),
+      nextDueDate: formatDateISO(body.nextDueDate),
+      lastCompleted: formatDateISO(body.lastCompleted),
       isActive: true,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -122,7 +128,7 @@ exports.createTask = async (event) => {
     return response(201, newTask);
   } catch (error) {
     console.error("Error in createTask:", error);
-    return response(400, { error: "Données invalides" });
+    return response(400, { error: ERROR_MESSAGES.INVALID_DATA });
   }
 };
 
@@ -167,7 +173,7 @@ exports.updateTask = async (event) => {
     return response(200, updatedTask);
   } catch (error) {
     console.error("Error in updateTask:", error);
-    return response(400, { error: "Données invalides" });
+    return response(400, { error: ERROR_MESSAGES.INVALID_DATA });
   }
 };
 
@@ -223,7 +229,7 @@ exports.completeTask = async (event) => {
     task.updatedAt = new Date().toISOString();
     task.isActive = true; // Réactiver la tâche
     task.history = Array.isArray(task.history) ? task.history : [];
-    const author = userId || task.assignee || "unknown";
+    const author = getUserId(event.headers) || task.assignee || "unknown";
     task.history.push({ date: nowIso, author });
 
     await dynamodb
@@ -298,8 +304,8 @@ exports.createNote = async (event) => {
     const now = new Date().toISOString();
     const otherUsers = ["Christophe", "Laurence"].filter((u) => u !== userId);
     const newNote = {
-      id: Date.now().toString(36) + Math.random().toString(36).substr(2),
-      title: (body.title || "").trim(),
+      id: generateId(),
+      title: sanitizeString(body.title),
       content: body.content || "",
       ownerId: userId,
       createdAt: now,
@@ -309,7 +315,7 @@ exports.createNote = async (event) => {
     return response(201, newNote);
   } catch (error) {
     console.error("Error in createNote:", error);
-    return response(400, { error: "Données invalides" });
+    return response(400, { error: ERROR_MESSAGES.INVALID_DATA });
   }
 };
 
@@ -336,7 +342,7 @@ exports.updateNote = async (event) => {
     return response(200, updated);
   } catch (error) {
     console.error("Error in updateNote:", error);
-    return response(400, { error: "Données invalides" });
+    return response(400, { error: ERROR_MESSAGES.INVALID_DATA });
   }
 };
 
@@ -385,7 +391,7 @@ exports.createShoppingItem = async (event) => {
     const category = (body.category || "").trim();
     if (!name) return response(400, { error: "Nom requis" });
     const item = {
-      id: Date.now().toString(36) + Math.random().toString(36).substr(2),
+      id: generateId(),
       name,
       category: category || undefined,
       createdAt: new Date().toISOString(),
@@ -395,7 +401,7 @@ exports.createShoppingItem = async (event) => {
     return response(201, item);
   } catch (error) {
     console.error("Error in createShoppingItem:", error);
-    return response(400, { error: "Données invalides" });
+    return response(400, { error: ERROR_MESSAGES.INVALID_DATA });
   }
 };
 
@@ -454,7 +460,7 @@ exports.updateShoppingItem = async (event) => {
     return response(200, updated);
   } catch (error) {
     console.error("Error in updateShoppingItem:", error);
-    return response(400, { error: "Données invalides" });
+    return response(400, { error: ERROR_MESSAGES.INVALID_DATA });
   }
 };
 
@@ -499,7 +505,7 @@ exports.addShoppingEntry = async (event) => {
     }
 
     const entry = {
-      id: Date.now().toString(36) + Math.random().toString(36).substr(2),
+      id: generateId(),
       itemId: itemId,
       name: item.Item.name,
       quantity,
@@ -511,7 +517,7 @@ exports.addShoppingEntry = async (event) => {
     return response(201, entry);
   } catch (error) {
     console.error("Error in addShoppingEntry:", error);
-    return response(400, { error: "Données invalides" });
+    return response(400, { error: ERROR_MESSAGES.INVALID_DATA });
   }
 };
 
@@ -535,7 +541,7 @@ exports.updateShoppingEntry = async (event) => {
     return response(200, updated);
   } catch (error) {
     console.error("Error in updateShoppingEntry:", error);
-    return response(400, { error: "Données invalides" });
+    return response(400, { error: ERROR_MESSAGES.INVALID_DATA });
   }
 };
 
@@ -731,7 +737,7 @@ exports.createCategory = async (event) => {
 
     const newCategory = {
       ...body,
-      id: body.id || Date.now().toString(36) + Math.random().toString(36).substr(2),
+      id: body.id || generateId(),
       isDefault: false,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -759,7 +765,7 @@ exports.createCategory = async (event) => {
     return response(201, newCategory);
   } catch (error) {
     console.error("Error in createCategory:", error);
-    return response(400, { error: "Données invalides" });
+    return response(400, { error: ERROR_MESSAGES.INVALID_DATA });
   }
 };
 
@@ -807,7 +813,7 @@ exports.updateCategory = async (event) => {
     return response(200, updatedCategory);
   } catch (error) {
     console.error("Error in updateCategory:", error);
-    return response(400, { error: "Données invalides" });
+    return response(400, { error: ERROR_MESSAGES.INVALID_DATA });
   }
 };
 
@@ -851,112 +857,4 @@ exports.deleteCategory = async (event) => {
   }
 };
 
-// Fonction utilitaire pour calculer la prochaine date
-function calculateNextDueDate(task) {
-  const base = new Date();
-
-  if (task.rrule) {
-    return computeNextWithRRule(task, base);
-  }
-
-  const nextDate = new Date(base);
-  switch (task.frequency) {
-    case "daily":
-      nextDate.setDate(nextDate.getDate() + 1);
-      break;
-    case "weekly":
-      nextDate.setDate(nextDate.getDate() + 7);
-      break;
-    case "monthly":
-      nextDate.setMonth(nextDate.getMonth() + 1);
-      break;
-    case "custom":
-      nextDate.setDate(nextDate.getDate() + (task.customDays || 7));
-      break;
-    default:
-      nextDate.setDate(nextDate.getDate() + 7);
-  }
-
-  return skipExcludedDates(nextDate, task);
-}
-
-function computeNextWithRRule(task, fromDate) {
-  try {
-    const set = new RRuleSet();
-    const rule = rrulestr(task.rrule, { forceset: false });
-    const after = task.lastCompleted ? new Date(task.lastCompleted) : new Date(fromDate);
-    after.setSeconds(after.getSeconds() + 1);
-
-    set.rrule(rule);
-    (task.exDates || []).forEach((iso) => {
-      const d = new Date(iso);
-      if (!isNaN(d.getTime())) set.exdate(d);
-    });
-
-    const startYear = after.getFullYear() - 1;
-    const endYear = after.getFullYear() + 2;
-    for (let y = startYear; y <= endYear; y++) {
-      [
-        `${y}-01-01`,
-        `${y}-05-01`,
-        `${y}-05-08`,
-        `${y}-07-14`,
-        `${y}-08-15`,
-        `${y}-11-01`,
-        `${y}-11-11`,
-        `${y}-12-25`,
-      ].forEach((s) => set.exdate(new Date(`${s}T00:00:00.000Z`)));
-    }
-
-    const next = set.after(after, true);
-    return next ? next : skipExcludedDates(new Date(fromDate), task);
-  } catch {
-    return skipExcludedDates(new Date(fromDate), task);
-  }
-}
-
-// parseRRule supprimé (remplacé par rrule)
-
-function nextByDayAfter(from, byDays, includeToday = false) {
-  const start = new Date(from);
-  start.setHours(0, 0, 0, 0);
-  if (!includeToday) {
-    start.setDate(start.getDate() + 1);
-  }
-  for (let i = 0; i < 14; i++) {
-    const d = new Date(start);
-    d.setDate(start.getDate() + i);
-    if (byDays.includes(d.getDay())) {
-      return d;
-    }
-  }
-  return new Date(from.getTime() + 7 * 24 * 60 * 60 * 1000);
-}
-
-// nthWeekdayOfMonth supprimé (remplacé par rrule)
-
-function skipExcludedDates(date, task) {
-  let d = new Date(date);
-  while (isExcluded(d, task)) {
-    d.setDate(d.getDate() + 1);
-  }
-  return d;
-}
-
-function isExcluded(date, task) {
-  return isHolidayFrance(date) || isExceptionDate(date, task.exDates || []);
-}
-
-function isExceptionDate(date, exceptions) {
-  if (!exceptions || exceptions.length === 0) return false;
-  const yyyyMmDd = date.toISOString().split("T")[0];
-  return exceptions.some((iso) => typeof iso === "string" && iso.startsWith(yyyyMmDd));
-}
-
-function isHolidayFrance(date) {
-  const [ymd] = date.toISOString().split("T");
-  const [, mm, dd] = ymd.split("-");
-  const mmdd = `${mm}-${dd}`;
-  const fixed = new Set(["01-01", "05-01", "05-08", "07-14", "08-15", "11-01", "11-11", "12-25"]);
-  return fixed.has(mmdd);
-}
+// Les fonctions de calcul de dates sont maintenant dans le module partagé shared/dates.js

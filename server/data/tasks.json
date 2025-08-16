@@ -64,11 +64,11 @@
       ]
     }
   ],
-  "lastUpdated": "2025-08-16T01:09:59.648Z",
+  "lastUpdated": "2025-08-16T01:16:20.957Z",
   "shoppingItems": [
     {
       "id": "me1ugcejd8u37lf652f",
-      "name": "tes2",
+      "name": "Test 2",
       "category": "Test"
     },
     {
@@ -83,11 +83,11 @@
   ],
   "shoppingList": [
     {
-      "id": "me1spaxdeml16ub87rk",
-      "itemId": "me1sotgmhy8n2q7aexi",
-      "name": "Sac poubelle",
-      "quantity": 2,
-      "checked": true
+      "id": "medkgcdxkzpxmwbiz2f",
+      "itemId": "me1ugcejd8u37lf652f",
+      "name": "Test 2",
+      "quantity": 1,
+      "checked": false
     }
   ],
   "notes": [

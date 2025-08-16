@@ -1,0 +1,17 @@
+{
+  "name": "taches-menageres-shared",
+  "version": "1.0.0",
+  "description": "Modules partagés entre le serveur local et les fonctions Lambda pour l'application Tâches Ménagères",
+  "main": "index.js",
+  "dependencies": {
+    "rrule": "^2.8.1"
+  },
+  "keywords": [
+    "taches",
+    "menageres",
+    "shared",
+    "utilities"
+  ],
+  "author": "Christophe & Laurence",
+  "license": "MIT"
+}
