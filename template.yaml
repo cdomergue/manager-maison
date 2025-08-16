@@ -271,22 +271,6 @@ Resources:
             Path: /api/notes/{id}
             Method: delete
 
-  ShareNoteFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: lambda/
-      Handler: handler.shareNote
-      Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref NotesTable
-      Events:
-        ShareNote:
-          Type: Api
-          Properties:
-            RestApiId: !Ref Api
-            Path: /api/notes/{id}/share
-            Method: post
-
   # ========== FONCTIONS CATEGORIES ==========
   GetCategoriesFunction:
     Type: AWS::Serverless::Function

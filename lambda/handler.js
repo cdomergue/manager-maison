@@ -1,17 +1,16 @@
 const AWS = require("aws-sdk");
 
-// Modules partagés
+// Modules partagés packagés
 const {
   generateId,
   sanitizeString,
-  validateName,
-  validateQuantity,
   formatDateISO,
   getUserId,
-  isDefined,
-} = require("../shared/utils");
-const { calculateNextDueDate } = require("../shared/dates");
-const { DEFAULT_CATEGORIES, ERROR_MESSAGES, DEFAULT_CORS_HEADERS } = require("../shared/constants");
+  calculateNextDueDate,
+  DEFAULT_CATEGORIES,
+  ERROR_MESSAGES,
+  DEFAULT_CORS_HEADERS,
+} = require("taches-menageres-shared");
 
 // Configuration DynamoDB
 const dynamodb = new AWS.DynamoDB.DocumentClient();
@@ -208,7 +207,6 @@ exports.completeTask = async (event) => {
 
   try {
     const taskId = event.pathParameters.id;
-    const userId = event.headers["X-User-Id"] || event.headers["x-user-id"] || "unknown";
 
     // Récupérer la tâche existante
     const existing = await dynamodb
@@ -302,7 +300,6 @@ exports.createNote = async (event) => {
     const userId = event.headers["X-User-Id"] || event.headers["x-user-id"];
     const body = JSON.parse(event.body || "{}");
     const now = new Date().toISOString();
-    const otherUsers = ["Christophe", "Laurence"].filter((u) => u !== userId);
     const newNote = {
       id: generateId(),
       title: sanitizeString(body.title),
@@ -593,58 +590,6 @@ exports.clearAllShoppingEntries = async (event) => {
 };
 
 // ========== GESTION DES CATÉGORIES ==========
-
-// Catégories par défaut
-const DEFAULT_CATEGORIES = [
-  {
-    id: "cuisine",
-    name: "Cuisine",
-    description: "Tâches liées à la cuisine et à la préparation des repas",
-    isDefault: true,
-  },
-  {
-    id: "menage",
-    name: "Ménage",
-    description: "Tâches de nettoyage et d'entretien de la maison",
-    isDefault: true,
-  },
-  {
-    id: "linge",
-    name: "Linge",
-    description: "Tâches liées à la lessive et au repassage",
-    isDefault: true,
-  },
-  {
-    id: "jardin",
-    name: "Jardin",
-    description: "Entretien du jardin et des plantes",
-    isDefault: true,
-  },
-  {
-    id: "administratif",
-    name: "Administratif",
-    description: "Tâches administratives et paperasse",
-    isDefault: true,
-  },
-  {
-    id: "chats",
-    name: "Chats",
-    description: "Soins et entretien des chats",
-    isDefault: true,
-  },
-  {
-    id: "rangements",
-    name: "Rangements",
-    description: "Organisation et rangement de la maison",
-    isDefault: true,
-  },
-  {
-    id: "autre",
-    name: "Autre",
-    description: "Autres tâches diverses",
-    isDefault: true,
-  },
-];
 
 // Initialiser les catégories par défaut si la table est vide
 async function initializeDefaultCategories() {

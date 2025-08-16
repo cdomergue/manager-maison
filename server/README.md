@@ -28,7 +28,6 @@ Le serveur sera accessible sur `http://localhost:3001`
 ```
 server/
 ├── server.js          # Serveur principal
-├── server-https.js    # Version HTTPS du serveur
 ├── config.js         # Configuration
 ├── package.json      # Dépendances
 ├── data/             # Base de données JSON

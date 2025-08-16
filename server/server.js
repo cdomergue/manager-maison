@@ -7,17 +7,9 @@ const config = require("./config");
 const categoriesRoutes = require("./routes/categories");
 
 // Modules partagés
-const {
-  generateId,
-  sanitizeString,
-  validateName,
-  validateQuantity,
-  formatDateISO,
-  getUserId,
-  isDefined,
-} = require("../shared/utils");
+const { generateId, sanitizeString, validateName, formatDateISO, getUserId } = require("../shared/utils");
 const { calculateNextDueDate } = require("../shared/dates");
-const { DEFAULT_CATEGORIES, ERROR_MESSAGES, DEFAULT_DATABASE_STRUCTURE } = require("../shared/constants");
+const { ERROR_MESSAGES, DEFAULT_DATABASE_STRUCTURE } = require("../shared/constants");
 
 const app = express();
 const PORT = process.env.PORT || config.port;
