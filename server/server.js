@@ -7,7 +7,7 @@ const config = require("./config");
 const categoriesRoutes = require("./routes/categories");
 
 const app = express();
-const { RRule, RRuleSet, rrulestr } = require('rrule');
+const { RRule, RRuleSet, rrulestr } = require("rrule");
 const PORT = process.env.PORT || config.port;
 const DB_PATH = path.join(__dirname, config.database.path);
 
@@ -97,6 +97,38 @@ app.post("/api/shopping/items", (req, res) => {
     } else {
       res.status(500).json({ error: "Erreur lors de la sauvegarde" });
     }
+  } catch (error) {
+    res.status(400).json({ error: "Données invalides" });
+  }
+});
+
+// PUT /api/shopping/items/:id - Modifier un item du catalogue
+app.put("/api/shopping/items/:id", (req, res) => {
+  try {
+    const db = readDatabase();
+    const id = req.params.id;
+    const itemIndex = db.shoppingItems.findIndex((i) => i.id === id);
+    if (itemIndex === -1) return res.status(404).json({ error: "Item non trouvé" });
+
+    const { name, category } = req.body;
+    const sanitizedName = name !== undefined ? String(name).trim() : undefined;
+    const sanitizedCategory = category !== undefined ? String(category).trim() : undefined;
+
+    const updatedItem = {
+      ...db.shoppingItems[itemIndex],
+      name: sanitizedName !== undefined && sanitizedName !== "" ? sanitizedName : db.shoppingItems[itemIndex].name,
+      category: sanitizedCategory !== undefined && sanitizedCategory !== "" ? sanitizedCategory : undefined,
+    };
+
+    db.shoppingItems[itemIndex] = updatedItem;
+
+    // Propager le nouveau nom dans les entrées de la liste courante
+    if (sanitizedName !== undefined && sanitizedName !== "") {
+      db.shoppingList = db.shoppingList.map((e) => (e.itemId === id ? { ...e, name: updatedItem.name } : e));
+    }
+
+    if (writeDatabase(db)) return res.json(updatedItem);
+    return res.status(500).json({ error: "Erreur lors de la sauvegarde" });
   } catch (error) {
     res.status(400).json({ error: "Données invalides" });
   }
@@ -584,24 +616,15 @@ function isExcluded(date, task) {
 
 function isExceptionDate(date, exceptions) {
   if (!exceptions || exceptions.length === 0) return false;
-  const yyyyMmDd = date.toISOString().split('T')[0];
-  return exceptions.some((iso) => typeof iso === 'string' && iso.startsWith(yyyyMmDd));
+  const yyyyMmDd = date.toISOString().split("T")[0];
+  return exceptions.some((iso) => typeof iso === "string" && iso.startsWith(yyyyMmDd));
 }
 
 function isHolidayFrance(date) {
-  const [ymd] = date.toISOString().split('T');
-  const [, mm, dd] = ymd.split('-');
+  const [ymd] = date.toISOString().split("T");
+  const [, mm, dd] = ymd.split("-");
   const mmdd = `${mm}-${dd}`;
-  const fixed = new Set([
-    '01-01',
-    '05-01',
-    '05-08',
-    '07-14',
-    '08-15',
-    '11-01',
-    '11-11',
-    '12-25',
-  ]);
+  const fixed = new Set(["01-01", "05-01", "05-08", "07-14", "08-15", "11-01", "11-11", "12-25"]);
   return fixed.has(mmdd);
 }
 

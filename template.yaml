@@ -401,6 +401,24 @@ Resources:
             Path: /api/shopping/items
             Method: post
 
+  UpdateShoppingItemFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda/
+      Handler: handler.updateShoppingItem
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ShoppingItemsTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ShoppingListTable
+      Events:
+        UpdateShoppingItem:
+          Type: Api
+          Properties:
+            RestApiId: !Ref Api
+            Path: /api/shopping/items/{id}
+            Method: put
+
   DeleteShoppingItemFunction:
     Type: AWS::Serverless::Function
     Properties:

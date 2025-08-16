@@ -64,11 +64,12 @@
       ]
     }
   ],
-  "lastUpdated": "2025-08-13T23:26:41.414Z",
+  "lastUpdated": "2025-08-16T01:09:59.648Z",
   "shoppingItems": [
     {
       "id": "me1ugcejd8u37lf652f",
-      "name": "tesgt 2"
+      "name": "tes2",
+      "category": "Test"
     },
     {
       "id": "me1ug1s7ywk1e9c53vi",

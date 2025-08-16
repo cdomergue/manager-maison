@@ -419,6 +419,45 @@ exports.deleteShoppingItem = async (event) => {
   }
 };
 
+// PUT /api/shopping/items/:id
+exports.updateShoppingItem = async (event) => {
+  const authError = authenticate(event);
+  if (authError) return authError;
+  try {
+    const id = event.pathParameters.id;
+    const body = JSON.parse(event.body || "{}");
+    const existing = await dynamodb.get({ TableName: SHOPPING_ITEMS_TABLE_NAME, Key: { id } }).promise();
+    if (!existing.Item) return response(404, { error: "Item non trouvé" });
+
+    const name = body.name !== undefined ? String(body.name).trim() : undefined;
+    const category = body.category !== undefined ? String(body.category).trim() : undefined;
+
+    const updated = {
+      ...existing.Item,
+      name: name !== undefined && name !== "" ? name : existing.Item.name,
+      category: category !== undefined && category !== "" ? category : undefined,
+      updatedAt: new Date().toISOString(),
+    };
+
+    await dynamodb.put({ TableName: SHOPPING_ITEMS_TABLE_NAME, Item: updated }).promise();
+
+    // Propager le nouveau nom dans les entrées de la liste
+    if (name !== undefined && name !== "") {
+      const list = await dynamodb.scan({ TableName: SHOPPING_LIST_TABLE_NAME }).promise();
+      const related = (list.Items || []).filter((e) => e.itemId === id);
+      for (const entry of related) {
+        const updatedEntry = { ...entry, name: updated.name, updatedAt: new Date().toISOString() };
+        await dynamodb.put({ TableName: SHOPPING_LIST_TABLE_NAME, Item: updatedEntry }).promise();
+      }
+    }
+
+    return response(200, updated);
+  } catch (error) {
+    console.error("Error in updateShoppingItem:", error);
+    return response(400, { error: "Données invalides" });
+  }
+};
+
 // GET /api/shopping/list
 exports.getShoppingList = async (event) => {
   const authError = authenticate(event);

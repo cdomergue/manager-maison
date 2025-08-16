@@ -72,6 +72,55 @@ export class ShoppingListService {
     }
   }
 
+  updateCatalogItem(itemId: string, data: Partial<Pick<ShoppingItem, 'name' | 'category'>>): void {
+    const existing = this.itemsSignal().find((i) => i.id === itemId);
+    if (!existing) return;
+
+    const sanitized = {
+      name: data.name !== undefined ? data.name.trim() : undefined,
+      category: data.category !== undefined ? data.category.trim() : undefined,
+    };
+
+    if (this.useLocalStorageSignal()) {
+      // Mettre à jour le catalogue
+      const updatedItems = this.itemsSignal().map((i) =>
+        i.id === itemId
+          ? {
+              ...i,
+              name: sanitized.name !== undefined && sanitized.name !== '' ? sanitized.name : i.name,
+              category: sanitized.category !== undefined && sanitized.category !== '' ? sanitized.category : undefined,
+            }
+          : i,
+      );
+      this.itemsSignal.set(updatedItems);
+
+      // Mettre à jour le nom dans les entrées de liste courante associées
+      const updatedList = this.currentListSignal().map((e) =>
+        e.itemId === itemId
+          ? {
+              ...e,
+              name: sanitized.name !== undefined && sanitized.name !== '' ? sanitized.name : e.name,
+            }
+          : e,
+      );
+      this.currentListSignal.set(updatedList);
+      this.persist();
+    } else {
+      this.api.updateShoppingItem(itemId, sanitized).subscribe((serverItem) => {
+        // Catalogue
+        const updatedItems = this.itemsSignal().map((i) => (i.id === itemId ? serverItem : i));
+        this.itemsSignal.set(updatedItems);
+        // Liste courante (synchroniser le nom)
+        if (serverItem.name) {
+          const updatedList = this.currentListSignal().map((e) =>
+            e.itemId === itemId ? { ...e, name: serverItem.name } : e,
+          );
+          this.currentListSignal.set(updatedList);
+        }
+      });
+    }
+  }
+
   removeCatalogItem(itemId: string): void {
     if (this.useLocalStorageSignal()) {
       this.itemsSignal.set(this.itemsSignal().filter((i) => i.id !== itemId));

@@ -209,6 +209,10 @@ export class ApiService {
     return this.post<ShoppingItem>('/shopping/items', { name, category });
   }
 
+  updateShoppingItem(itemId: string, data: Partial<Pick<ShoppingItem, 'name' | 'category'>>): Observable<ShoppingItem> {
+    return this.put<ShoppingItem>(`/shopping/items/${itemId}`, data);
+  }
+
   deleteShoppingItem(itemId: string): Observable<void> {
     return this.delete<void>(`/shopping/items/${itemId}`);
   }

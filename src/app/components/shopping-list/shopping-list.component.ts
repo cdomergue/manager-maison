@@ -12,6 +12,9 @@ export class ShoppingListComponent {
   newItemName = signal<string>('');
   newItemCategory = signal<string>('');
   search = signal<string>('');
+  editingId = signal<string | null>(null);
+  editName = signal<string>('');
+  editCategory = signal<string>('');
 
   // pas de constructeur nécessaire
   public shopping = inject(ShoppingListService);
@@ -34,6 +37,27 @@ export class ShoppingListComponent {
 
   addToList(itemId: string): void {
     this.shopping.addToCurrentList(itemId, 1);
+  }
+
+  startEdit(itemId: string): void {
+    const item = this.shopping.items().find((i) => i.id === itemId);
+    if (!item) return;
+    this.editingId.set(itemId);
+    this.editName.set(item.name);
+    this.editCategory.set(item.category || '');
+  }
+
+  cancelEdit(): void {
+    this.editingId.set(null);
+    this.editName.set('');
+    this.editCategory.set('');
+  }
+
+  saveEdit(): void {
+    const id = this.editingId();
+    if (!id) return;
+    this.shopping.updateCatalogItem(id, { name: this.editName(), category: this.editCategory() });
+    this.cancelEdit();
   }
 
   inc(entryId: string): void {
