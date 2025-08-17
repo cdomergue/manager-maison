@@ -101,6 +101,13 @@ const ERROR_MESSAGES = {
   SHOPPING_CLEAR_ERROR: "Erreur lors du nettoyage",
   SHOPPING_EMPTY_ERROR: "Erreur lors du vidage",
 
+  // Erreurs spécifiques aux recettes
+  RECIPE_NOT_FOUND: "Recette non trouvée",
+  RECIPE_SAVE_ERROR: "Erreur lors de la sauvegarde de la recette",
+  RECIPE_DELETE_ERROR: "Erreur lors de la suppression de la recette",
+  RECIPE_RETRIEVE_ERROR: "Erreur lors de la récupération des recettes",
+  RECIPE_INVALID_INGREDIENT: "Ingrédient invalide dans la recette",
+
   // Erreurs serveur
   STATUS_ERROR: "Erreur lors de la récupération du statut",
   API_ROUTE_NOT_FOUND: "Route API non trouvée",
@@ -125,6 +132,7 @@ const DEFAULT_DATABASE_STRUCTURE = {
   shoppingItems: [],
   shoppingList: [],
   notes: [],
+  recipes: [],
   lastUpdated: new Date().toISOString(),
 };
 

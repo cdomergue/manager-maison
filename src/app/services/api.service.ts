@@ -267,6 +267,23 @@ export class ApiService {
 
   // partage supprimé
 
+  // ================= RECIPES =================
+  getRecipes(): Observable<unknown[]> {
+    return this.get<unknown[]>('/recipes');
+  }
+
+  createRecipe(payload: unknown): Observable<unknown> {
+    return this.post<unknown>('/recipes', payload);
+  }
+
+  updateRecipe(id: string, payload: unknown): Observable<unknown> {
+    return this.put<unknown>(`/recipes/${id}`, payload);
+  }
+
+  deleteRecipe(id: string): Observable<void> {
+    return this.delete<void>(`/recipes/${id}`);
+  }
+
   // Convertir les dates ISO en objets Date
   private convertDates(tasks: Task[]): void {
     tasks.forEach((task) => {

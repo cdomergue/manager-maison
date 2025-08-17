@@ -41,6 +41,7 @@ function readDatabase() {
     if (!data.shoppingItems) data.shoppingItems = [];
     if (!data.shoppingList) data.shoppingList = [];
     if (!data.notes) data.notes = [];
+    if (!data.recipes) data.recipes = [];
     return data;
   } catch (error) {
     console.error("Erreur lors de la lecture de la base de données:", error);
@@ -251,6 +252,102 @@ app.get("/api/notes", (req, res) => {
     res.json(db.notes || []);
   } catch (error) {
     res.status(500).json({ error: "Erreur lors de la récupération des notes" });
+  }
+});
+
+// ================= RECETTES =================
+// GET /api/recipes
+app.get("/api/recipes", (req, res) => {
+  try {
+    const db = readDatabase();
+    res.json(db.recipes || []);
+  } catch (error) {
+    res.status(500).json({ error: ERROR_MESSAGES.RECIPE_RETRIEVE_ERROR });
+  }
+});
+
+// POST /api/recipes
+app.post("/api/recipes", (req, res) => {
+  try {
+    const db = readDatabase();
+    const userId = req.header("X-User-Id") || getUserId(req.headers) || "anonymous";
+    const { title, description, ingredients, servings, prepTime, cookTime, category } = req.body || {};
+
+    // Validation minimale
+    if (!title || !Array.isArray(ingredients)) return res.status(400).json({ error: ERROR_MESSAGES.INVALID_DATA });
+    for (const ing of ingredients) {
+      if (!ing || !ing.itemId || !ing.name || !(Number(ing.quantity) > 0)) {
+        return res.status(400).json({ error: ERROR_MESSAGES.RECIPE_INVALID_INGREDIENT });
+      }
+    }
+
+    const now = new Date().toISOString();
+    const recipe = {
+      id: generateId(),
+      title: sanitizeString(title),
+      description: description || "",
+      ingredients,
+      servings: servings || undefined,
+      prepTime: prepTime || undefined,
+      cookTime: cookTime || undefined,
+      category: category || undefined,
+      ownerId: userId,
+      createdAt: now,
+      updatedAt: now,
+    };
+    db.recipes.unshift(recipe);
+    if (writeDatabase(db)) return res.status(201).json(recipe);
+    return res.status(500).json({ error: ERROR_MESSAGES.RECIPE_SAVE_ERROR });
+  } catch (error) {
+    res.status(400).json({ error: ERROR_MESSAGES.INVALID_DATA });
+  }
+});
+
+// PUT /api/recipes/:id
+app.put("/api/recipes/:id", (req, res) => {
+  try {
+    const db = readDatabase();
+    const id = req.params.id;
+    const idx = (db.recipes || []).findIndex((r) => r.id === id);
+    if (idx === -1) return res.status(404).json({ error: ERROR_MESSAGES.RECIPE_NOT_FOUND });
+    const { title, description, ingredients, servings, prepTime, cookTime, category } = req.body || {};
+    if (ingredients) {
+      if (!Array.isArray(ingredients)) return res.status(400).json({ error: ERROR_MESSAGES.INVALID_DATA });
+      for (const ing of ingredients) {
+        if (!ing || !ing.itemId || !ing.name || !(Number(ing.quantity) > 0)) {
+          return res.status(400).json({ error: ERROR_MESSAGES.RECIPE_INVALID_INGREDIENT });
+        }
+      }
+    }
+    db.recipes[idx] = {
+      ...db.recipes[idx],
+      title: title !== undefined ? sanitizeString(title) : db.recipes[idx].title,
+      description: description !== undefined ? description : db.recipes[idx].description,
+      ingredients: ingredients !== undefined ? ingredients : db.recipes[idx].ingredients,
+      servings: servings !== undefined ? servings : db.recipes[idx].servings,
+      prepTime: prepTime !== undefined ? prepTime : db.recipes[idx].prepTime,
+      cookTime: cookTime !== undefined ? cookTime : db.recipes[idx].cookTime,
+      category: category !== undefined ? category : db.recipes[idx].category,
+      updatedAt: new Date().toISOString(),
+    };
+    if (writeDatabase(db)) return res.json(db.recipes[idx]);
+    return res.status(500).json({ error: ERROR_MESSAGES.RECIPE_SAVE_ERROR });
+  } catch (error) {
+    res.status(400).json({ error: ERROR_MESSAGES.INVALID_DATA });
+  }
+});
+
+// DELETE /api/recipes/:id
+app.delete("/api/recipes/:id", (req, res) => {
+  try {
+    const db = readDatabase();
+    const before = (db.recipes || []).length;
+    db.recipes = (db.recipes || []).filter((r) => r.id !== req.params.id);
+    if (db.recipes.length === before) return res.status(404).json({ error: ERROR_MESSAGES.RECIPE_NOT_FOUND });
+    if (writeDatabase(db)) return res.status(204).send();
+    return res.status(500).json({ error: ERROR_MESSAGES.RECIPE_DELETE_ERROR });
+  } catch (error) {
+    res.status(500).json({ error: ERROR_MESSAGES.RECIPE_DELETE_ERROR });
   }
 });
 

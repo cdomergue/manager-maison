@@ -1,0 +1,448 @@
+<div class="flex flex-col lg:flex-row lg:items-start gap-6">
+  <!-- Nouvelle recette -->
+  <details
+    #newRecipePanel
+    class="w-full lg:w-96 bg-white dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-700"
+  >
+    <summary class="cursor-pointer select-none px-4 py-3 font-semibold text-gray-900 dark:text-white">
+      Nouvelle recette
+    </summary>
+    <form class="space-y-3 p-4 pt-2" (ngSubmit)="createRecipe()">
+      <!-- Titre -->
+      <div>
+        <label for="title-input" class="block text-sm text-gray-600 dark:text-gray-300 mb-1">Titre</label>
+        <input
+          id="title-input"
+          [ngModel]="newRecipeTitle()"
+          (ngModelChange)="newRecipeTitle.set($event)"
+          name="title"
+          class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+          placeholder="Nom de la recette"
+        />
+      </div>
+
+      <!-- Informations générales -->
+      <div class="grid grid-cols-2 gap-2">
+        <div>
+          <label for="servings-input" class="block text-sm text-gray-600 dark:text-gray-300 mb-1">Portions</label>
+          <input
+            id="servings-input"
+            type="number"
+            [ngModel]="newRecipeServings()"
+            (ngModelChange)="newRecipeServings.set($event)"
+            name="servings"
+            min="1"
+            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+            placeholder="4"
+          />
+        </div>
+        <div>
+          <label for="category-input" class="block text-sm text-gray-600 dark:text-gray-300 mb-1">Catégorie</label>
+          <input
+            id="category-input"
+            [ngModel]="newRecipeCategory()"
+            (ngModelChange)="newRecipeCategory.set($event)"
+            name="category"
+            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+            placeholder="Plat principal"
+          />
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-2">
+        <div>
+          <label for="prep-time-input" class="block text-sm text-gray-600 dark:text-gray-300 mb-1"
+            >Préparation (min)</label
+          >
+          <input
+            id="prep-time-input"
+            type="number"
+            [ngModel]="newRecipePrepTime()"
+            (ngModelChange)="newRecipePrepTime.set($event)"
+            name="prepTime"
+            min="0"
+            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+            placeholder="30"
+          />
+        </div>
+        <div>
+          <label for="cook-time-input" class="block text-sm text-gray-600 dark:text-gray-300 mb-1">Cuisson (min)</label>
+          <input
+            id="cook-time-input"
+            type="number"
+            [ngModel]="newRecipeCookTime()"
+            (ngModelChange)="newRecipeCookTime.set($event)"
+            name="cookTime"
+            min="0"
+            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+            placeholder="45"
+          />
+        </div>
+      </div>
+
+      <!-- Ingrédients -->
+      <div>
+        <div class="block text-sm text-gray-600 dark:text-gray-300 mb-1">Ingrédients</div>
+
+        <!-- Ajouter un ingrédient -->
+        <div class="space-y-2 mb-2">
+          <app-autocomplete
+            [options]="autocompleteOptions()"
+            [ngModel]="selectedItemId()"
+            (ngModelChange)="selectedItemId.set($event)"
+            (optionSelected)="onIngredientSelected($event)"
+            placeholder="Choisir un ingrédient..."
+            name="selectedItem"
+          ></app-autocomplete>
+          <div class="flex gap-2">
+            <input
+              type="number"
+              [ngModel]="ingredientQuantity()"
+              (ngModelChange)="ingredientQuantity.set($event)"
+              name="quantity"
+              min="0.1"
+              step="0.1"
+              class="w-16 px-1 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
+              placeholder="1"
+            />
+            <input
+              [ngModel]="ingredientUnit()"
+              (ngModelChange)="ingredientUnit.set($event)"
+              name="unit"
+              class="w-20 px-1 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 text-sm"
+              placeholder="kg"
+            />
+            <button
+              type="button"
+              (click)="addIngredient()"
+              class="flex-1 px-3 py-2 bg-green-600 dark:bg-green-600 text-white rounded hover:bg-green-700 dark:hover:bg-green-700 transition-colors text-sm"
+            >
+              Ajouter
+            </button>
+          </div>
+        </div>
+
+        <!-- Liste des ingrédients -->
+        @if (newRecipeIngredients().length > 0) {
+          <ul class="space-y-1 mb-2">
+            @for (ingredient of newRecipeIngredients(); track ingredient.itemId) {
+              <li class="flex items-center gap-2 text-sm">
+                <span class="flex-1 text-gray-900 dark:text-white">{{ ingredient.name }}</span>
+                <input
+                  type="number"
+                  [value]="ingredient.quantity"
+                  (input)="updateIngredientQuantity($index, +$any($event.target).value)"
+                  min="0.1"
+                  step="0.1"
+                  class="w-16 px-1 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-xs"
+                />
+                <input
+                  [value]="ingredient.unit || ''"
+                  (input)="updateIngredientUnit($index, $any($event.target).value)"
+                  class="w-16 px-1 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 text-xs"
+                  placeholder="unité"
+                />
+                <button
+                  type="button"
+                  (click)="removeIngredient($index)"
+                  class="px-2 py-1 text-xs text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
+                >
+                  ×
+                </button>
+              </li>
+            }
+          </ul>
+        }
+      </div>
+
+      <!-- Description/Instructions -->
+      <div>
+        <div class="block text-sm text-gray-600 dark:text-gray-300 mb-1">Instructions</div>
+        <app-rich-text-editor
+          [ngModel]="newRecipeDescription()"
+          (ngModelChange)="newRecipeDescription.set($event)"
+          name="description"
+          placeholder="Décrivez les étapes de préparation..."
+          minHeight="150px"
+        ></app-rich-text-editor>
+      </div>
+
+      <button
+        type="submit"
+        [disabled]="!newRecipeTitle().trim() || newRecipeIngredients().length === 0"
+        class="px-3 py-2 rounded bg-blue-600 dark:bg-blue-600 text-white hover:bg-blue-700 dark:hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        Créer la recette
+      </button>
+    </form>
+  </details>
+
+  <!-- Liste des recettes -->
+  <div class="flex-1 mt-6 lg:mt-0">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Recettes</h2>
+      <button
+        class="text-sm px-3 py-1 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 transition-colors"
+        (click)="refresh()"
+      >
+        Rafraîchir
+      </button>
+    </div>
+
+    <!-- Filtres -->
+    <div class="flex flex-col sm:flex-row gap-2 mb-4">
+      <input
+        type="text"
+        placeholder="Rechercher..."
+        [ngModel]="searchTerm()"
+        (ngModelChange)="searchTerm.set($event)"
+        class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+      />
+      <select
+        [ngModel]="selectedCategory()"
+        (ngModelChange)="selectedCategory.set($event)"
+        class="w-full sm:w-auto px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+      >
+        <option value="">Toutes catégories</option>
+        @for (category of categories(); track category) {
+          <option [value]="category">{{ category }}</option>
+        }
+      </select>
+    </div>
+
+    <!-- Grille des recettes -->
+    <div class="grid gap-4">
+      @for (recipe of filteredRecipes(); track recipe.id) {
+        <div class="border border-gray-200 dark:border-gray-700 rounded p-4 bg-white dark:bg-gray-800">
+          @if (editingId() === recipe.id) {
+            <!-- Mode édition -->
+            <div class="space-y-3">
+              <input
+                [ngModel]="editTitle()"
+                (ngModelChange)="editTitle.set($event)"
+                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white font-medium"
+              />
+
+              <div class="grid grid-cols-2 gap-2">
+                <input
+                  type="number"
+                  [ngModel]="editServings()"
+                  (ngModelChange)="editServings.set($event)"
+                  placeholder="Portions"
+                  min="1"
+                  class="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
+                />
+                <input
+                  [ngModel]="editCategory()"
+                  (ngModelChange)="editCategory.set($event)"
+                  placeholder="Catégorie"
+                  class="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
+                />
+              </div>
+
+              <div class="grid grid-cols-2 gap-2">
+                <input
+                  type="number"
+                  [ngModel]="editPrepTime()"
+                  (ngModelChange)="editPrepTime.set($event)"
+                  placeholder="Préparation (min)"
+                  min="0"
+                  class="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
+                />
+                <input
+                  type="number"
+                  [ngModel]="editCookTime()"
+                  (ngModelChange)="editCookTime.set($event)"
+                  placeholder="Cuisson (min)"
+                  min="0"
+                  class="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
+                />
+              </div>
+
+              <!-- Ingrédients en édition -->
+              <div>
+                <div class="text-sm text-gray-600 dark:text-gray-300 mb-2">Ingrédients</div>
+
+                <!-- Ajouter un ingrédient -->
+                <div class="space-y-2 mb-2">
+                  <app-autocomplete
+                    [options]="autocompleteOptions()"
+                    [ngModel]="selectedItemId()"
+                    (ngModelChange)="selectedItemId.set($event)"
+                    (optionSelected)="onIngredientSelected($event)"
+                    placeholder="Choisir un ingrédient..."
+                    inputClass="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
+                  ></app-autocomplete>
+                  <div class="flex gap-2">
+                    <input
+                      type="number"
+                      [ngModel]="ingredientQuantity()"
+                      (ngModelChange)="ingredientQuantity.set($event)"
+                      min="0.1"
+                      step="0.1"
+                      class="w-16 px-1 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
+                      placeholder="1"
+                    />
+                    <input
+                      [ngModel]="ingredientUnit()"
+                      (ngModelChange)="ingredientUnit.set($event)"
+                      class="w-20 px-1 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
+                      placeholder="kg"
+                    />
+                    <button
+                      type="button"
+                      (click)="addIngredient()"
+                      class="flex-1 px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 transition-colors text-sm"
+                    >
+                      Ajouter
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Liste des ingrédients -->
+                <ul class="space-y-1 mb-2">
+                  @for (ingredient of editIngredients(); track $index) {
+                    <li class="flex items-center gap-2 text-sm">
+                      <span class="flex-1 text-gray-900 dark:text-white">{{ ingredient.name }}</span>
+                      <input
+                        type="number"
+                        [value]="ingredient.quantity"
+                        (input)="updateIngredientQuantity($index, +$any($event.target).value)"
+                        min="0.1"
+                        step="0.1"
+                        class="w-16 px-1 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-xs"
+                      />
+                      <input
+                        [value]="ingredient.unit || ''"
+                        (input)="updateIngredientUnit($index, $any($event.target).value)"
+                        class="w-16 px-1 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-xs"
+                        placeholder="unité"
+                      />
+                      <button
+                        type="button"
+                        (click)="removeIngredient($index)"
+                        class="px-2 py-1 text-xs text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
+                      >
+                        ×
+                      </button>
+                    </li>
+                  }
+                </ul>
+              </div>
+
+              <!-- Description en édition -->
+              <div>
+                <div class="text-sm text-gray-600 dark:text-gray-300 mb-1">Instructions</div>
+                <app-rich-text-editor
+                  [ngModel]="editDescription()"
+                  (ngModelChange)="editDescription.set($event)"
+                  placeholder="Décrivez les étapes de préparation..."
+                  minHeight="150px"
+                ></app-rich-text-editor>
+              </div>
+
+              <div class="flex gap-2">
+                <button
+                  class="px-3 py-1 rounded bg-blue-600 dark:bg-blue-600 text-white hover:bg-blue-700 dark:hover:bg-blue-700 transition-colors"
+                  (click)="saveEdit()"
+                >
+                  Enregistrer
+                </button>
+                <button
+                  class="px-3 py-1 rounded border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                  (click)="cancelEdit()"
+                >
+                  Annuler
+                </button>
+              </div>
+            </div>
+          } @else {
+            <!-- Mode affichage -->
+            <div class="recipe-row flex items-start sm:justify-between gap-2 sm:gap-4">
+              <div class="recipe-body order-2 sm:order-1 flex-1">
+                <div class="flex items-start justify-between">
+                  <div>
+                    <h3 class="font-medium text-gray-900 dark:text-white text-lg">{{ recipe.title }}</h3>
+
+                    <div class="flex flex-wrap gap-2 mt-1 text-sm text-gray-500 dark:text-gray-400">
+                      @if (recipe.category) {
+                        <span
+                          class="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 rounded"
+                          >{{ recipe.category }}</span
+                        >
+                      }
+                      @if (recipe.servings) {
+                        <span>{{ recipe.servings }} portions</span>
+                      }
+                      @if (recipe.prepTime) {
+                        <span>Préparation: {{ formatTime(recipe.prepTime) }}</span>
+                      }
+                      @if (recipe.cookTime) {
+                        <span>Cuisson: {{ formatTime(recipe.cookTime) }}</span>
+                      }
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Ingrédients -->
+                @if (recipe.ingredients.length > 0) {
+                  <div class="mt-3">
+                    <h4 class="font-medium text-gray-700 dark:text-gray-300 mb-2">Ingrédients</h4>
+                    <ul class="grid grid-cols-1 sm:grid-cols-2 gap-1 text-sm">
+                      @for (ingredient of recipe.ingredients; track $index) {
+                        <li class="text-gray-600 dark:text-gray-400">
+                          {{ ingredient.quantity }}{{ ingredient.unit ? " " + ingredient.unit : "" }}
+                          {{ ingredient.name }}
+                        </li>
+                      }
+                    </ul>
+                  </div>
+                }
+
+                <!-- Instructions -->
+                @if (recipe.description) {
+                  <div class="mt-3">
+                    <h4 class="font-medium text-gray-700 dark:text-gray-300 mb-2">Instructions</h4>
+                    <div
+                      class="note-content text-gray-700 dark:text-gray-300 text-sm"
+                      [innerHTML]="recipe.description"
+                    ></div>
+                  </div>
+                }
+
+                <div class="text-xs text-gray-500 dark:text-gray-400 mt-3">Propriétaire: {{ recipe.ownerId }}</div>
+              </div>
+
+              <!-- Actions -->
+              <div
+                class="recipe-actions order-1 sm:order-2 shrink-0 self-start flex flex-col sm:flex-row items-center sm:items-start gap-2 mt-2 sm:mt-0"
+              >
+                <button
+                  class="w-20 h-auto px-2 py-1 text-sm bg-green-600 dark:bg-green-600 text-white rounded hover:bg-green-700 dark:hover:bg-green-700 transition-colors"
+                  (click)="addRecipeToShoppingList(recipe.id)"
+                  title="Ajouter tous les ingrédients à la liste de courses"
+                >
+                  + Liste
+                </button>
+                <button
+                  class="w-20 h-auto px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 transition-colors"
+                  (click)="startEdit(recipe)"
+                >
+                  Modifier
+                </button>
+                <button
+                  class="w-20 h-auto px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 transition-colors"
+                  (click)="removeRecipe(recipe.id)"
+                >
+                  Supp
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+      } @empty {
+        <div class="text-sm text-gray-500 dark:text-gray-400">Aucune recette trouvée.</div>
+      }
+    </div>
+  </div>
+</div>

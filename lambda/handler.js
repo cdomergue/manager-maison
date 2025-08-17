@@ -19,6 +19,7 @@ const CATEGORIES_TABLE_NAME = process.env.CATEGORIES_TABLE_NAME || "gestion-mais
 const SHOPPING_ITEMS_TABLE_NAME = process.env.SHOPPING_ITEMS_TABLE_NAME || "gestion-maison-shopping-items";
 const SHOPPING_LIST_TABLE_NAME = process.env.SHOPPING_LIST_TABLE_NAME || "gestion-maison-shopping-list";
 const NOTES_TABLE_NAME = process.env.NOTES_TABLE_NAME || "gestion-maison-notes";
+const RECIPES_TABLE_NAME = process.env.RECIPES_TABLE_NAME || "gestion-maison-recipes";
 
 // Configuration spéciale
 const YOU_KNOW_WHAT = "21cdf2c38551";
@@ -803,3 +804,103 @@ exports.deleteCategory = async (event) => {
 };
 
 // Les fonctions de calcul de dates sont maintenant dans le module partagé shared/dates.js
+
+// ========== GESTION DES RECETTES ==========
+
+// GET /api/recipes
+exports.getRecipes = async (event) => {
+  const authError = authenticate(event);
+  if (authError) return authError;
+  try {
+    const result = await dynamodb.scan({ TableName: RECIPES_TABLE_NAME }).promise();
+    return response(200, result.Items || []);
+  } catch (error) {
+    console.error("Error in getRecipes:", error);
+    return response(500, { error: ERROR_MESSAGES.RECIPE_RETRIEVE_ERROR });
+  }
+};
+
+// POST /api/recipes
+exports.createRecipe = async (event) => {
+  const authError = authenticate(event);
+  if (authError) return authError;
+  try {
+    const userId = event.headers["X-User-Id"] || event.headers["x-user-id"];
+    const body = JSON.parse(event.body || "{}");
+    const ingredients = Array.isArray(body.ingredients) ? body.ingredients : [];
+    for (const ing of ingredients) {
+      if (!ing || !ing.itemId || !ing.name || !(Number(ing.quantity) > 0)) {
+        return response(400, { error: ERROR_MESSAGES.RECIPE_INVALID_INGREDIENT });
+      }
+    }
+    const now = new Date().toISOString();
+    const recipe = {
+      id: generateId(),
+      title: sanitizeString(body.title),
+      description: body.description || "",
+      ingredients,
+      servings: body.servings || undefined,
+      prepTime: body.prepTime || undefined,
+      cookTime: body.cookTime || undefined,
+      category: body.category || undefined,
+      ownerId: userId || "anonymous",
+      createdAt: now,
+      updatedAt: now,
+    };
+    await dynamodb.put({ TableName: RECIPES_TABLE_NAME, Item: recipe }).promise();
+    return response(201, recipe);
+  } catch (error) {
+    console.error("Error in createRecipe:", error);
+    return response(400, { error: ERROR_MESSAGES.INVALID_DATA });
+  }
+};
+
+// PUT /api/recipes/:id
+exports.updateRecipe = async (event) => {
+  const authError = authenticate(event);
+  if (authError) return authError;
+  try {
+    const id = event.pathParameters.id;
+    const body = JSON.parse(event.body || "{}");
+    const existing = await dynamodb.get({ TableName: RECIPES_TABLE_NAME, Key: { id } }).promise();
+    if (!existing.Item) return response(404, { error: ERROR_MESSAGES.RECIPE_NOT_FOUND });
+    if (body.ingredients) {
+      if (!Array.isArray(body.ingredients)) return response(400, { error: ERROR_MESSAGES.INVALID_DATA });
+      for (const ing of body.ingredients) {
+        if (!ing || !ing.itemId || !ing.name || !(Number(ing.quantity) > 0)) {
+          return response(400, { error: ERROR_MESSAGES.RECIPE_INVALID_INGREDIENT });
+        }
+      }
+    }
+    const updated = {
+      ...existing.Item,
+      title: body.title !== undefined ? sanitizeString(body.title) : existing.Item.title,
+      description: body.description !== undefined ? body.description : existing.Item.description,
+      ingredients: body.ingredients !== undefined ? body.ingredients : existing.Item.ingredients,
+      servings: body.servings !== undefined ? body.servings : existing.Item.servings,
+      prepTime: body.prepTime !== undefined ? body.prepTime : existing.Item.prepTime,
+      cookTime: body.cookTime !== undefined ? body.cookTime : existing.Item.cookTime,
+      category: body.category !== undefined ? body.category : existing.Item.category,
+      updatedAt: new Date().toISOString(),
+    };
+    await dynamodb.put({ TableName: RECIPES_TABLE_NAME, Item: updated }).promise();
+    return response(200, updated);
+  } catch (error) {
+    console.error("Error in updateRecipe:", error);
+    return response(400, { error: ERROR_MESSAGES.INVALID_DATA });
+  }
+};
+
+// DELETE /api/recipes/:id
+exports.deleteRecipe = async (event) => {
+  const authError = authenticate(event);
+  if (authError) return authError;
+  try {
+    const id = event.pathParameters.id;
+    await dynamodb.delete({ TableName: RECIPES_TABLE_NAME, Key: { id } }).promise();
+    return response(204, {});
+  } catch (error) {
+    console.error("Error in deleteRecipe:", error);
+    return response(500, { error: ERROR_MESSAGES.RECIPE_DELETE_ERROR });
+  }
+};

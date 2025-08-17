@@ -1,0 +1,37 @@
+<div class="relative">
+  <input
+    #inputElement
+    type="text"
+    [value]="inputValue()"
+    (input)="onInput($event)"
+    (focus)="onFocus()"
+    (blur)="onBlur()"
+    (keydown)="onKeydown($event)"
+    [placeholder]="placeholder"
+    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+    autocomplete="off"
+  />
+
+  @if (showDropdown() && filteredOptions().length > 0) {
+    <div
+      class="absolute z-10 w-full mt-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg max-h-60 overflow-auto"
+    >
+      @for (option of filteredOptions(); track option.id; let i = $index) {
+        <div
+          class="px-3 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-900 dark:text-white"
+          [class.bg-gray-100]="highlightedIndex() === i"
+          [class.dark:bg-gray-600]="highlightedIndex() === i"
+          (click)="selectOption(option)"
+          (keydown.enter)="selectOption(option)"
+          (mouseenter)="highlightedIndex.set(i)"
+          tabindex="0"
+        >
+          <div class="font-medium">{{ option.name }}</div>
+          @if (option.category) {
+            <div class="text-sm text-gray-500 dark:text-gray-400">{{ option.category }}</div>
+          }
+        </div>
+      }
+    </div>
+  }
+</div>

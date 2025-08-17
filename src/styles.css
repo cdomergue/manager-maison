@@ -32,6 +32,41 @@
   list-style: decimal inside;
   margin: 0.25rem 0;
 }
+.note-content a {
+  color: #2563eb;
+  text-decoration: underline;
+  word-break: break-word;
+}
+
+/* Mode sombre pour les liens */
+:root.dark .note-content a {
+  color: #60a5fa;
+}
+
+/* Styles pour l'éditeur de texte riche */
+.btn {
+  transition: background-color 0.15s ease;
+}
+
+.btn.active {
+  background-color: #e0e7ff;
+}
+
+/* Mode sombre pour les boutons actifs */
+:root.dark .btn.active {
+  background-color: #1e3a8a;
+}
+
+/* Styles pour le contenu des notes en mode sombre */
+:root.dark .note-content h1,
+:root.dark .note-content h2,
+:root.dark .note-content h3 {
+  color: #f1f5f9;
+}
+
+:root.dark .note-content p {
+  color: #e2e8f0;
+}
 
 /* Styles personnalisés */
 body {

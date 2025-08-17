@@ -3,13 +3,13 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { UserSelectComponent } from './components/user-select/user-select.component';
 import { LoadingService } from './services/loading.service';
 import { BackgroundCheckService } from './services/background-check.service';
-import { DatePipe, NgOptimizedImage } from '@angular/common';
+import { NgOptimizedImage } from '@angular/common';
 import { PwaUpdateService } from './services/pwa-update.service';
 import { ThemeService } from './services/theme.service';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, UserSelectComponent, DatePipe, NgOptimizedImage],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, UserSelectComponent, NgOptimizedImage],
   templateUrl: './app.html',
   styleUrl: './app.css',
 })

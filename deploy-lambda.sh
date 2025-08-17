@@ -47,7 +47,58 @@ aws s3 mb s3://$S3_BUCKET --region $AWS_REGION 2>/dev/null || log_warn "Bucket d
 
 # Build SAM
 log_info "Construction du package SAM..."
-sam build
+
+# --- Préparer le module partagé pour la lambda (sans dupliquer le code) ---
+SHARED_VERSION=$(node -p "require('./shared/package.json').version" 2>/dev/null)
+if [ -z "$SHARED_VERSION" ]; then
+  # Fallback sans node -p
+  SHARED_VERSION=$(grep -m1 '"version"' shared/package.json | sed -E 's/.*"version"\s*:\s*"([^"]+)".*/\1/')
+fi
+
+log_info "Packaging du module shared (version ${SHARED_VERSION})..."
+pushd shared >/dev/null || { log_error "Dossier shared introuvable"; exit 1; }
+npm pack --silent || { log_error "npm pack a échoué pour shared/"; popd >/dev/null; exit 1; }
+TARBALL=$(ls -t taches-menageres-shared-*.tgz | head -1)
+popd >/dev/null
+
+if [ ! -f "shared/$TARBALL" ]; then
+  log_error "Tarball du module shared introuvable"
+  exit 1
+fi
+
+log_info "Copie du tarball $TARBALL dans lambda/"
+cp "shared/$TARBALL" lambda/ || { log_error "Impossible de copier le tarball dans lambda/"; exit 1; }
+
+# Sauvegarder et réécrire temporairement la dépendance dans lambda/package.json
+LAMBDA_PKG=lambda/package.json
+LAMBDA_PKG_BAK=lambda/package.json.bak
+cp "$LAMBDA_PKG" "$LAMBDA_PKG_BAK" || { log_error "Impossible de sauvegarder lambda/package.json"; exit 1; }
+
+log_info "Remplacement temporaire de la dépendance taches-menageres-shared par le tarball local"
+node - <<'EOS'
+const fs = require('fs');
+const path = 'lambda/package.json';
+const pkg = JSON.parse(fs.readFileSync(path, 'utf8'));
+pkg.dependencies = pkg.dependencies || {};
+if (pkg.dependencies['taches-menageres-shared']) {
+  const tar = fs.readdirSync('lambda').find(f => /^taches-menageres-shared-.*\.tgz$/.test(f));
+  if (!tar) {
+    console.error('Tarball introuvable dans lambda/');
+    process.exit(1);
+  }
+  pkg.dependencies['taches-menageres-shared'] = `file:./${tar}`;
+}
+fs.writeFileSync(path, JSON.stringify(pkg, null, 2));
+EOS
+if [ $? -ne 0 ]; then
+  log_error "Echec de la mise à jour temporaire de lambda/package.json"; mv "$LAMBDA_PKG_BAK" "$LAMBDA_PKG"; exit 1
+fi
+
+log_info "Installation des dépendances dans lambda/"
+(cd lambda && npm install --silent) || { log_error "npm install a échoué dans lambda/"; mv "$LAMBDA_PKG_BAK" "$LAMBDA_PKG"; rm -f "lambda/$TARBALL"; exit 1; }
+
+# Build SAM (après avoir préparé les deps)
+sam build || { log_error "sam build a échoué"; mv "$LAMBDA_PKG_BAK" "$LAMBDA_PKG"; rm -f "lambda/$TARBALL"; exit 1; }
 
 # Déploiement
 log_info "Déploiement de la stack CloudFormation..."
@@ -61,6 +112,10 @@ sam deploy \
 
 if [ $? -eq 0 ]; then
     log_info "Déploiement réussi ! ✅"
+    # Nettoyage et restauration
+    mv "$LAMBDA_PKG_BAK" "$LAMBDA_PKG" 2>/dev/null || true
+    rm -f "lambda/$TARBALL" 2>/dev/null || true
+    rm -f "shared/$TARBALL" 2>/dev/null || true
     
     # Récupérer l'URL de l'API
     API_URL=$(aws cloudformation describe-stacks \
@@ -81,5 +136,8 @@ if [ $? -eq 0 ]; then
     
 else
     log_error "Échec du déploiement"
+    # Restauration en cas d'erreur
+    mv "$LAMBDA_PKG_BAK" "$LAMBDA_PKG" 2>/dev/null || true
+    rm -f "lambda/$TARBALL" 2>/dev/null || true
     exit 1
 fi

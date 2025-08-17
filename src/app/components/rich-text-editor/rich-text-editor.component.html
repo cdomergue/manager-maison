@@ -1,0 +1,104 @@
+<div>
+  <!-- Toolbar -->
+  <div class="flex flex-wrap items-center gap-2 mb-2 text-sm">
+    <!-- Format Block -->
+    <select
+      class="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+      [value]="toolbar.block"
+      (change)="format('formatBlock', $any($event.target).value)"
+    >
+      <option value="P">Paragraphe</option>
+      <option value="H1">Titre 1</option>
+      <option value="H2">Titre 2</option>
+      <option value="H3">Titre 3</option>
+    </select>
+
+    <!-- Bold -->
+    <button
+      type="button"
+      class="btn px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-600"
+      [class.active]="toolbar.bold"
+      (click)="format('bold')"
+    >
+      <b>B</b>
+    </button>
+
+    <!-- Italic -->
+    <button
+      type="button"
+      class="btn px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-600 italic"
+      [class.active]="toolbar.italic"
+      (click)="format('italic')"
+    >
+      I
+    </button>
+
+    <!-- Strike -->
+    <button
+      type="button"
+      class="btn px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-600"
+      [class.active]="toolbar.strike"
+      (click)="format('strikeThrough')"
+    >
+      <span class="line-through">S</span>
+    </button>
+
+    <!-- Unordered List -->
+    <button
+      type="button"
+      class="btn px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-600"
+      [class.active]="toolbar.ul"
+      (click)="format('insertUnorderedList')"
+    >
+      • Liste
+    </button>
+
+    <!-- Ordered List -->
+    <button
+      type="button"
+      class="btn px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-600"
+      [class.active]="toolbar.ol"
+      (click)="format('insertOrderedList')"
+    >
+      1. Liste
+    </button>
+
+    <!-- Separator -->
+    <span class="mx-1 h-4 w-px bg-gray-300 dark:bg-gray-600 inline-block align-middle"></span>
+
+    <!-- Insert Link -->
+    <button
+      type="button"
+      class="btn px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-600"
+      [class.active]="toolbar.link"
+      title="Insérer un lien"
+      (click)="insertLink()"
+    >
+      Lien
+    </button>
+
+    <!-- Unlink -->
+    <button
+      type="button"
+      class="btn px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-600"
+      [disabled]="!toolbar.link"
+      title="Supprimer le lien"
+      (click)="unlink()"
+    >
+      Retirer lien
+    </button>
+  </div>
+
+  <!-- Editor -->
+  <div
+    #editor
+    class="min-h-32 w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded focus:outline-none note-content max-w-none bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+    [style.min-height]="minHeight"
+    contenteditable="true"
+    (input)="onEditorInput()"
+    (keyup)="onEditorInput()"
+    (mouseup)="onEditorInput()"
+    (focus)="onEditorFocus()"
+    [attr.data-placeholder]="placeholder"
+  ></div>
+</div>

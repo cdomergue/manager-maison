@@ -19,88 +19,11 @@
       </div>
       <div>
         <div class="block text-sm text-gray-600 dark:text-gray-300 mb-1">Contenu</div>
-        <div class="flex flex-wrap items-center gap-2 mb-2 text-sm">
-          <select
-            class="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-            [value]="toolbar.block"
-            (change)="
-              format(getCurrentEditor(), 'formatBlock', $any($event.target).value); onEditorInput(getCurrentEditor())
-            "
-          >
-            <option value="P">Paragraphe</option>
-            <option value="H1">Titre 1</option>
-            <option value="H2">Titre 2</option>
-            <option value="H3">Titre 3</option>
-          </select>
-          <button
-            type="button"
-            class="btn px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-600"
-            [class.active]="toolbar.bold"
-            (click)="format(getCurrentEditor(), 'bold'); onEditorInput(getCurrentEditor())"
-          >
-            <b>B</b>
-          </button>
-          <button
-            type="button"
-            class="btn px-2 py-1 border rounded italic"
-            [class.active]="toolbar.italic"
-            (click)="format(getCurrentEditor(), 'italic'); onEditorInput(getCurrentEditor())"
-          >
-            I
-          </button>
-          <button
-            type="button"
-            class="btn px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-600"
-            [class.active]="toolbar.strike"
-            (click)="format(getCurrentEditor(), 'strikeThrough'); onEditorInput(getCurrentEditor())"
-          >
-            <span class="line-through">S</span>
-          </button>
-          <button
-            type="button"
-            class="btn px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-600"
-            [class.active]="toolbar.ul"
-            (click)="format(getCurrentEditor(), 'insertUnorderedList'); onEditorInput(getCurrentEditor())"
-          >
-            • Liste
-          </button>
-          <button
-            type="button"
-            class="btn px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-600"
-            [class.active]="toolbar.ol"
-            (click)="format(getCurrentEditor(), 'insertOrderedList'); onEditorInput(getCurrentEditor())"
-          >
-            1. Liste
-          </button>
-          <span class="mx-1 h-4 w-px bg-gray-300 dark:bg-gray-600 inline-block align-middle"></span>
-          <button
-            type="button"
-            class="btn px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-600"
-            [class.active]="toolbar.link"
-            title="Insérer un lien"
-            (click)="insertLink(getCurrentEditor())"
-          >
-            Lien
-          </button>
-          <button
-            type="button"
-            class="btn px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-600"
-            [disabled]="!toolbar.link"
-            title="Supprimer le lien"
-            (click)="unlink(getCurrentEditor())"
-          >
-            Retirer lien
-          </button>
-        </div>
-        <div
-          #createEditor
-          class="min-h-32 w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded focus:outline-none note-content max-w-none bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-          contenteditable="true"
-          (input)="onEditorInput(createEditor)"
-          (keyup)="onEditorInput(createEditor)"
-          (mouseup)="onEditorInput(createEditor)"
-          (focus)="setActiveEditor('create')"
-        ></div>
+        <app-rich-text-editor
+          [(ngModel)]="content"
+          name="content"
+          placeholder="Tapez votre contenu..."
+        ></app-rich-text-editor>
       </div>
       <button
         type="submit"
@@ -134,89 +57,13 @@
                 name="editTitle"
                 class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               />
-              <div class="flex flex-wrap items-center gap-2 mb-2 text-sm">
-                <select
-                  class="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                  [value]="toolbar.block"
-                  (change)="
-                    format(getCurrentEditor(), 'formatBlock', $any($event.target).value);
-                    onEditorInput(getCurrentEditor())
-                  "
-                >
-                  <option value="P">Paragraphe</option>
-                  <option value="H1">Titre 1</option>
-                  <option value="H2">Titre 2</option>
-                  <option value="H3">Titre 3</option>
-                </select>
-                <button
-                  type="button"
-                  class="btn px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-600"
-                  [class.active]="toolbar.bold"
-                  (click)="format(getCurrentEditor(), 'bold'); onEditorInput(getCurrentEditor())"
-                >
-                  <b>B</b>
-                </button>
-                <button
-                  type="button"
-                  class="btn px-2 py-1 border rounded italic"
-                  [class.active]="toolbar.italic"
-                  (click)="format(getCurrentEditor(), 'italic'); onEditorInput(getCurrentEditor())"
-                >
-                  I
-                </button>
-                <button
-                  type="button"
-                  class="btn px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-600"
-                  [class.active]="toolbar.strike"
-                  (click)="format(getCurrentEditor(), 'strikeThrough'); onEditorInput(getCurrentEditor())"
-                >
-                  <span class="line-through">S</span>
-                </button>
-                <button
-                  type="button"
-                  class="btn px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-600"
-                  [class.active]="toolbar.ul"
-                  (click)="format(getCurrentEditor(), 'insertUnorderedList'); onEditorInput(getCurrentEditor())"
-                >
-                  • Liste
-                </button>
-                <button
-                  type="button"
-                  class="btn px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-600"
-                  [class.active]="toolbar.ol"
-                  (click)="format(getCurrentEditor(), 'insertOrderedList'); onEditorInput(getCurrentEditor())"
-                >
-                  1. Liste
-                </button>
-                <span class="mx-1 h-4 w-px bg-gray-300 dark:bg-gray-600 inline-block align-middle"></span>
-                <button
-                  type="button"
-                  class="btn px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-600"
-                  [class.active]="toolbar.link"
-                  title="Insérer un lien"
-                  (click)="insertLink(getCurrentEditor())"
-                >
-                  Lien
-                </button>
-                <button
-                  type="button"
-                  class="btn px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-600"
-                  [disabled]="!toolbar.link"
-                  title="Supprimer le lien"
-                  (click)="unlink(getCurrentEditor())"
-                >
-                  Retirer lien
-                </button>
+              <div class="mt-3">
+                <app-rich-text-editor
+                  [(ngModel)]="editContent"
+                  name="editContent"
+                  placeholder="Tapez votre contenu..."
+                ></app-rich-text-editor>
               </div>
-              <div
-                #editEditor
-                class="min-h-32 w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded focus:outline-none note-content max-w-none bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                contenteditable="true"
-                (input)="onEditorInput(editEditor)"
-                (keyup)="onEditorInput(editEditor)"
-                (mouseup)="onEditorInput(editEditor)"
-                (focus)="setActiveEditor('edit')"
-              ></div>
               <div class="flex gap-2">
                 <button
                   class="px-3 py-1 rounded bg-blue-600 dark:bg-blue-600 text-white hover:bg-blue-700 dark:hover:bg-blue-700 transition-colors"

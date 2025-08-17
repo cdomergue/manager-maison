@@ -13,6 +13,7 @@ Globals:
         SHOPPING_ITEMS_TABLE_NAME: !Ref ShoppingItemsTable
         SHOPPING_LIST_TABLE_NAME: !Ref ShoppingListTable
         NOTES_TABLE_NAME: !Ref NotesTable
+        RECIPES_TABLE_NAME: !Ref RecipesTable
   Api:
     Cors:
       AllowMethods: "'GET,POST,PUT,DELETE,OPTIONS'"
@@ -74,6 +75,18 @@ Resources:
     Type: AWS::DynamoDB::Table
     Properties:
       TableName: gestion-maison-shopping-list
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
+
+  RecipesTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: gestion-maison-recipes
       AttributeDefinitions:
         - AttributeName: id
           AttributeType: S
@@ -269,6 +282,71 @@ Resources:
           Properties:
             RestApiId: !Ref Api
             Path: /api/notes/{id}
+            Method: delete
+
+  # ========== RECIPES FUNCTIONS ==========
+  GetRecipesFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda/
+      Handler: handler.getRecipes
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref RecipesTable
+      Events:
+        GetRecipes:
+          Type: Api
+          Properties:
+            RestApiId: !Ref Api
+            Path: /api/recipes
+            Method: get
+
+  CreateRecipeFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda/
+      Handler: handler.createRecipe
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref RecipesTable
+      Events:
+        CreateRecipe:
+          Type: Api
+          Properties:
+            RestApiId: !Ref Api
+            Path: /api/recipes
+            Method: post
+
+  UpdateRecipeFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda/
+      Handler: handler.updateRecipe
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref RecipesTable
+      Events:
+        UpdateRecipe:
+          Type: Api
+          Properties:
+            RestApiId: !Ref Api
+            Path: /api/recipes/{id}
+            Method: put
+
+  DeleteRecipeFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda/
+      Handler: handler.deleteRecipe
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref RecipesTable
+      Events:
+        DeleteRecipe:
+          Type: Api
+          Properties:
+            RestApiId: !Ref Api
+            Path: /api/recipes/{id}
             Method: delete
 
   # ========== FONCTIONS CATEGORIES ==========
