@@ -1,4 +1,4 @@
-import { Component, computed, OnDestroy, OnInit, signal, inject, DestroyRef } from '@angular/core';
+import { Component, computed, OnInit, signal, inject, DestroyRef } from '@angular/core';
 import { RouterModule, ActivatedRoute } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TaskListComponent } from '../task-list/task-list.component';
@@ -12,20 +12,11 @@ import { NotificationService } from '../../services/notification.service';
   imports: [RouterModule, TaskListComponent, TaskFormComponent],
   templateUrl: './tasks.component.html',
 })
-export class TasksComponent implements OnInit, OnDestroy {
-  showTaskForm = signal(false);
+export class TasksComponent implements OnInit {
   editingTask = signal<Task | undefined>(undefined);
 
   // Signaux calculés pour les tâches
   tasks = computed(() => this.taskService.tasks());
-
-  // Référence à la fonction pour pouvoir la supprimer
-  private popstateHandler = () => {
-    console.log('PopState event triggered, showTaskForm:', this.showTaskForm());
-    if (this.showTaskForm()) {
-      this.closeTaskFormFromBack();
-    }
-  };
 
   private taskService = inject(TaskService);
   private notificationService = inject(NotificationService);
@@ -36,9 +27,6 @@ export class TasksComponent implements OnInit, OnDestroy {
   highlightedTaskId = signal<string | null>(null);
 
   ngOnInit(): void {
-    // Écouter l'événement popstate pour fermer la modale
-    window.addEventListener('popstate', this.popstateHandler);
-
     // Écouter les changements de fragment pour mettre en surbrillance une tâche
     this.route.fragment.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((fragment) => {
       if (fragment) {
@@ -53,48 +41,37 @@ export class TasksComponent implements OnInit, OnDestroy {
     });
   }
 
-  showAddTaskForm(): void {
-    this.editingTask.set(undefined);
-    this.showTaskForm.set(true);
-    // Ajouter un état dans l'historique pour la modale
-    history.pushState({ modal: true }, '');
-  }
-
-  showEditTaskForm(task: Task): void {
-    this.editingTask.set(task);
-    this.showTaskForm.set(true);
-    // Ajouter un état dans l'historique pour la modale
-    history.pushState({ modal: true }, '');
-  }
-
   onTaskSaved(task: Task): void {
-    this.closeTaskForm();
+    this.editingTask.set(undefined);
+    // Fermer le panneau d'expansion après création/modification
+    try {
+      const panel = document.querySelector('details') as HTMLDetailsElement | null;
+      if (panel) panel.open = false;
+    } catch {
+      // ignore
+    }
 
     // Programmer la notification pour cette tâche
     this.notificationService.scheduleTaskReminder(task);
   }
 
   onTaskFormCancelled(): void {
-    this.closeTaskForm();
-  }
-
-  closeTaskForm(): void {
-    this.showTaskForm.set(false);
-    this.editingTask.set(undefined);
-    // Si on ferme manuellement, on revient dans l'historique
-    if (history.state?.modal) {
-      history.back();
-    }
-  }
-
-  closeTaskFormFromBack(): void {
-    // Fermeture via le bouton retour - pas besoin de modifier l'historique
-    this.showTaskForm.set(false);
     this.editingTask.set(undefined);
   }
 
   editTask(task: Task): void {
-    this.showEditTaskForm(task);
+    this.editingTask.set(task);
+    // Ouvrir le panneau d'expansion pour l'édition
+    try {
+      const panel = document.querySelector('details') as HTMLDetailsElement | null;
+      if (panel) panel.open = true;
+    } catch {
+      // ignore
+    }
+  }
+
+  refreshTasks(): void {
+    this.taskService.refreshTasks();
   }
 
   private scrollToTask(taskId: string): void {
@@ -111,10 +88,5 @@ export class TasksComponent implements OnInit, OnDestroy {
         element.classList.remove('animate-pulse');
       }, 2000);
     }
-  }
-
-  ngOnDestroy(): void {
-    // Supprimer les écouteurs d'événements
-    window.removeEventListener('popstate', this.popstateHandler);
   }
 }

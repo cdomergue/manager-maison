@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, OnInit, Output, inject, DestroyRef } from '@angular/core';
+import { Component, OnInit, inject, DestroyRef, input, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Assignee, Task } from '../../models/task.model';
@@ -15,9 +15,9 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
   templateUrl: './task-form.component.html',
 })
 export class TaskFormComponent implements OnInit {
-  @Input() task?: Task;
-  @Output() taskSaved = new EventEmitter<Task>();
-  @Output() cancelled = new EventEmitter<void>();
+  task = input<Task | undefined>();
+  taskSaved = output<Task>();
+  cancelled = output<void>();
 
   taskForm: FormGroup;
   categories: Category[] = [];
@@ -65,22 +65,23 @@ export class TaskFormComponent implements OnInit {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((categories) => (this.categories = categories));
 
-    if (this.task) {
+    const currentTask = this.task();
+    if (currentTask) {
       this.taskForm.patchValue({
-        name: this.task.name,
-        description: this.task.description || '',
-        category: this.task.category || '',
-        frequency: this.task.frequency,
-        customDays: this.task.customDays || 7,
-        rrule: this.task.rrule || '',
-        exDates: (this.task.exDates || []).map((d) => d.split('T')[0]).join(','),
-        priority: this.task.priority,
-        nextDueDate: this.formatDateForInput(this.task.nextDueDate),
+        name: currentTask.name,
+        description: currentTask.description || '',
+        category: currentTask.category || '',
+        frequency: currentTask.frequency,
+        customDays: currentTask.customDays || 7,
+        rrule: currentTask.rrule || '',
+        exDates: (currentTask.exDates || []).map((d) => d.split('T')[0]).join(','),
+        priority: currentTask.priority,
+        nextDueDate: this.formatDateForInput(currentTask.nextDueDate),
       });
 
       // Pour une tâche existante, on considère que la date a été définie manuellement
       this.dateModifiedManually = true;
-      this.lastAutoCalculatedDate = this.formatDateForInput(this.task.nextDueDate);
+      this.lastAutoCalculatedDate = this.formatDateForInput(currentTask.nextDueDate);
     } else {
       // Pour une nouvelle tâche, calculer automatiquement la date basée sur la fréquence par défaut
       this.dateModifiedManually = false;
@@ -151,10 +152,11 @@ export class TaskFormComponent implements OnInit {
         assignee: formValue.assignee,
       };
 
-      if (this.task) {
+      const currentTask = this.task();
+      if (currentTask) {
         // Mode édition
         const updatedTask: Task = {
-          ...this.task,
+          ...currentTask,
           ...taskData,
         };
         this.taskService.updateTask(updatedTask);
