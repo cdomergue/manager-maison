@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, input, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Task } from '../../models/task.model';
 
@@ -8,12 +8,12 @@ import { Task } from '../../models/task.model';
   templateUrl: './task-detail.component.html',
 })
 export class TaskDetailComponent {
-  @Input() task!: Task;
-  @Output() closed = new EventEmitter<void>();
-  @Output() complete = new EventEmitter<string>();
-  @Output() edit = new EventEmitter<Task>();
-  @Output() removeTask = new EventEmitter<string>();
-  @Output() toggleActive = new EventEmitter<Task>();
+  task = input.required<Task>();
+  closed = output<void>();
+  complete = output<string>();
+  edit = output<Task>();
+  removeTask = output<string>();
+  toggleActive = output<Task>();
 
   priorities = [
     { value: 'low', label: 'Basse', color: 'text-green-600' },
@@ -66,7 +66,7 @@ export class TaskDetailComponent {
   }
 
   get sortedHistory() {
-    const entries = this.task?.history || [];
+    const entries = this.task()?.history || [];
     return [...entries].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }
 

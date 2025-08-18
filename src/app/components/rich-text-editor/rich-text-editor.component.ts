@@ -1,13 +1,4 @@
-import {
-  Component,
-  ElementRef,
-  EventEmitter,
-  forwardRef,
-  Input,
-  Output,
-  ViewChild,
-  ViewEncapsulation,
-} from '@angular/core';
+import { Component, ElementRef, forwardRef, input, output, ViewChild, ViewEncapsulation } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 
@@ -16,6 +7,18 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
   imports: [CommonModule],
   encapsulation: ViewEncapsulation.None,
   templateUrl: './rich-text-editor.component.html',
+  styles: [
+    `
+      [data-placeholder]:empty::before {
+        content: attr(data-placeholder);
+        color: oklch(70.7% 0.022 261.325);
+        pointer-events: none;
+      }
+      [data-placeholder]:empty {
+        position: relative;
+      }
+    `,
+  ],
   providers: [
     {
       provide: NG_VALUE_ACCESSOR,
@@ -25,9 +28,10 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
   ],
 })
 export class RichTextEditorComponent implements ControlValueAccessor {
-  @Input() placeholder = 'Tapez votre contenu...';
-  @Input() minHeight = '128px';
-  @Output() contentChange = new EventEmitter<string>();
+  placeholder = input<string>('Tapez votre contenu...');
+  minHeight = input<string>('128px');
+
+  contentChange = output<string>();
 
   @ViewChild('editor') editorRef?: ElementRef<HTMLElement>;
 
@@ -60,6 +64,11 @@ export class RichTextEditorComponent implements ControlValueAccessor {
     this.content = value || '';
     if (this.editor) {
       this.editor.innerHTML = this.content;
+
+      // Si la valeur est vide, s'assurer que l'éditeur est complètement vide pour le placeholder
+      if (!this.content.trim()) {
+        this.editor.innerHTML = '';
+      }
     }
   }
 
@@ -168,6 +177,17 @@ export class RichTextEditorComponent implements ControlValueAccessor {
     if (!this.editor) return;
 
     this.content = this.editor.innerHTML;
+
+    // Vérifier si le contenu est réellement vide (ignorer les balises vides et espaces)
+    const textContent = this.editor.textContent || '';
+    const isContentEmpty = textContent.trim() === '';
+
+    // Si le contenu est vide, nettoyer complètement l'éditeur pour que le placeholder fonctionne
+    if (isContentEmpty) {
+      this.editor.innerHTML = '';
+      this.content = '';
+    }
+
     this.onChange(this.content);
     this.onTouched();
     this.contentChange.emit(this.content);

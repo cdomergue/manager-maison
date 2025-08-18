@@ -1,14 +1,4 @@
-import {
-  Component,
-  computed,
-  ElementRef,
-  EventEmitter,
-  forwardRef,
-  Input,
-  Output,
-  signal,
-  ViewChild,
-} from '@angular/core';
+import { Component, computed, ElementRef, forwardRef, input, output, signal, ViewChild } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 
@@ -31,9 +21,9 @@ export interface AutocompleteOption {
   templateUrl: './autocomplete.component.html',
 })
 export class AutocompleteComponent implements ControlValueAccessor {
-  @Input() options: AutocompleteOption[] = [];
-  @Input() placeholder = '';
-  @Output() optionSelected = new EventEmitter<AutocompleteOption>();
+  options = input<AutocompleteOption[]>([]);
+  placeholder = input<string>('');
+  optionSelected = output<AutocompleteOption>();
   @ViewChild('inputElement') inputElement!: ElementRef<HTMLInputElement>;
 
   inputValue = signal<string>('');
@@ -50,9 +40,9 @@ export class AutocompleteComponent implements ControlValueAccessor {
 
   filteredOptions = computed(() => {
     const query = this.inputValue().toLowerCase().trim();
-    if (!query) return this.options;
+    if (!query) return this.options();
 
-    return this.options.filter(
+    return this.options().filter(
       (option) => option.name.toLowerCase().includes(query) || option.category?.toLowerCase().includes(query) || false,
     );
   });
@@ -126,7 +116,7 @@ export class AutocompleteComponent implements ControlValueAccessor {
   // ControlValueAccessor implementation
   writeValue(value: string): void {
     if (value) {
-      const option = this.options.find((opt) => opt.id === value);
+      const option = this.options().find((opt) => opt.id === value);
       if (option) {
         this.inputValue.set(option.name);
         this.selectedOption.set(option);
