@@ -55,6 +55,6 @@
       }
     }
 
-    <app-task-list (editTaskEvent)="editTask($event)"></app-task-list>
+    <app-task-list (editTaskEvent)="editTask($event)" [highlightedTaskId]="highlightedTaskId()"></app-task-list>
   </main>
 </div>

@@ -126,7 +126,11 @@
     @for (task of filteredTasks(); track task.id) {
       <div
         class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-3 sm:p-4 transition-all duration-200 hover:shadow-md cursor-pointer"
-        [ngClass]="getStatusClass(task)"
+        [ngClass]="
+          getStatusClass(task) +
+          (highlightedTaskId() === task.id ? ' ring-2 ring-blue-500 ring-opacity-75 bg-blue-50 dark:bg-blue-950' : '')
+        "
+        [attr.data-task-id]="task.id"
         (click)="showTaskDetails(task)"
         role="button"
         tabindex="0"

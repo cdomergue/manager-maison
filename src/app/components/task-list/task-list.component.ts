@@ -1,4 +1,4 @@
-import { Component, computed, OnDestroy, OnInit, output, signal, inject } from '@angular/core';
+import { Component, computed, OnDestroy, OnInit, output, signal, inject, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Task } from '../../models/task.model';
@@ -18,6 +18,9 @@ export class TaskListComponent implements OnInit, OnDestroy {
   selectedTask = signal<Task | null>(null);
   // Événement pour signaler qu'une tâche doit être éditée
   editTaskEvent = output<Task>();
+
+  // Input pour la tâche à mettre en surbrillance
+  highlightedTaskId = input<string | null>(null);
 
   // Signaux pour les filtres
   selectedCategory = signal<string>('all');

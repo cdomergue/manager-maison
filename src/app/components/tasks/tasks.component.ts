@@ -1,5 +1,6 @@
-import { Component, computed, OnDestroy, OnInit, signal, inject } from '@angular/core';
-import { RouterModule } from '@angular/router';
+import { Component, computed, OnDestroy, OnInit, signal, inject, DestroyRef } from '@angular/core';
+import { RouterModule, ActivatedRoute } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TaskListComponent } from '../task-list/task-list.component';
 import { TaskFormComponent } from '../task-form/task-form.component';
 import { Task } from '../../models/task.model';
@@ -28,10 +29,28 @@ export class TasksComponent implements OnInit, OnDestroy {
 
   private taskService = inject(TaskService);
   private notificationService = inject(NotificationService);
+  private route = inject(ActivatedRoute);
+  private destroyRef = inject(DestroyRef);
+
+  // Signal pour la tâche à mettre en surbrillance
+  highlightedTaskId = signal<string | null>(null);
 
   ngOnInit(): void {
     // Écouter l'événement popstate pour fermer la modale
     window.addEventListener('popstate', this.popstateHandler);
+
+    // Écouter les changements de fragment pour mettre en surbrillance une tâche
+    this.route.fragment.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((fragment) => {
+      if (fragment) {
+        this.highlightedTaskId.set(fragment);
+        // Scroll vers la tâche après un petit délai pour s'assurer que le DOM est mis à jour
+        setTimeout(() => {
+          this.scrollToTask(fragment);
+        }, 100);
+      } else {
+        this.highlightedTaskId.set(null);
+      }
+    });
   }
 
   showAddTaskForm(): void {
@@ -76,6 +95,22 @@ export class TasksComponent implements OnInit, OnDestroy {
 
   editTask(task: Task): void {
     this.showEditTaskForm(task);
+  }
+
+  private scrollToTask(taskId: string): void {
+    const element = document.querySelector(`[data-task-id="${taskId}"]`);
+    if (element) {
+      element.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+      });
+
+      // Optionnel : ajouter une animation flash pour attirer l'attention
+      element.classList.add('animate-pulse');
+      setTimeout(() => {
+        element.classList.remove('animate-pulse');
+      }, 2000);
+    }
   }
 
   ngOnDestroy(): void {

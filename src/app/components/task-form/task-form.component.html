@@ -194,9 +194,19 @@
 
     <!-- Date d'échéance -->
     <div>
-      <label for="nextDueDate" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-        Prochaine échéance *
-      </label>
+      <div class="flex items-center justify-between mb-1">
+        <label for="nextDueDate" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+          Prochaine échéance *
+        </label>
+        <button
+          type="button"
+          (click)="resetDateModificationFlag()"
+          class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors"
+          title="Recalculer automatiquement la date basée sur la fréquence"
+        >
+          🔄 Auto
+        </button>
+      </div>
       <input
         id="nextDueDate"
         type="date"
@@ -206,6 +216,11 @@
       />
       @if (taskForm.get("nextDueDate")?.invalid && taskForm.get("nextDueDate")?.touched) {
         <div class="text-red-500 text-sm mt-1">La date d'échéance est requise</div>
+      }
+      @if (dateModifiedManually) {
+        <p class="text-gray-500 text-xs mt-1">
+          📝 Date modifiée manuellement. Cliquez sur "Auto" pour recalculer automatiquement.
+        </p>
       }
     </div>
 
