@@ -1,51 +1,62 @@
 import { Component, computed, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule, FormsModule, Validators } from '@angular/forms';
 import { RecipeService } from '../../services/recipe.service';
 import { ShoppingListService } from '../../services/shopping-list.service';
 import { RichTextEditorComponent } from '../rich-text-editor/rich-text-editor.component';
 import { AutocompleteComponent, AutocompleteOption } from '../autocomplete/autocomplete.component';
-import { Recipe, RecipeIngredient, CreateRecipeData } from '../../models/recipe.model';
+import { Recipe, RecipeIngredient, CreateRecipeData, RecipeForm, IngredientForm } from '../../models/recipe.model';
 
 @Component({
   selector: 'app-recipes',
-  imports: [CommonModule, FormsModule, RichTextEditorComponent, AutocompleteComponent],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, RichTextEditorComponent, AutocompleteComponent],
   templateUrl: './recipes.component.html',
 })
 export class RecipesComponent {
   private recipeService = inject(RecipeService);
   private shoppingService = inject(ShoppingListService);
+  private fb = inject(FormBuilder);
 
-  // State for new recipe creation
-  newRecipeTitle = signal<string>('');
-  newRecipeDescription = signal<string>('');
-  newRecipeServings = signal<number | undefined>(undefined);
-  newRecipePrepTime = signal<number | undefined>(undefined);
-  newRecipeCookTime = signal<number | undefined>(undefined);
-  newRecipeCategory = signal<string>('');
+  // Reactive Forms typés
+  newRecipeForm: RecipeForm;
+  editRecipeForm: RecipeForm;
+  ingredientForm: IngredientForm;
+
+  // State signals
   newRecipeIngredients = signal<RecipeIngredient[]>([]);
-
-  // State for editing
   editingId = signal<string | null>(null);
-  editTitle = signal<string>('');
-  editDescription = signal<string>('');
-  editServings = signal<number | undefined>(undefined);
-  editPrepTime = signal<number | undefined>(undefined);
-  editCookTime = signal<number | undefined>(undefined);
-  editCategory = signal<string>('');
   editIngredients = signal<RecipeIngredient[]>([]);
-
-  // Search and filters
   searchTerm = signal<string>('');
   selectedCategory = signal<string>('');
 
-  // Ingredient selection
-  selectedItemId = signal<string>('');
-  ingredientQuantity = signal<number>(1);
-  ingredientUnit = signal<string>('');
-
   recipes = this.recipeService.recipes;
   shoppingItems = this.shoppingService.items;
+
+  constructor() {
+    this.newRecipeForm = this.fb.group({
+      title: ['', [Validators.required, Validators.minLength(2)]],
+      description: [''],
+      servings: [null as number | null],
+      prepTime: [null as number | null],
+      cookTime: [null as number | null],
+      category: [''],
+    });
+
+    this.editRecipeForm = this.fb.group({
+      title: ['', [Validators.required, Validators.minLength(2)]],
+      description: [''],
+      servings: [null as number | null],
+      prepTime: [null as number | null],
+      cookTime: [null as number | null],
+      category: [''],
+    });
+
+    this.ingredientForm = this.fb.group({
+      selectedItemId: ['', Validators.required],
+      quantity: [1, [Validators.required, Validators.min(0.1)]],
+      unit: [''],
+    });
+  }
 
   // Options pour l'autocomplete
   autocompleteOptions = computed((): AutocompleteOption[] => {
@@ -108,19 +119,20 @@ export class RecipesComponent {
 
   // Recipe CRUD operations
   createRecipe(): void {
-    const title = this.newRecipeTitle().trim();
-    const description = this.newRecipeDescription();
+    if (this.newRecipeForm.invalid || this.newRecipeIngredients().length === 0) {
+      this.newRecipeForm.markAllAsTouched();
+      return;
+    }
 
-    if (!title || this.newRecipeIngredients().length === 0) return;
-
+    const formValue = this.newRecipeForm.value;
     const recipeData: CreateRecipeData = {
-      title,
-      description,
+      title: formValue.title!.trim(),
+      description: formValue.description || '',
       ingredients: this.newRecipeIngredients(),
-      servings: this.newRecipeServings(),
-      prepTime: this.newRecipePrepTime(),
-      cookTime: this.newRecipeCookTime(),
-      category: this.newRecipeCategory() || undefined,
+      servings: formValue.servings || undefined,
+      prepTime: formValue.prepTime || undefined,
+      cookTime: formValue.cookTime || undefined,
+      category: formValue.category || undefined,
     };
 
     this.recipeService.create(recipeData);
@@ -136,41 +148,44 @@ export class RecipesComponent {
   }
 
   private resetNewRecipeForm(): void {
-    this.newRecipeTitle.set('');
-    this.newRecipeDescription.set('');
-    this.newRecipeServings.set(undefined);
-    this.newRecipePrepTime.set(undefined);
-    this.newRecipeCookTime.set(undefined);
-    this.newRecipeCategory.set('');
+    this.newRecipeForm.reset();
     this.newRecipeIngredients.set([]);
-    this.selectedItemId.set('');
-    this.ingredientQuantity.set(1);
-    this.ingredientUnit.set('');
+    this.ingredientForm.reset({
+      selectedItemId: '',
+      quantity: 1,
+      unit: '',
+    });
   }
 
   startEdit(recipe: Recipe): void {
     this.editingId.set(recipe.id);
-    this.editTitle.set(recipe.title);
-    this.editDescription.set(recipe.description);
-    this.editServings.set(recipe.servings);
-    this.editPrepTime.set(recipe.prepTime);
-    this.editCookTime.set(recipe.cookTime);
-    this.editCategory.set(recipe.category || '');
+    this.editRecipeForm.patchValue({
+      title: recipe.title,
+      description: recipe.description,
+      servings: recipe.servings || null,
+      prepTime: recipe.prepTime || null,
+      cookTime: recipe.cookTime || null,
+      category: recipe.category || '',
+    });
     this.editIngredients.set([...recipe.ingredients]);
   }
 
   saveEdit(): void {
     const id = this.editingId();
-    if (!id) return;
+    if (!id || this.editRecipeForm.invalid) {
+      this.editRecipeForm.markAllAsTouched();
+      return;
+    }
 
+    const formValue = this.editRecipeForm.value;
     this.recipeService.update(id, {
-      title: this.editTitle(),
-      description: this.editDescription(),
+      title: formValue.title!,
+      description: formValue.description!,
       ingredients: this.editIngredients(),
-      servings: this.editServings(),
-      prepTime: this.editPrepTime(),
-      cookTime: this.editCookTime(),
-      category: this.editCategory() || undefined,
+      servings: formValue.servings || undefined,
+      prepTime: formValue.prepTime || undefined,
+      cookTime: formValue.cookTime || undefined,
+      category: formValue.category || undefined,
     });
 
     this.cancelEdit();
@@ -178,12 +193,7 @@ export class RecipesComponent {
 
   cancelEdit(): void {
     this.editingId.set(null);
-    this.editTitle.set('');
-    this.editDescription.set('');
-    this.editServings.set(undefined);
-    this.editPrepTime.set(undefined);
-    this.editCookTime.set(undefined);
-    this.editCategory.set('');
+    this.editRecipeForm.reset();
     this.editIngredients.set([]);
   }
 
@@ -195,10 +205,14 @@ export class RecipesComponent {
 
   // Ingredient management
   addIngredient(): void {
-    const itemId = this.selectedItemId();
-    const quantity = this.ingredientQuantity();
+    if (this.ingredientForm.invalid) {
+      this.ingredientForm.markAllAsTouched();
+      return;
+    }
 
-    if (!itemId || quantity <= 0) return;
+    const formValue = this.ingredientForm.value;
+    const itemId = formValue.selectedItemId!;
+    const quantity = formValue.quantity!;
 
     const item = this.shoppingItems().find((item) => item.id === itemId);
     if (!item) return;
@@ -207,26 +221,30 @@ export class RecipesComponent {
       itemId: item.id,
       name: item.name,
       quantity,
-      unit: this.ingredientUnit() || undefined,
+      unit: formValue.unit || undefined,
     };
 
     const currentIngredients = this.getCurrentIngredients();
     this.setCurrentIngredients([...currentIngredients, ingredient]);
 
     // Reset ingredient form
-    this.selectedItemId.set('');
-    this.ingredientQuantity.set(1);
-    this.ingredientUnit.set('');
+    this.ingredientForm.reset({
+      selectedItemId: '',
+      quantity: 1,
+      unit: '',
+    });
   }
 
   onIngredientSelected(option: AutocompleteOption): void {
-    this.selectedItemId.set(option.id);
+    this.ingredientForm.patchValue({ selectedItemId: option.id });
   }
 
   clearIngredientForm(): void {
-    this.selectedItemId.set('');
-    this.ingredientQuantity.set(1);
-    this.ingredientUnit.set('');
+    this.ingredientForm.reset({
+      selectedItemId: '',
+      quantity: 1,
+      unit: '',
+    });
   }
 
   removeIngredient(index: number): void {

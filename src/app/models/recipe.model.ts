@@ -38,3 +38,21 @@ export interface UpdateRecipeData {
   cookTime?: number;
   category?: string;
 }
+
+// Types pour les Reactive Forms typés
+import { FormControl, FormGroup } from '@angular/forms';
+
+export type RecipeForm = FormGroup<{
+  title: FormControl<string | null>;
+  description: FormControl<string | null>;
+  servings: FormControl<number | null>;
+  prepTime: FormControl<number | null>;
+  cookTime: FormControl<number | null>;
+  category: FormControl<string | null>;
+}>;
+
+export type IngredientForm = FormGroup<{
+  selectedItemId: FormControl<string | null>;
+  quantity: FormControl<number | null>;
+  unit: FormControl<string | null>;
+}>;
