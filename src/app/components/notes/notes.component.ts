@@ -1,31 +1,55 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { NotesService } from '../../services/notes.service';
 import { RichTextEditorComponent } from '../rich-text-editor/rich-text-editor.component';
+import { NoteForm } from '../../models/note.model';
 
 @Component({
   selector: 'app-notes',
-  imports: [CommonModule, FormsModule, RichTextEditorComponent],
+  imports: [CommonModule, ReactiveFormsModule, RichTextEditorComponent],
   styleUrls: ['./notes.component.css'],
   templateUrl: './notes.component.html',
 })
 export class NotesComponent {
   private notesService = inject(NotesService);
+  private fb = inject(FormBuilder);
 
-  title = '';
-  content = '';
+  // Reactive Forms typés
+  newNoteForm: NoteForm;
+  editNoteForm: NoteForm;
+
   editingId: string | null = null;
-  editTitle = '';
-  editContent = '';
-
   notes = this.notesService.notes;
 
+  constructor() {
+    this.newNoteForm = this.fb.group({
+      title: ['', Validators.required],
+      content: [''],
+    });
+
+    this.editNoteForm = this.fb.group({
+      title: ['', Validators.required],
+      content: [''],
+    });
+  }
+
   create(): void {
-    if (!this.title.trim() && !this.content.trim()) return;
-    this.notesService.create({ title: this.title.trim(), content: this.content });
-    this.title = '';
-    this.content = '';
+    if (this.newNoteForm.invalid) {
+      this.newNoteForm.markAllAsTouched();
+      return;
+    }
+
+    const formValue = this.newNoteForm.value;
+    if (!formValue.title?.trim() && !formValue.content?.trim()) return;
+
+    this.notesService.create({
+      title: formValue.title?.trim() || '',
+      content: formValue.content || '',
+    });
+
+    this.newNoteForm.reset();
+
     // Fermer l'expansion panel si présent
     try {
       const panel = document.querySelector('details') as HTMLDetailsElement | null;
@@ -45,18 +69,28 @@ export class NotesComponent {
 
   startEdit(id: string, title: string, content: string): void {
     this.editingId = id;
-    this.editTitle = title;
-    this.editContent = content;
+    this.editNoteForm.patchValue({
+      title: title,
+      content: content,
+    });
   }
 
   save(id: string): void {
-    this.notesService.update(id, { title: this.editTitle, content: this.editContent });
+    if (this.editNoteForm.invalid) {
+      this.editNoteForm.markAllAsTouched();
+      return;
+    }
+
+    const formValue = this.editNoteForm.value;
+    this.notesService.update(id, {
+      title: formValue.title!,
+      content: formValue.content!,
+    });
     this.cancel();
   }
 
   cancel(): void {
     this.editingId = null;
-    this.editTitle = '';
-    this.editContent = '';
+    this.editNoteForm.reset();
   }
 }

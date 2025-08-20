@@ -1,4 +1,13 @@
-import { Component, ElementRef, forwardRef, input, output, ViewChild, ViewEncapsulation } from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  forwardRef,
+  input,
+  output,
+  ViewChild,
+  ViewEncapsulation,
+  AfterViewInit,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 
@@ -27,7 +36,7 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
     },
   ],
 })
-export class RichTextEditorComponent implements ControlValueAccessor {
+export class RichTextEditorComponent implements ControlValueAccessor, AfterViewInit {
   placeholder = input<string>('Tapez votre contenu...');
   minHeight = input<string>('128px');
 
@@ -36,6 +45,7 @@ export class RichTextEditorComponent implements ControlValueAccessor {
   @ViewChild('editor') editorRef?: ElementRef<HTMLElement>;
 
   content = '';
+  private pendingValue: string | null = null;
 
   // Toolbar reactive state
   toolbar = {
@@ -59,6 +69,14 @@ export class RichTextEditorComponent implements ControlValueAccessor {
     return this.editorRef?.nativeElement || null;
   }
 
+  ngAfterViewInit(): void {
+    // Si nous avons une valeur en attente, l'appliquer maintenant
+    if (this.pendingValue !== null) {
+      this.writeValue(this.pendingValue);
+      this.pendingValue = null;
+    }
+  }
+
   // ControlValueAccessor implementation
   writeValue(value: string): void {
     this.content = value || '';
@@ -69,6 +87,9 @@ export class RichTextEditorComponent implements ControlValueAccessor {
       if (!this.content.trim()) {
         this.editor.innerHTML = '';
       }
+    } else {
+      // Si l'éditeur n'est pas encore prêt, stocker la valeur pour plus tard
+      this.pendingValue = this.content;
     }
   }
 
