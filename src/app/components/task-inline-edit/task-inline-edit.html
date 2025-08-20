@@ -1,0 +1,209 @@
+<form
+  [formGroup]="taskForm"
+  (ngSubmit)="onSubmit()"
+  class="task-inline-form space-y-4"
+  (click)="$event.stopPropagation()"
+  (keydown)="$event.stopPropagation()"
+>
+  @let nameControl = taskForm.get("name");
+  @let dueDateControl = taskForm.get("nextDueDate");
+  @let assigneeControl = taskForm.get("assignee");
+
+  <!-- Nom de la tâche -->
+  <div>
+    <label for="edit-name-{{ task().id }}" class="block text-sm text-gray-600 dark:text-gray-300 mb-1"
+      >Nom de la tâche *</label
+    >
+    <input
+      id="edit-name-{{ task().id }}"
+      formControlName="name"
+      class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+      [ngClass]="{ 'border-red-500': nameControl?.invalid && nameControl?.touched }"
+      placeholder="Nom de la tâche"
+    />
+    @if (nameControl?.invalid && nameControl?.touched) {
+      <div class="text-red-500 text-sm mt-1">
+        @if (nameControl?.errors?.["required"]) {
+          <span>Le nom est requis</span>
+        }
+        @if (nameControl?.errors?.["minlength"]) {
+          <span>Le nom doit contenir au moins 2 caractères</span>
+        }
+      </div>
+    }
+  </div>
+
+  <!-- Description -->
+  <div>
+    <label for="edit-description-{{ task().id }}" class="block text-sm text-gray-600 dark:text-gray-300 mb-1"
+      >Description</label
+    >
+    <textarea
+      id="edit-description-{{ task().id }}"
+      formControlName="description"
+      rows="2"
+      class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+      placeholder="Description de la tâche"
+    ></textarea>
+  </div>
+
+  <!-- Grille pour les champs compacts -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <!-- Catégorie -->
+    <div>
+      <label for="edit-category-{{ task().id }}" class="block text-sm text-gray-600 dark:text-gray-300 mb-1"
+        >Catégorie</label
+      >
+      <select
+        id="edit-category-{{ task().id }}"
+        formControlName="category"
+        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+      >
+        <option value="">Aucune catégorie</option>
+        @for (category of categories; track category.id) {
+          <option [value]="category.id">{{ category.name }}</option>
+        }
+      </select>
+    </div>
+
+    <!-- Priorité -->
+    <div>
+      <label for="edit-priority-{{ task().id }}" class="block text-sm text-gray-600 dark:text-gray-300 mb-1"
+        >Priorité *</label
+      >
+      <select
+        id="edit-priority-{{ task().id }}"
+        formControlName="priority"
+        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+      >
+        @for (priority of priorities; track priority.value) {
+          <option [value]="priority.value">{{ priority.label }}</option>
+        }
+      </select>
+    </div>
+
+    <!-- Fréquence -->
+    <div>
+      <label for="edit-frequency-{{ task().id }}" class="block text-sm text-gray-600 dark:text-gray-300 mb-1"
+        >Fréquence *</label
+      >
+      <select
+        id="edit-frequency-{{ task().id }}"
+        formControlName="frequency"
+        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+      >
+        @for (freq of frequencies; track freq.value) {
+          <option [value]="freq.value">{{ freq.label }}</option>
+        }
+      </select>
+    </div>
+
+    <!-- Assigné à -->
+    <div>
+      <label for="edit-assignee-{{ task().id }}" class="block text-sm text-gray-600 dark:text-gray-300 mb-1"
+        >Assigné à *</label
+      >
+      <select
+        id="edit-assignee-{{ task().id }}"
+        formControlName="assignee"
+        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+        [ngClass]="{ 'border-red-500': assigneeControl?.invalid && assigneeControl?.touched }"
+      >
+        <option value="">Sélectionner...</option>
+        @for (assignee of assignees; track assignee) {
+          <option [value]="assignee">{{ assignee }}</option>
+        }
+      </select>
+      @if (assigneeControl?.invalid && assigneeControl?.touched) {
+        <div class="text-red-500 text-sm mt-1">
+          <span>L'assignation est requise</span>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- Jours personnalisés (si fréquence custom) -->
+  @if (isCustomFrequency) {
+    <div>
+      <label for="edit-custom-days-{{ task().id }}" class="block text-sm text-gray-600 dark:text-gray-300 mb-1">
+        Nombre de jours entre chaque tâche
+      </label>
+      <input
+        id="edit-custom-days-{{ task().id }}"
+        type="number"
+        formControlName="customDays"
+        min="1"
+        max="365"
+        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+      />
+    </div>
+  }
+
+  <!-- Règle RRULE -->
+  <div>
+    <label for="edit-rrule-{{ task().id }}" class="block text-sm text-gray-600 dark:text-gray-300 mb-1">
+      Récurrence avancée (RRULE)
+    </label>
+    <input
+      id="edit-rrule-{{ task().id }}"
+      type="text"
+      formControlName="rrule"
+      placeholder="Ex: FREQ=WEEKLY;INTERVAL=2;BYDAY=MO"
+      class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+    />
+    <p class="text-gray-500 dark:text-gray-400 text-xs mt-1">Si renseigné, la RRULE prime sur la fréquence simple.</p>
+  </div>
+
+  <!-- Dates d'exception -->
+  <div>
+    <label for="edit-ex-dates-{{ task().id }}" class="block text-sm text-gray-600 dark:text-gray-300 mb-1">
+      Dates d'exception (CSV)
+    </label>
+    <input
+      id="edit-ex-dates-{{ task().id }}"
+      type="text"
+      formControlName="exDates"
+      placeholder="2024-01-15,2024-02-20"
+      class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+    />
+    <p class="text-gray-500 dark:text-gray-400 text-xs mt-1">
+      Dates à exclure (format YYYY-MM-DD), séparées par des virgules.
+    </p>
+  </div>
+
+  <!-- Date d'échéance -->
+  <div>
+    <label for="edit-due-date-{{ task().id }}" class="block text-sm text-gray-600 dark:text-gray-300 mb-1"
+      >Prochaine échéance *</label
+    >
+    <input
+      id="edit-due-date-{{ task().id }}"
+      type="date"
+      formControlName="nextDueDate"
+      class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+      [ngClass]="{ 'border-red-500': dueDateControl?.invalid && dueDateControl?.touched }"
+    />
+    @if (dueDateControl?.invalid && dueDateControl?.touched) {
+      <div class="text-red-500 text-sm mt-1">
+        <span>La date d'échéance est requise</span>
+      </div>
+    }
+  </div>
+
+  <!-- Boutons d'action -->
+  <div class="flex gap-2 pt-2">
+    <button
+      type="submit"
+      class="px-4 py-2 bg-blue-600 dark:bg-blue-600 text-white rounded hover:bg-blue-700 dark:hover:bg-blue-700 transition-colors"
+    >
+      Enregistrer
+    </button>
+    <button
+      type="button"
+      (click)="onCancel($event)"
+      class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+    >
+      Annuler
+    </button>
+  </div>
+</form>

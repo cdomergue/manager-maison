@@ -1,23 +1,23 @@
-import { Component, computed, OnDestroy, OnInit, output, signal, inject, input } from '@angular/core';
+import { Component, computed, OnDestroy, OnInit, signal, inject, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Task } from '../../models/task.model';
 import { Category } from '../../models/category.model';
 import { CategoryService } from '../../services/category.service';
 import { TaskService } from '../../services/task.service';
+
 // import {NotificationService} from '../../services/notification.service';
 import { Subscription } from 'rxjs';
 import { TaskDetailComponent } from '../task-detail/task-detail.component';
+import { TaskInlineEdit } from '../task-inline-edit/task-inline-edit';
 
 @Component({
   selector: 'app-task-list',
-  imports: [CommonModule, FormsModule, TaskDetailComponent],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, TaskDetailComponent, TaskInlineEdit],
   templateUrl: './task-list.component.html',
 })
 export class TaskListComponent implements OnInit, OnDestroy {
   selectedTask = signal<Task | null>(null);
-  // Événement pour signaler qu'une tâche doit être éditée
-  editTaskEvent = output<Task>();
 
   // Input pour la tâche à mettre en surbrillance
   highlightedTaskId = input<string | null>(null);
@@ -90,6 +90,9 @@ export class TaskListComponent implements OnInit, OnDestroy {
 
   private taskService = inject(TaskService);
   private categoryService = inject(CategoryService);
+
+  // État pour l'édition inline
+  editingTaskId = signal<string | null>(null);
 
   ngOnInit(): void {
     // Charger les catégories
@@ -193,7 +196,16 @@ export class TaskListComponent implements OnInit, OnDestroy {
 
   editTask(task: Task): void {
     this.selectedTask.set(null);
-    this.editTaskEvent.emit(task);
+    this.editingTaskId.set(task.id);
+  }
+
+  onTaskSaved(updatedTask: Task): void {
+    this.taskService.updateTask(updatedTask);
+    this.editingTaskId.set(null);
+  }
+
+  onTaskEditCancelled(): void {
+    this.editingTaskId.set(null);
   }
 
   showTaskDetails(task: Task): void {

@@ -5,18 +5,10 @@
     class="w-full lg:w-96 bg-white dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-700"
   >
     <summary class="cursor-pointer select-none px-4 py-3 font-semibold text-gray-900 dark:text-white">
-      {{ editingTask() ? "Modifier la tâche" : "Nouvelle tâche" }}
+      Nouvelle tâche
     </summary>
     <div class="p-4 pt-2">
-      @if (!editingTask()) {
-        <app-task-form (taskSaved)="onTaskSaved($event)" (cancelled)="onTaskFormCancelled()"></app-task-form>
-      } @else {
-        <app-task-form
-          [task]="editingTask()"
-          (taskSaved)="onTaskSaved($event)"
-          (cancelled)="onTaskFormCancelled()"
-        ></app-task-form>
-      }
+      <app-task-form (taskSaved)="onTaskSaved($event)" (cancelled)="onTaskFormCancelled()"></app-task-form>
     </div>
   </details>
 
@@ -40,6 +32,6 @@
       </div>
     </div>
 
-    <app-task-list (editTaskEvent)="editTask($event)" [highlightedTaskId]="highlightedTaskId()"></app-task-list>
+    <app-task-list [highlightedTaskId]="highlightedTaskId()"></app-task-list>
   </div>
 </div>

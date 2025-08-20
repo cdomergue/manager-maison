@@ -124,159 +124,75 @@
   <div class="space-y-4">
     @for (task of filteredTasks(); track task.id) {
       <div
-        class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-3 sm:p-4 transition-all duration-200 hover:shadow-md cursor-pointer"
+        class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-3 sm:p-4 transition-all duration-200"
         [ngClass]="
           getStatusClass(task) +
-          (highlightedTaskId() === task.id ? ' ring-2 ring-blue-500 ring-opacity-75 bg-blue-50 dark:bg-blue-950' : '')
+          (highlightedTaskId() === task.id ? ' ring-2 ring-blue-500 ring-opacity-75 bg-blue-50 dark:bg-blue-950' : '') +
+          (editingTaskId() === task.id ? '' : ' hover:shadow-md cursor-pointer')
         "
         [attr.data-task-id]="task.id"
-        (click)="showTaskDetails(task)"
-        role="button"
-        tabindex="0"
-        (keyup.enter)="showTaskDetails(task)"
-        (keyup.space)="$event.preventDefault(); showTaskDetails(task)"
-        attr.aria-label="Voir les détails de la tâche {{ task.name }}"
+        [attr.role]="editingTaskId() === task.id ? null : 'button'"
+        [attr.tabindex]="editingTaskId() === task.id ? null : '0'"
+        [attr.aria-label]="editingTaskId() === task.id ? null : 'Voir les détails de la tâche ' + task.name"
+        (click)="editingTaskId() === task.id ? null : showTaskDetails(task)"
+        (keyup.enter)="editingTaskId() === task.id ? null : showTaskDetails(task)"
+        (keyup.space)="editingTaskId() === task.id ? null : showTaskDetails(task)"
       >
-        <!-- Mobile Layout -->
-        <div class="sm:hidden">
-          <!-- En-tête mobile -->
-          <div class="flex items-start justify-between mb-3">
-            <div class="flex-1 min-w-0">
-              <h3 class="text-lg font-semibold text-gray-800 dark:text-white truncate">{{ task.name }}</h3>
-              <div class="flex flex-wrap gap-1 mt-1">
-                <span class="px-2 py-1 text-xs font-medium rounded-full" [ngClass]="getPriorityColor(task.priority)">
-                  {{ getPriorityLabel(task.priority) }}
-                </span>
-                @if (task.category) {
-                  <span
-                    class="px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full"
-                  >
-                    {{ getCategoryName(task.category) }}
+        @if (editingTaskId() === task.id) {
+          <!-- Formulaire d'édition inline -->
+          <app-task-inline-edit
+            [task]="task"
+            (taskSaved)="onTaskSaved($event)"
+            (cancelled)="onTaskEditCancelled()"
+          ></app-task-inline-edit>
+        } @else {
+          <!-- Affichage normal de la tâche -->
+          <!-- Mobile Layout -->
+          <div class="sm:hidden">
+            <!-- En-tête mobile -->
+            <div class="flex items-start justify-between mb-3">
+              <div class="flex-1 min-w-0">
+                <h3 class="text-lg font-semibold text-gray-800 dark:text-white truncate">{{ task.name }}</h3>
+                <div class="flex flex-wrap gap-1 mt-1">
+                  <span class="px-2 py-1 text-xs font-medium rounded-full" [ngClass]="getPriorityColor(task.priority)">
+                    {{ getPriorityLabel(task.priority) }}
                   </span>
-                }
-              </div>
-            </div>
-
-            <!-- Statut rapide -->
-            <div class="text-right text-xs">
-              <div class="font-medium" [ngClass]="getDueDateClass(task)">
-                {{ getDueDateText(task) }}
-              </div>
-              @if (task.rrule) {
-                <div
-                  class="mt-1 text-[11px] text-gray-500 dark:text-gray-400 truncate max-w-[140px]"
-                  title="{{ task.rrule }}"
-                >
-                  RRULE: {{ task.rrule }}
+                  @if (task.category) {
+                    <span
+                      class="px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full"
+                    >
+                      {{ getCategoryName(task.category) }}
+                    </span>
+                  }
                 </div>
-              }
-            </div>
-          </div>
+              </div>
 
-          <!-- Description mobile -->
-          @if (task.description) {
-            <p class="text-gray-600 dark:text-gray-300 text-sm mb-3 line-clamp-2">{{ task.description }}</p>
-          }
-
-          <!-- Info compacte mobile -->
-          <div class="text-xs text-gray-500 dark:text-gray-400 mb-4 space-y-1">
-            <div>
-              @if (!task.rrule) {
-                📅
-                @switch (task.frequency) {
-                  @case ("custom") {
-                    <span>{{ task.customDays }} jours</span>
-                  }
-                  @case ("daily") {
-                    <span>Quotidienne</span>
-                  }
-                  @case ("weekly") {
-                    <span>Hebdomadaire</span>
-                  }
-                  @case ("monthly") {
-                    <span>Mensuelle</span>
-                  }
+              <!-- Statut rapide -->
+              <div class="text-right text-xs">
+                <div class="font-medium" [ngClass]="getDueDateClass(task)">
+                  {{ getDueDateText(task) }}
+                </div>
+                @if (task.rrule) {
+                  <div
+                    class="mt-1 text-[11px] text-gray-500 dark:text-gray-400 truncate max-w-[140px]"
+                    title="{{ task.rrule }}"
+                  >
+                    RRULE: {{ task.rrule }}
+                  </div>
                 }
-              }
-            </div>
-            @if (task.lastCompleted) {
-              <div>🕐 Dernière: {{ formatDate(task.lastCompleted) }}</div>
-            }
-            @if (task.assignee) {
-              <div>👤 {{ task.assignee }}</div>
-            }
-          </div>
-
-          <!-- Actions mobiles horizontales -->
-          <div class="flex gap-2">
-            <button
-              (click)="$event.stopPropagation(); completeTask(task.id)"
-              (keyup.enter)="$event.stopPropagation(); completeTask(task.id)"
-              (keyup.space)="$event.stopPropagation(); completeTask(task.id)"
-              class="flex-1 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
-              [disabled]="!task.isActive"
-            >
-              ✅
-            </button>
-
-            <button
-              (click)="$event.stopPropagation(); editTask(task)"
-              (keyup.enter)="$event.stopPropagation(); editTask(task)"
-              (keyup.space)="$event.stopPropagation(); editTask(task)"
-              class="px-4 py-3 border border-blue-300 dark:border-blue-600 text-blue-600 dark:text-blue-400 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900 transition-colors text-sm"
-              title="Éditer"
-            >
-              ✏️
-            </button>
-
-            <button
-              (click)="$event.stopPropagation(); toggleTaskActive(task)"
-              (keyup.enter)="$event.stopPropagation(); toggleTaskActive(task)"
-              (keyup.space)="$event.stopPropagation(); toggleTaskActive(task)"
-              class="px-4 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm"
-            >
-              {{ task.isActive ? "⏸️" : "▶️" }}
-            </button>
-
-            <button
-              (click)="$event.stopPropagation(); deleteTask(task.id)"
-              (keyup.enter)="$event.stopPropagation(); deleteTask(task.id)"
-              (keyup.space)="$event.stopPropagation(); deleteTask(task.id)"
-              class="px-4 py-3 border border-red-300 dark:border-red-600 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-50 dark:hover:bg-red-900 transition-colors text-sm"
-            >
-              🗑️
-            </button>
-          </div>
-        </div>
-
-        <!-- Desktop Layout -->
-        <div class="hidden sm:flex items-start justify-between">
-          <div class="flex-1">
-            <!-- En-tête desktop -->
-            <div class="flex items-center gap-3 mb-2">
-              <h3 class="text-lg font-semibold text-gray-800 dark:text-white">{{ task.name }}</h3>
-              <span class="px-2 py-1 text-xs font-medium rounded-full" [ngClass]="getPriorityColor(task.priority)">
-                {{ getPriorityLabel(task.priority) }}
-              </span>
-              @if (task.category) {
-                <span
-                  class="px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full"
-                >
-                  {{ getCategoryName(task.category) }}
-                </span>
-              }
+              </div>
             </div>
 
-            <!-- Description desktop -->
+            <!-- Description mobile -->
             @if (task.description) {
-              <p class="text-gray-600 dark:text-gray-300 mb-3">{{ task.description }}</p>
+              <p class="text-gray-600 dark:text-gray-300 text-sm mb-3 line-clamp-2">{{ task.description }}</p>
             }
 
-            <!-- Informations desktop -->
-            <div class="flex flex-wrap gap-4 text-sm text-gray-500 dark:text-gray-400 mb-3">
-              <span>
+            <!-- Info compacte mobile -->
+            <div class="text-xs text-gray-500 dark:text-gray-400 mb-4 space-y-1">
+              <div>
                 @if (!task.rrule) {
-                  <strong>Fréquence: </strong>
+                  📅
                   @switch (task.frequency) {
                     @case ("custom") {
                       <span>{{ task.customDays }} jours</span>
@@ -292,68 +208,163 @@
                     }
                   }
                 }
-              </span>
-              @if (task.rrule) {
-                <span class="truncate">
-                  <strong>RRULE:</strong>
-                  <code
-                    class="bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 px-1 py-0.5 rounded text-gray-700 dark:text-gray-300"
-                    >{{ task.rrule }}</code
-                  >
-                </span>
-              }
-              <span>
-                <strong>Prochaine échéance:</strong>
-                <span class="font-medium" [ngClass]="getDueDateClass(task)">
-                  {{ getDueDateText(task) }}
-                </span>
-              </span>
+              </div>
               @if (task.lastCompleted) {
-                <span> <strong>Dernière fois:</strong> {{ formatDate(task.lastCompleted) }} </span>
+                <div>🕐 Dernière: {{ formatDate(task.lastCompleted) }}</div>
               }
               @if (task.assignee) {
-                <span>
-                  <strong>Assigné :</strong>
-                  <span class="font-medium">
-                    {{ task.assignee }}
-                  </span>
-                </span>
+                <div>👤 {{ task.assignee }}</div>
               }
+            </div>
+
+            <!-- Actions mobiles horizontales -->
+            <div class="flex gap-2">
+              <button
+                (click)="$event.stopPropagation(); completeTask(task.id)"
+                (keyup.enter)="$event.stopPropagation(); completeTask(task.id)"
+                (keyup.space)="$event.stopPropagation(); completeTask(task.id)"
+                class="flex-1 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
+                [disabled]="!task.isActive"
+              >
+                ✅
+              </button>
+
+              <button
+                (click)="$event.stopPropagation(); editTask(task)"
+                (keyup.enter)="$event.stopPropagation(); editTask(task)"
+                (keyup.space)="$event.stopPropagation(); editTask(task)"
+                class="px-4 py-3 border border-blue-300 dark:border-blue-600 text-blue-600 dark:text-blue-400 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900 transition-colors text-sm"
+                title="Éditer"
+              >
+                ✏️
+              </button>
+
+              <button
+                (click)="$event.stopPropagation(); toggleTaskActive(task)"
+                (keyup.enter)="$event.stopPropagation(); toggleTaskActive(task)"
+                (keyup.space)="$event.stopPropagation(); toggleTaskActive(task)"
+                class="px-4 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm"
+              >
+                {{ task.isActive ? "⏸️" : "▶️" }}
+              </button>
+
+              <button
+                (click)="$event.stopPropagation(); deleteTask(task.id)"
+                (keyup.enter)="$event.stopPropagation(); deleteTask(task.id)"
+                (keyup.space)="$event.stopPropagation(); deleteTask(task.id)"
+                class="px-4 py-3 border border-red-300 dark:border-red-600 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-50 dark:hover:bg-red-900 transition-colors text-sm"
+              >
+                🗑️
+              </button>
             </div>
           </div>
 
-          <!-- Actions desktop -->
-          <div class="flex flex-col gap-2 ml-4">
-            <button
-              (click)="$event.stopPropagation(); completeTask(task.id)"
-              class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors text-sm"
-              [disabled]="!task.isActive"
-            >
-              ✓ Terminer
-            </button>
+          <!-- Desktop Layout -->
+          <div class="hidden sm:flex items-start justify-between">
+            <div class="flex-1">
+              <!-- En-tête desktop -->
+              <div class="flex items-center gap-3 mb-2">
+                <h3 class="text-lg font-semibold text-gray-800 dark:text-white">{{ task.name }}</h3>
+                <span class="px-2 py-1 text-xs font-medium rounded-full" [ngClass]="getPriorityColor(task.priority)">
+                  {{ getPriorityLabel(task.priority) }}
+                </span>
+                @if (task.category) {
+                  <span
+                    class="px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full"
+                  >
+                    {{ getCategoryName(task.category) }}
+                  </span>
+                }
+              </div>
 
-            <button
-              (click)="$event.stopPropagation(); editTask(task)"
-              class="px-4 py-2 border border-blue-300 dark:border-blue-600 text-blue-600 dark:text-blue-400 rounded-md hover:bg-blue-50 dark:hover:bg-blue-900 transition-colors text-sm"
-            >
-              ✏️ Éditer
-            </button>
+              <!-- Description desktop -->
+              @if (task.description) {
+                <p class="text-gray-600 dark:text-gray-300 mb-3">{{ task.description }}</p>
+              }
 
-            <button
-              (click)="$event.stopPropagation(); toggleTaskActive(task)"
-              class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm"
-            >
-              {{ task.isActive ? "⏸️ Pause" : "▶️ Activer" }}
-            </button>
+              <!-- Informations desktop -->
+              <div class="flex flex-wrap gap-4 text-sm text-gray-500 dark:text-gray-400 mb-3">
+                <span>
+                  @if (!task.rrule) {
+                    <strong>Fréquence: </strong>
+                    @switch (task.frequency) {
+                      @case ("custom") {
+                        <span>{{ task.customDays }} jours</span>
+                      }
+                      @case ("daily") {
+                        <span>Quotidienne</span>
+                      }
+                      @case ("weekly") {
+                        <span>Hebdomadaire</span>
+                      }
+                      @case ("monthly") {
+                        <span>Mensuelle</span>
+                      }
+                    }
+                  }
+                </span>
+                @if (task.rrule) {
+                  <span class="truncate">
+                    <strong>RRULE:</strong>
+                    <code
+                      class="bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 px-1 py-0.5 rounded text-gray-700 dark:text-gray-300"
+                      >{{ task.rrule }}</code
+                    >
+                  </span>
+                }
+                <span>
+                  <strong>Prochaine échéance:</strong>
+                  <span class="font-medium" [ngClass]="getDueDateClass(task)">
+                    {{ getDueDateText(task) }}
+                  </span>
+                </span>
+                @if (task.lastCompleted) {
+                  <span> <strong>Dernière fois:</strong> {{ formatDate(task.lastCompleted) }} </span>
+                }
+                @if (task.assignee) {
+                  <span>
+                    <strong>Assigné :</strong>
+                    <span class="font-medium">
+                      {{ task.assignee }}
+                    </span>
+                  </span>
+                }
+              </div>
+            </div>
 
-            <button
-              (click)="$event.stopPropagation(); deleteTask(task.id)"
-              class="px-4 py-2 border border-red-300 dark:border-red-600 text-red-600 dark:text-red-400 rounded-md hover:bg-red-50 dark:hover:bg-red-900 transition-colors text-sm"
-            >
-              🗑️ Supprimer
-            </button>
+            <!-- Actions desktop -->
+            <div class="flex flex-col gap-2 ml-4">
+              <button
+                (click)="$event.stopPropagation(); completeTask(task.id)"
+                class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors text-sm"
+                [disabled]="!task.isActive"
+              >
+                ✓ Terminer
+              </button>
+
+              <button
+                (click)="$event.stopPropagation(); editTask(task)"
+                class="px-4 py-2 border border-blue-300 dark:border-blue-600 text-blue-600 dark:text-blue-400 rounded-md hover:bg-blue-50 dark:hover:bg-blue-900 transition-colors text-sm"
+              >
+                ✏️ Éditer
+              </button>
+
+              <button
+                (click)="$event.stopPropagation(); toggleTaskActive(task)"
+                class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm"
+              >
+                {{ task.isActive ? "⏸️ Pause" : "▶️ Activer" }}
+              </button>
+
+              <button
+                (click)="$event.stopPropagation(); deleteTask(task.id)"
+                class="px-4 py-2 border border-red-300 dark:border-red-600 text-red-600 dark:text-red-400 rounded-md hover:bg-red-50 dark:hover:bg-red-900 transition-colors text-sm"
+              >
+                🗑️ Supprimer
+              </button>
+            </div>
           </div>
-        </div>
+        }
       </div>
     } @empty {
       <div class="text-center py-12">

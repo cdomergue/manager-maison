@@ -44,6 +44,8 @@ export type TaskForm = FormGroup<{
   category: FormControl<string | null>;
   frequency: FormControl<Frequency | null>;
   customDays: FormControl<number | null>;
+  rrule: FormControl<string | null>;
+  exDates: FormControl<string | null>;
   priority: FormControl<Priority | null>;
   nextDueDate: FormControl<string | null>;
   assignee: FormControl<Assignee | null>;

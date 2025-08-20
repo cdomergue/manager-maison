@@ -13,8 +13,6 @@ import { NotificationService } from '../../services/notification.service';
   templateUrl: './tasks.component.html',
 })
 export class TasksComponent implements OnInit {
-  editingTask = signal<Task | undefined>(undefined);
-
   // Signaux calculés pour les tâches
   tasks = computed(() => this.taskService.tasks());
 
@@ -42,8 +40,7 @@ export class TasksComponent implements OnInit {
   }
 
   onTaskSaved(task: Task): void {
-    this.editingTask.set(undefined);
-    // Fermer le panneau d'expansion après création/modification
+    // Fermer le panneau d'expansion après création
     try {
       const panel = document.querySelector('details') as HTMLDetailsElement | null;
       if (panel) panel.open = false;
@@ -56,18 +53,7 @@ export class TasksComponent implements OnInit {
   }
 
   onTaskFormCancelled(): void {
-    this.editingTask.set(undefined);
-  }
-
-  editTask(task: Task): void {
-    this.editingTask.set(task);
-    // Ouvrir le panneau d'expansion pour l'édition
-    try {
-      const panel = document.querySelector('details') as HTMLDetailsElement | null;
-      if (panel) panel.open = true;
-    } catch {
-      // ignore
-    }
+    // Méthode conservée pour l'annulation du formulaire de création
   }
 
   refreshTasks(): void {
