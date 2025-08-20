@@ -70,6 +70,7 @@
     <div class="space-y-3 mb-4">
       <input
         type="text"
+        name="name"
         placeholder="Nom de l'article"
         [ngModel]="newItemName()"
         (ngModelChange)="newItemName.set($event)"
@@ -77,6 +78,7 @@
       />
       <input
         type="text"
+        name="category"
         placeholder="Catégorie (optionnel)"
         [ngModel]="newItemCategory()"
         (ngModelChange)="newItemCategory.set($event)"
@@ -93,6 +95,7 @@
     <div class="mb-2">
       <input
         type="text"
+        id="search"
         placeholder="Rechercher..."
         [ngModel]="search()"
         (ngModelChange)="search.set($event)"
@@ -111,6 +114,7 @@
                 <div class="flex flex-col gap-2">
                   <input
                     type="text"
+                    name="name"
                     placeholder="Nom"
                     [ngModel]="editName()"
                     (ngModelChange)="editName.set($event)"
@@ -118,6 +122,7 @@
                   />
                   <input
                     type="text"
+                    name="category"
                     placeholder="Catégorie (optionnel)"
                     [ngModel]="editCategory()"
                     (ngModelChange)="editCategory.set($event)"
