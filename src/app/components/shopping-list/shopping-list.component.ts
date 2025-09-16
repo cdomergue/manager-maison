@@ -31,11 +31,26 @@ export class ShoppingListComponent {
     });
   });
 
-  filteredCatalog = computed(() => {
+  private filteredCatalog = computed(() => {
     const term = this.search().toLowerCase().trim();
     const items = this.shopping.items();
     if (!term) return items;
     return items.filter((i) => i.name.toLowerCase().includes(term) || i.category?.toLowerCase().includes(term));
+  });
+
+  sortedFilteredCatalog = computed(() => {
+    const items = this.filteredCatalog();
+    return [...items].sort((a, b) => {
+      const ac = (a.category ?? '\uFFFF').toLocaleLowerCase();
+      const bc = (b.category ?? '\uFFFF').toLocaleLowerCase();
+      if (ac < bc) return -1;
+      if (ac > bc) return 1;
+      const an = (a.name || '').toLocaleLowerCase();
+      const bn = (b.name || '').toLocaleLowerCase();
+      if (an < bn) return -1;
+      if (an > bn) return 1;
+      return 0;
+    });
   });
 
   constructor() {
