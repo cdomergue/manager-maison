@@ -17,7 +17,6 @@ export class ShoppingListComponent {
   editCategory = signal<string>('');
   autoRefresh = signal<boolean>(false);
 
-  // pas de constructeur nécessaire
   public shopping = inject(ShoppingListService);
 
   filteredCatalog = computed(() => {
