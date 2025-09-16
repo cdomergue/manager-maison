@@ -1,4 +1,4 @@
-import { Component, computed, signal, inject } from '@angular/core';
+import { Component, computed, effect, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ShoppingListService } from '../../services/shopping-list.service';
@@ -15,6 +15,7 @@ export class ShoppingListComponent {
   editingId = signal<string | null>(null);
   editName = signal<string>('');
   editCategory = signal<string>('');
+  autoRefresh = signal<boolean>(false);
 
   // pas de constructeur nécessaire
   public shopping = inject(ShoppingListService);
@@ -25,6 +26,16 @@ export class ShoppingListComponent {
     if (!term) return items;
     return items.filter((i) => i.name.toLowerCase().includes(term) || i.category?.toLowerCase().includes(term));
   });
+
+  constructor() {
+    effect((onCleanup) => {
+      const enabled = this.autoRefresh();
+      const api = this.shopping.isUsingApi();
+      if (!enabled || !api) return;
+      const id = setInterval(() => this.shopping.refreshFromApi(), 2000);
+      onCleanup(() => clearInterval(id));
+    });
+  }
 
   addCatalogItem(): void {
     const name = this.newItemName();
@@ -74,5 +85,9 @@ export class ShoppingListComponent {
 
   remove(entryId: string): void {
     this.shopping.removeFromCurrentList(entryId);
+  }
+
+  toggleAutoRefresh(): void {
+    this.autoRefresh.update((v) => !v);
   }
 }

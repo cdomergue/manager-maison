@@ -1,4 +1,4 @@
-import { inject, Injectable, signal, computed } from '@angular/core';
+import { computed, inject, Injectable, signal } from '@angular/core';
 import { StorageService } from './storage.service';
 import { ShoppingItem, ShoppingListEntry } from '../models/shopping-item.model';
 import { ApiService } from './api.service';
@@ -18,6 +18,7 @@ export class ShoppingListService {
   readonly items = this.itemsSignal.asReadonly();
   readonly currentList = this.currentListSignal.asReadonly();
   readonly uncheckedCount = computed(() => this.currentListSignal().filter((e) => !e.checked).length);
+  readonly isUsingApi = computed(() => !this.useLocalStorageSignal());
 
   constructor() {
     // Décider du mode de synchronisation en fonction de l'API
@@ -46,6 +47,15 @@ export class ShoppingListService {
   private loadFromApi(): void {
     this.api.getShoppingItems().subscribe((items) => this.itemsSignal.set(items));
     this.api.getShoppingList().subscribe((list) => this.currentListSignal.set(list));
+  }
+
+  // Permet de forcer un rafraîchissement depuis la source active (API ou storage)
+  refreshFromApi(): void {
+    if (this.useLocalStorageSignal()) {
+      this.loadFromStorage();
+    } else {
+      this.loadFromApi();
+    }
   }
 
   addCatalogItem(name: string, category?: string): ShoppingItem {

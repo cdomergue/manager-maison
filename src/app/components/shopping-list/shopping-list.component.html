@@ -5,6 +5,19 @@
       <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Liste de courses</h2>
       <div class="flex gap-2">
         <button
+          (click)="toggleAutoRefresh()"
+          class="px-3 py-2 border rounded text-sm"
+          [class.border-green-400]="autoRefresh()"
+          [class.text-green-600]="autoRefresh()"
+          [class.border-gray-300]="!autoRefresh()"
+          [class.dark:border-gray-600]="!autoRefresh()"
+          [class.text-gray-700]="!autoRefresh()"
+          [class.dark:text-gray-200]="!autoRefresh()"
+          [class.bg-green-50]="autoRefresh()"
+        >
+          {{ autoRefresh() ? "Auto-rafraîchissement: ON" : "Auto-rafraîchissement: OFF" }}
+        </button>
+        <button
           (click)="shopping.clearChecked()"
           class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-700 text-sm text-gray-700 dark:text-gray-200"
         >
