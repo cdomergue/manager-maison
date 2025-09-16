@@ -36,7 +36,7 @@
       <p class="text-gray-500 dark:text-gray-400">Aucun article pour le moment.</p>
     } @else {
       <ul class="divide-y divide-gray-200 dark:divide-gray-700">
-        @for (entry of shopping.currentList(); track entry.id) {
+        @for (entry of sortedCurrentList(); track entry.id) {
           <li class="py-3 flex items-center gap-3">
             <input
               type="checkbox"

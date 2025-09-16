@@ -19,6 +19,18 @@ export class ShoppingListComponent {
 
   public shopping = inject(ShoppingListService);
 
+  sortedCurrentList = computed(() => {
+    const list = this.shopping.currentList();
+    return [...list].sort((a, b) => {
+      if (a.checked !== b.checked) return a.checked ? 1 : -1; // non cochés d'abord
+      const an = (a.name || '').toLocaleLowerCase();
+      const bn = (b.name || '').toLocaleLowerCase();
+      if (an < bn) return -1;
+      if (an > bn) return 1;
+      return 0;
+    });
+  });
+
   filteredCatalog = computed(() => {
     const term = this.search().toLowerCase().trim();
     const items = this.shopping.items();
