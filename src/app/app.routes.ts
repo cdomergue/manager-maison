@@ -5,8 +5,8 @@ import { AuthComponent } from './components/auth/auth.component';
 export const routes: Routes = [
   {
     path: '',
-    loadComponent: () => import('./components/tasks/tasks.component').then((m) => m.TasksComponent),
-    canActivate: [authGuard],
+    redirectTo: 'shopping',
+    pathMatch: 'full',
   },
   {
     path: 'shopping',

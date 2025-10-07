@@ -24,35 +24,12 @@ export class BackgroundCheckService {
   private notificationService = inject(NotificationService);
 
   constructor() {
-    this.initializeBackgroundCheck();
+    // Désactivé temporairement: pas de vérification périodique tant que la section tâches est masquée
+    // this.initializeBackgroundCheck();
   }
 
   private initializeBackgroundCheck(): void {
-    // Démarrer la vérification périodique
-    this.startPeriodicCheck();
-
-    // Écouter les changements de visibilité de la page
-    document.addEventListener('visibilitychange', () => {
-      if (document.hidden) {
-        // Page cachée : réduire la fréquence à 1 appel par heure
-        this.setCheckInterval(3600000); // 1 heure
-      } else {
-        // Page visible : fréquence normale
-        this.setCheckInterval(300000); // 5 minutes
-        // Vérifier immédiatement
-        this.checkForNewTasks();
-      }
-    });
-
-    // Écouter les événements de focus/blur
-    window.addEventListener('focus', () => {
-      this.checkForNewTasks();
-    });
-
-    // Écouter les événements de réseau
-    window.addEventListener('online', () => {
-      this.checkForNewTasks();
-    });
+    // Désactivé temporairement
   }
 
   startPeriodicCheck(): void {

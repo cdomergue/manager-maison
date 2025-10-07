@@ -9,7 +9,7 @@ import { SwPush } from '@angular/service-worker';
 export class NotificationService {
   private readonly SETTINGS_KEY = 'notification_settings';
   private settings: NotificationSettings = {
-    enabled: true,
+    enabled: false, // notifications désactivées temporairement
     reminderTime: '09:00',
     advanceNotice: 2,
   };
@@ -21,7 +21,8 @@ export class NotificationService {
   private swPush = inject(SwPush);
   constructor() {
     this.loadSettings();
-    this.requestPermission();
+    // Permission non demandée automatiquement pendant la désactivation
+    // this.requestPermission();
   }
 
   private isTaskForCurrentUser(task: Task): boolean {
