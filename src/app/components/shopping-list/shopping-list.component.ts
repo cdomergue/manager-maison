@@ -53,6 +53,28 @@ export class ShoppingListComponent {
     });
   });
 
+  groupedFilteredCatalog = computed(() => {
+    const items = this.sortedFilteredCatalog();
+    const groups: { key: string; label: string; items: typeof items }[] = [];
+    let currentKey: string | null = null;
+    let currentGroup: { key: string; label: string; items: typeof items } | null = null;
+    for (const item of items) {
+      const rawCategory = item.category ?? '';
+      const key = rawCategory.toLocaleLowerCase() || '\uFFFF';
+      if (key !== currentKey) {
+        currentKey = key;
+        currentGroup = {
+          key,
+          label: rawCategory || 'Sans catégorie',
+          items: [],
+        };
+        groups.push(currentGroup);
+      }
+      currentGroup!.items.push(item);
+    }
+    return groups;
+  });
+
   constructor() {
     effect((onCleanup) => {
       const enabled = this.autoRefresh();

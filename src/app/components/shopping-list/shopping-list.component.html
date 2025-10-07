@@ -119,70 +119,81 @@
     @if (sortedFilteredCatalog().length === 0) {
       <p class="text-gray-500 dark:text-gray-400">Aucun article dans le catalogue.</p>
     } @else {
-      <ul class="divide-y divide-gray-200 dark:divide-gray-700">
-        @for (item of sortedFilteredCatalog(); track item.id) {
-          <li class="py-3 flex items-center justify-between">
-            <div class="flex-1">
-              @if (editingId() === item.id) {
-                <div class="flex flex-col gap-2">
-                  <input
-                    type="text"
-                    name="name"
-                    placeholder="Nom"
-                    [ngModel]="editName()"
-                    (ngModelChange)="editName.set($event)"
-                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
-                  />
-                  <input
-                    type="text"
-                    name="category"
-                    placeholder="Catégorie (optionnel)"
-                    [ngModel]="editCategory()"
-                    (ngModelChange)="editCategory.set($event)"
-                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
-                  />
-                </div>
-              } @else {
-                <div>
-                  <div class="font-medium text-gray-900 dark:text-white">{{ item.name }}</div>
-                  @if (item.category) {
-                    <div class="text-sm text-gray-500 dark:text-gray-400">{{ item.category }}</div>
-                  }
-                </div>
-              }
+      <div class="space-y-4">
+        @for (group of groupedFilteredCatalog(); track group.key) {
+          <div>
+            <div class="text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-300 mb-1">
+              {{ group.label }}
             </div>
-            <div class="flex items-center gap-2">
-              @if (editingId() === item.id) {
-                <button
-                  (click)="saveEdit()"
-                  class="px-3 py-1 bg-green-600 dark:bg-green-600 text-white rounded hover:bg-green-700 dark:hover:bg-green-700 transition-colors"
-                >
-                  Enregistrer
-                </button>
-                <button
-                  (click)="cancelEdit()"
-                  class="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 transition-colors"
-                >
-                  Annuler
-                </button>
-              } @else {
-                <button
-                  (click)="addToList(item.id)"
-                  class="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 transition-colors"
-                >
-                  Ajouter
-                </button>
-                <button
-                  (click)="startEdit(item.id)"
-                  class="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 transition-colors"
-                >
-                  Modifier
-                </button>
+            <ul
+              class="divide-y divide-gray-200 dark:divide-gray-700 rounded border border-gray-200 dark:border-gray-700"
+            >
+              @for (item of group.items; track item.id) {
+                <li class="py-3 px-3 flex items-center justify-between">
+                  <div class="flex-1">
+                    @if (editingId() === item.id) {
+                      <div class="flex flex-col gap-2">
+                        <input
+                          type="text"
+                          name="name"
+                          placeholder="Nom"
+                          [ngModel]="editName()"
+                          (ngModelChange)="editName.set($event)"
+                          class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+                        />
+                        <input
+                          type="text"
+                          name="category"
+                          placeholder="Catégorie (optionnel)"
+                          [ngModel]="editCategory()"
+                          (ngModelChange)="editCategory.set($event)"
+                          class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+                        />
+                      </div>
+                    } @else {
+                      <div>
+                        <div class="font-medium text-gray-900 dark:text-white">{{ item.name }}</div>
+                        @if (item.category) {
+                          <div class="text-sm text-gray-500 dark:text-gray-400">{{ item.category }}</div>
+                        }
+                      </div>
+                    }
+                  </div>
+                  <div class="flex items-center gap-2">
+                    @if (editingId() === item.id) {
+                      <button
+                        (click)="saveEdit()"
+                        class="px-3 py-1 bg-green-600 dark:bg-green-600 text-white rounded hover:bg-green-700 dark:hover:bg-green-700 transition-colors"
+                      >
+                        Enregistrer
+                      </button>
+                      <button
+                        (click)="cancelEdit()"
+                        class="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 transition-colors"
+                      >
+                        Annuler
+                      </button>
+                    } @else {
+                      <button
+                        (click)="addToList(item.id)"
+                        class="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 transition-colors"
+                      >
+                        Ajouter
+                      </button>
+                      <button
+                        (click)="startEdit(item.id)"
+                        class="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 transition-colors"
+                      >
+                        Modifier
+                      </button>
+                    }
+                  </div>
+                </li>
               }
-            </div>
-          </li>
+            </ul>
+          </div>
         }
-      </ul>
+      </div>
     }
   </div>
 </div>
