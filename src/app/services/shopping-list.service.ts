@@ -2,11 +2,13 @@ import { computed, inject, Injectable, signal } from '@angular/core';
 import { StorageService } from './storage.service';
 import { ShoppingItem, ShoppingListEntry } from '../models/shopping-item.model';
 import { ApiService } from './api.service';
+import { CacheService } from './cache.service';
 
 @Injectable({ providedIn: 'root' })
 export class ShoppingListService {
   private storage = inject(StorageService);
   private api = inject(ApiService);
+  private cacheService = inject(CacheService);
 
   private readonly ITEMS_KEY = 'shopping_items_catalog';
   private readonly CURRENT_LIST_KEY = 'shopping_current_list';
@@ -21,6 +23,9 @@ export class ShoppingListService {
   readonly isUsingApi = computed(() => !this.useLocalStorageSignal());
 
   constructor() {
+    // Charger d'abord depuis le cache si disponible
+    this.loadFromCache();
+
     // Décider du mode de synchronisation en fonction de l'API
     this.api.getConnectionStatus().subscribe((isConnected) => {
       this.useLocalStorageSignal.set(!isConnected);
@@ -30,6 +35,24 @@ export class ShoppingListService {
         this.loadFromStorage();
       }
     });
+  }
+
+  private async loadFromCache(): Promise<void> {
+    try {
+      const cached = await this.cacheService.loadFromCache();
+      if (cached) {
+        if (cached.shoppingItems.length > 0) {
+          this.itemsSignal.set(cached.shoppingItems);
+          console.log('Items de courses chargés depuis le cache');
+        }
+        if (cached.shoppingList.length > 0) {
+          this.currentListSignal.set(cached.shoppingList);
+          console.log('Liste de courses chargée depuis le cache');
+        }
+      }
+    } catch (error) {
+      console.warn('Erreur lors du chargement depuis le cache:', error);
+    }
   }
 
   private loadFromStorage(): void {

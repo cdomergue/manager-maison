@@ -5,6 +5,7 @@ import { Assignee, Task, TaskHistoryEntry } from '../models/task.model';
 import { RRule, RRuleSet, rrulestr } from 'rrule';
 import { ApiService } from './api.service';
 import { StorageService } from './storage.service';
+import { CacheService } from './cache.service';
 
 @Injectable({
   providedIn: 'root',
@@ -32,19 +33,23 @@ export class TaskService {
   private readonly STORAGE_KEY = 'household_tasks';
   private apiService = inject(ApiService);
   private storageService = inject(StorageService);
+  private cacheService = inject(CacheService);
 
   constructor() {
     this.initializeService();
   }
 
   private initializeService(): void {
-    // Vérifier d'abord si le serveur est disponible avec un délai
+    // Charger d'abord depuis le cache si disponible
+    this.loadFromCache();
+
+    // Vérifier ensuite si le serveur est disponible avec un délai
     setTimeout(() => {
       this.apiService.getConnectionStatus().subscribe((isConnected) => {
         if (isConnected) {
           this.useLocalStorageSignal.set(false);
-          // Charger les données depuis l'API
-          this.loadTasksFromAPI();
+          // Mettre à jour depuis l'API en arrière-plan
+          this.loadTasksFromAPI(true);
         } else {
           this.useLocalStorageSignal.set(true);
           // Charger depuis localStorage seulement si le serveur n'est pas disponible
@@ -52,6 +57,24 @@ export class TaskService {
         }
       });
     }, 1000); // Attendre 1 seconde pour laisser l'API se connecter
+  }
+
+  private async loadFromCache(): Promise<void> {
+    try {
+      const cached = await this.cacheService.loadFromCache();
+      if (cached && cached.tasks.length > 0) {
+        const tasks = cached.tasks.map((task: Task) => ({
+          ...task,
+          nextDueDate: new Date(task.nextDueDate),
+          lastCompleted: task.lastCompleted ? new Date(task.lastCompleted) : undefined,
+          history: this.parseHistory((task as unknown as { history?: { date: string; author: Assignee }[] }).history),
+        }));
+        this.tasksSignal.set(tasks);
+        console.log('Tâches chargées depuis le cache');
+      }
+    } catch (error) {
+      console.warn('Erreur lors du chargement depuis le cache:', error);
+    }
   }
 
   // Méthodes pour charger les tâches
@@ -370,16 +393,7 @@ export class TaskService {
   private isHolidayFrance(date: Date): boolean {
     const [, monthStr, dayStr] = date.toISOString().split('T')[0].split('-');
     const mmdd = `${monthStr}-${dayStr}`;
-    const fixed = new Set([
-      '01-01',
-      '05-01',
-      '05-08',
-      '07-14',
-      '08-15',
-      '11-01',
-      '11-11',
-      '12-25',
-    ]);
+    const fixed = new Set(['01-01', '05-01', '05-08', '07-14', '08-15', '11-01', '11-11', '12-25']);
     if (fixed.has(mmdd)) return true;
     return false;
   }

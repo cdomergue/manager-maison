@@ -221,6 +221,34 @@ export class ApiService {
     return this.get<ShoppingListEntry[]>('/shopping/list');
   }
 
+  async getShoppingItemsAsync(): Promise<ShoppingItem[]> {
+    try {
+      const response = await this.http
+        .get<ShoppingItem[]>(`${this.API_BASE_URL}/shopping/items`, {
+          headers: this.getHeaders(),
+        })
+        .toPromise();
+      return response || [];
+    } catch (error) {
+      console.error('Erreur lors de la récupération des items de courses:', error);
+      throw error;
+    }
+  }
+
+  async getShoppingListAsync(): Promise<ShoppingListEntry[]> {
+    try {
+      const response = await this.http
+        .get<ShoppingListEntry[]>(`${this.API_BASE_URL}/shopping/list`, {
+          headers: this.getHeaders(),
+        })
+        .toPromise();
+      return response || [];
+    } catch (error) {
+      console.error('Erreur lors de la récupération de la liste de courses:', error);
+      throw error;
+    }
+  }
+
   addShoppingEntry(itemId: string, quantity: number): Observable<ShoppingListEntry> {
     return this.post<ShoppingListEntry>('/shopping/list', { itemId, quantity });
   }

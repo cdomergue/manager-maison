@@ -1,6 +1,8 @@
 import {
   ApplicationConfig,
+  inject,
   isDevMode,
+  provideAppInitializer,
   provideBrowserGlobalErrorListeners,
   provideZonelessChangeDetection,
 } from '@angular/core';
@@ -10,6 +12,7 @@ import { provideHttpClient, withInterceptors, withInterceptorsFromDi } from '@an
 import { routes } from './app.routes';
 import { loadingInterceptor } from './interceptors/loading.interceptor';
 import { provideServiceWorker } from '@angular/service-worker';
+import { AppInitializationService } from './services/app-initialization.service';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -21,5 +24,6 @@ export const appConfig: ApplicationConfig = {
       enabled: !isDevMode(),
       registrationStrategy: 'registerWhenStable:30000',
     }),
+    provideAppInitializer(() => inject(AppInitializationService).initializeApp()),
   ],
 };
