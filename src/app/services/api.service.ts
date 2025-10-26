@@ -314,6 +314,20 @@ export class ApiService {
     return this.get<unknown[]>('/recipes');
   }
 
+  async getRecipesAsync(): Promise<unknown[]> {
+    try {
+      const response = await this.http
+        .get<unknown[]>(`${this.API_BASE_URL}/recipes`, {
+          headers: this.getHeaders(),
+        })
+        .toPromise();
+      return response || [];
+    } catch (error) {
+      console.error('Erreur lors de la récupération des recettes:', error);
+      throw error;
+    }
+  }
+
   createRecipe(payload: unknown): Observable<unknown> {
     return this.post<unknown>('/recipes', payload);
   }

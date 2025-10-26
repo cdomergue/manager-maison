@@ -4,12 +4,14 @@ import { ApiService } from './api.service';
 import { Task } from '../models/task.model';
 import { ShoppingItem, ShoppingListEntry } from '../models/shopping-item.model';
 import { Note } from '../models/note.model';
+import { Recipe } from '../models/recipe.model';
 
 export interface CacheData {
   tasks: Task[];
   shoppingItems: ShoppingItem[];
   shoppingList: ShoppingListEntry[];
   notes: Note[];
+  recipes: Recipe[];
   lastUpdated: string;
 }
 
@@ -68,11 +70,12 @@ export class CacheService {
     console.log('Mise à jour depuis la lambda...');
 
     try {
-      const [tasks, shoppingItems, shoppingList, notes] = await Promise.all([
+      const [tasks, shoppingItems, shoppingList, notes, recipes] = await Promise.all([
         this.api.getTasksAsync(),
         this.api.getShoppingItemsAsync(),
         this.api.getShoppingListAsync(),
         this.api.getNotesAsync(),
+        this.api.getRecipesAsync(),
       ]);
 
       const cacheData: CacheData = {
@@ -80,6 +83,7 @@ export class CacheService {
         shoppingItems,
         shoppingList,
         notes: notes as Note[],
+        recipes: recipes as Recipe[],
         lastUpdated: new Date().toISOString(),
       };
 
