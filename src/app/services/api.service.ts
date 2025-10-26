@@ -277,6 +277,20 @@ export class ApiService {
     return this.get<unknown[]>('/notes');
   }
 
+  async getNotesAsync(): Promise<unknown[]> {
+    try {
+      const response = await this.http
+        .get<unknown[]>(`${this.API_BASE_URL}/notes`, {
+          headers: this.getHeaders(),
+        })
+        .toPromise();
+      return response || [];
+    } catch (error) {
+      console.error('Erreur lors de la récupération des notes:', error);
+      throw error;
+    }
+  }
+
   getNote(id: string): Observable<unknown> {
     return this.get<unknown>(`/notes/${id}`);
   }

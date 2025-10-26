@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { CacheService } from './cache.service';
 import { TaskService } from './task.service';
 import { ShoppingListService } from './shopping-list.service';
+import { NotesService } from './notes.service';
 
 @Injectable({
   providedIn: 'root',
@@ -10,6 +11,7 @@ export class AppInitializationService {
   private cacheService = inject(CacheService);
   private taskService = inject(TaskService);
   private shoppingListService = inject(ShoppingListService);
+  private notesService = inject(NotesService);
 
   /**
    * Initialise l'application en chargeant les données depuis le cache
@@ -37,6 +39,11 @@ export class AppInitializationService {
 
         if (cached.shoppingList.length > 0) {
           console.log(`${cached.shoppingList.length} entrées de liste disponibles depuis le cache`);
+        }
+
+        // Charger les notes depuis le cache
+        if (cached.notes.length > 0) {
+          console.log(`${cached.notes.length} notes disponibles depuis le cache`);
         }
 
         // Mettre à jour depuis la lambda en arrière-plan

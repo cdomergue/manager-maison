@@ -3,11 +3,13 @@ import { StorageService } from './storage.service';
 import { ApiService } from './api.service';
 import { Task } from '../models/task.model';
 import { ShoppingItem, ShoppingListEntry } from '../models/shopping-item.model';
+import { Note } from '../models/note.model';
 
 export interface CacheData {
   tasks: Task[];
   shoppingItems: ShoppingItem[];
   shoppingList: ShoppingListEntry[];
+  notes: Note[];
   lastUpdated: string;
 }
 
@@ -66,16 +68,18 @@ export class CacheService {
     console.log('Mise à jour depuis la lambda...');
 
     try {
-      const [tasks, shoppingItems, shoppingList] = await Promise.all([
+      const [tasks, shoppingItems, shoppingList, notes] = await Promise.all([
         this.api.getTasksAsync(),
         this.api.getShoppingItemsAsync(),
         this.api.getShoppingListAsync(),
+        this.api.getNotesAsync(),
       ]);
 
       const cacheData: CacheData = {
         tasks,
         shoppingItems,
         shoppingList,
+        notes: notes as Note[],
         lastUpdated: new Date().toISOString(),
       };
 

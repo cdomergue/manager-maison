@@ -2,6 +2,7 @@ import { inject, Injectable, signal } from '@angular/core';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { ApiService } from './api.service';
 import { StorageService } from './storage.service';
+import { CacheService } from './cache.service';
 import { Note } from '../models/note.model';
 
 @Injectable({ providedIn: 'root' })
@@ -16,8 +17,12 @@ export class NotesService {
   private readonly STORAGE_KEY = 'shared_notes';
   private api = inject(ApiService);
   private storage = inject(StorageService);
+  private cacheService = inject(CacheService);
 
   constructor() {
+    // Charger d'abord depuis le cache si disponible
+    this.loadFromCache();
+
     setTimeout(() => {
       this.api.getConnectionStatus().subscribe((isConnected) => {
         if (isConnected) {
@@ -34,6 +39,18 @@ export class NotesService {
   refresh(): void {
     if (this.useLocalStorageSignal()) this.loadFromLocal();
     else this.loadFromAPI();
+  }
+
+  private async loadFromCache(): Promise<void> {
+    try {
+      const cached = await this.cacheService.loadFromCache();
+      if (cached && cached.notes.length > 0) {
+        this.notesSignal.set(cached.notes as Note[]);
+        console.log('Notes chargées depuis le cache');
+      }
+    } catch (error) {
+      console.warn('Erreur lors du chargement depuis le cache:', error);
+    }
   }
 
   private loadFromAPI(): void {
