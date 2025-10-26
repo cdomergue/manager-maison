@@ -35,44 +35,55 @@
     @if (shopping.currentList().length === 0) {
       <p class="text-gray-500 dark:text-gray-400">Aucun article pour le moment.</p>
     } @else {
-      <ul class="divide-y divide-gray-200 dark:divide-gray-700">
-        @for (entry of sortedCurrentList(); track entry.id) {
-          <li class="py-3 flex items-center gap-3">
-            <input
-              type="checkbox"
-              [checked]="entry.checked"
-              (change)="toggle(entry.id)"
-              class="h-5 w-5 text-blue-600 dark:text-blue-400 bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 dark:focus:ring-blue-400"
-            />
-            <div class="flex-1">
-              <div class="font-medium text-gray-900 dark:text-white" [class.line-through]="entry.checked">
-                {{ entry.name }}
-              </div>
-              <div class="text-sm text-gray-500 dark:text-gray-400">Quantité: {{ entry.quantity }}</div>
+      <div class="space-y-4">
+        @for (group of groupedCurrentList(); track group.key) {
+          <div>
+            <div class="text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-300 mb-1">
+              {{ group.label }}
             </div>
-            <div class="flex items-center gap-2">
-              <button
-                (click)="dec(entry.id)"
-                class="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200"
-              >
-                -
-              </button>
-              <button
-                (click)="inc(entry.id)"
-                class="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200"
-              >
-                +
-              </button>
-              <button
-                (click)="remove(entry.id)"
-                class="px-2 py-1 border border-red-300 dark:border-red-600 rounded text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
-              >
-                Supprimer
-              </button>
-            </div>
-          </li>
+            <ul
+              class="divide-y divide-gray-200 dark:divide-gray-700 rounded border border-gray-200 dark:border-gray-700"
+            >
+              @for (entry of group.items; track entry.id) {
+                <li class="py-3 px-3 flex items-center gap-3">
+                  <input
+                    type="checkbox"
+                    [checked]="entry.checked"
+                    (change)="toggle(entry.id)"
+                    class="h-5 w-5 text-blue-600 dark:text-blue-400 bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 dark:focus:ring-blue-400"
+                  />
+                  <div class="flex-1">
+                    <div class="font-medium text-gray-900 dark:text-white" [class.line-through]="entry.checked">
+                      {{ entry.name }}
+                    </div>
+                    <div class="text-sm text-gray-500 dark:text-gray-400">Quantité: {{ entry.quantity }}</div>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <button
+                      (click)="dec(entry.id)"
+                      class="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200"
+                    >
+                      -
+                    </button>
+                    <button
+                      (click)="inc(entry.id)"
+                      class="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200"
+                    >
+                      +
+                    </button>
+                    <button
+                      (click)="remove(entry.id)"
+                      class="px-2 py-1 border border-red-300 dark:border-red-600 rounded text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
+                    >
+                      Supprimer
+                    </button>
+                  </div>
+                </li>
+              }
+            </ul>
+          </div>
         }
-      </ul>
+      </div>
     }
   </div>
 

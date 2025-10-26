@@ -2,6 +2,7 @@ import { Component, computed, effect, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ShoppingListService } from '../../services/shopping-list.service';
+import { ShoppingListEntry } from '../../models/shopping-item.model';
 
 @Component({
   selector: 'app-shopping-list',
@@ -29,6 +30,47 @@ export class ShoppingListComponent {
       if (an > bn) return 1;
       return 0;
     });
+  });
+
+  private getEntryCategory(entry: ShoppingListEntry): string {
+    const item = this.shopping.items().find((i) => i.id === entry.itemId);
+    return item?.category || '';
+  }
+
+  groupedCurrentList = computed(() => {
+    const list = this.shopping.currentList();
+    const sortedList = [...list].sort((a, b) => {
+      if (a.checked !== b.checked) return a.checked ? 1 : -1; // non cochés d'abord
+      const ac = this.getEntryCategory(a).toLocaleLowerCase();
+      const bc = this.getEntryCategory(b).toLocaleLowerCase();
+      if (ac < bc) return -1;
+      if (ac > bc) return 1;
+      const an = (a.name || '').toLocaleLowerCase();
+      const bn = (b.name || '').toLocaleLowerCase();
+      if (an < bn) return -1;
+      if (an > bn) return 1;
+      return 0;
+    });
+
+    const groups: { key: string; label: string; items: typeof sortedList }[] = [];
+    let currentKey: string | null = null;
+    let currentGroup: { key: string; label: string; items: typeof sortedList } | null = null;
+
+    for (const item of sortedList) {
+      const rawCategory = this.getEntryCategory(item);
+      const key = rawCategory.toLocaleLowerCase() || '\uFFFF';
+      if (key !== currentKey) {
+        currentKey = key;
+        currentGroup = {
+          key,
+          label: rawCategory || 'Sans catégorie',
+          items: [],
+        };
+        groups.push(currentGroup);
+      }
+      currentGroup!.items.push(item);
+    }
+    return groups;
   });
 
   private filteredCatalog = computed(() => {
