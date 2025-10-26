@@ -1,19 +1,11 @@
-import { Injectable, inject } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { CacheService } from './cache.service';
-import { TaskService } from './task.service';
-import { ShoppingListService } from './shopping-list.service';
-import { NotesService } from './notes.service';
-import { RecipeService } from './recipe.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class AppInitializationService {
   private cacheService = inject(CacheService);
-  private taskService = inject(TaskService);
-  private shoppingListService = inject(ShoppingListService);
-  private notesService = inject(NotesService);
-  private recipeService = inject(RecipeService);
 
   /**
    * Initialise l'application en chargeant les données depuis le cache
@@ -28,11 +20,6 @@ export class AppInitializationService {
 
       if (cached) {
         console.log('Données chargées depuis le cache');
-
-        // Charger les tâches depuis le cache
-        if (cached.tasks.length > 0) {
-          console.log(`${cached.tasks.length} tâches disponibles depuis le cache`);
-        }
 
         // Charger les données de courses depuis le cache
         if (cached.shoppingItems.length > 0) {
@@ -79,14 +66,5 @@ export class AppInitializationService {
         console.warn('Échec de la mise à jour en arrière-plan:', error);
       }
     }, 2000); // Attendre 2 secondes
-  }
-
-  private parseHistory(history: unknown): { date: Date; author: string }[] {
-    if (!Array.isArray(history)) return [];
-    return history.map((entry) => {
-      const e = entry as { date: string | Date; author: string };
-      const dateValue = e.date instanceof Date ? e.date : new Date(e.date);
-      return { date: dateValue, author: e.author };
-    });
   }
 }

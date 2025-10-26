@@ -25,29 +25,8 @@ export const routes: Routes = [
     canActivate: [authGuard],
   },
   {
-    path: 'notifications',
-    loadComponent: () =>
-      import('./components/notifications-config/notifications-config.component').then(
-        (m) => m.NotificationsConfigComponent,
-      ),
-    canActivate: [authGuard],
-  },
-  {
     path: 'settings',
     loadComponent: () => import('./components/settings/settings.component').then((m) => m.SettingsComponent),
-    canActivate: [authGuard],
-  },
-  {
-    path: 'categories',
-    loadComponent: () =>
-      import('./components/category-management/category-management.component').then(
-        (m) => m.CategoryManagementComponent,
-      ),
-    canActivate: [authGuard],
-  },
-  {
-    path: 'calendar',
-    loadComponent: () => import('./components/calendar/calendar.component').then((m) => m.CalendarComponent),
     canActivate: [authGuard],
   },
   {

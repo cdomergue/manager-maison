@@ -1,13 +1,11 @@
-import { Injectable, inject } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { StorageService } from './storage.service';
 import { ApiService } from './api.service';
-import { Task } from '../models/task.model';
 import { ShoppingItem, ShoppingListEntry } from '../models/shopping-item.model';
 import { Note } from '../models/note.model';
 import { Recipe } from '../models/recipe.model';
 
 export interface CacheData {
-  tasks: Task[];
   shoppingItems: ShoppingItem[];
   shoppingList: ShoppingListEntry[];
   notes: Note[];
@@ -70,8 +68,7 @@ export class CacheService {
     console.log('Mise à jour depuis la lambda...');
 
     try {
-      const [tasks, shoppingItems, shoppingList, notes, recipes] = await Promise.all([
-        this.api.getTasksAsync(),
+      const [shoppingItems, shoppingList, notes, recipes] = await Promise.all([
         this.api.getShoppingItemsAsync(),
         this.api.getShoppingListAsync(),
         this.api.getNotesAsync(),
@@ -79,7 +76,6 @@ export class CacheService {
       ]);
 
       const cacheData: CacheData = {
-        tasks,
         shoppingItems,
         shoppingList,
         notes: notes as Note[],

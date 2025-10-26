@@ -68,52 +68,6 @@
     </div>
   </div>
 
-  <!-- Vérification en arrière-plan -->
-  <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
-    <h3
-      class="text-xl font-semibold text-gray-800 dark:text-white mb-4 pb-2 border-b-2 border-gray-200 dark:border-gray-600"
-    >
-      Vérification en arrière-plan
-    </h3>
-    <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 space-y-3">
-      <div class="flex items-center justify-between py-2 border-b border-gray-200 dark:border-gray-600 last:border-b-0">
-        <span class="font-medium text-gray-700 dark:text-gray-300 min-w-[150px]">Statut :</span>
-        <span
-          class="font-semibold flex-1 text-right mr-2"
-          [ngClass]="{
-            'text-green-600 dark:text-green-400': !isCheckingBackground(),
-            'text-red-600 dark:text-red-400': isCheckingBackground(),
-          }"
-        >
-          {{ isCheckingBackground() ? "Vérification en cours..." : "Actif" }}
-        </span>
-        <button
-          class="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-2 py-1 rounded text-sm transition-colors disabled:cursor-not-allowed"
-          (click)="forceBackgroundCheck()"
-          [disabled]="isCheckingBackground()"
-        >
-          🔍
-        </button>
-      </div>
-
-      @if (lastBackgroundCheck()) {
-        <div
-          class="flex items-center justify-between py-2 border-b border-gray-200 dark:border-gray-600 last:border-b-0"
-        >
-          <span class="font-medium text-gray-700 dark:text-gray-300 min-w-[150px]">Dernière vérification :</span>
-          <span class="font-semibold text-gray-900 dark:text-white">{{
-            lastBackgroundCheck() | date: "HH:mm:ss"
-          }}</span>
-        </div>
-      }
-
-      <div class="flex items-center justify-between py-2 border-b border-gray-200 dark:border-gray-600 last:border-b-0">
-        <span class="font-medium text-gray-700 dark:text-gray-300 min-w-[150px]">Intervalle :</span>
-        <span class="font-semibold text-gray-900 dark:text-white">{{ backgroundCheckInterval() / 1000 }} secondes</span>
-      </div>
-    </div>
-  </div>
-
   <!-- Apparence -->
   <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
     <h3

@@ -1,11 +1,10 @@
-import { Component, OnInit, signal, computed, inject } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { StorageService } from '../../services/storage.service';
 import { ApiService } from '../../services/api.service';
-import { BackgroundCheckService } from '../../services/background-check.service';
-import { ThemeService, Theme } from '../../services/theme.service';
+import { Theme, ThemeService } from '../../services/theme.service';
 
 @Component({
   selector: 'app-settings',
@@ -17,11 +16,6 @@ export class SettingsComponent implements OnInit {
   isServerConnected = signal(false);
   serverStatus = signal<ServerStatus | null>(null);
   connectionStatus = signal('Vérification...');
-
-  // Signaux pour la vérification en arrière-plan
-  isCheckingBackground = computed(() => this.backgroundCheckService.isCheckingBackground());
-  lastBackgroundCheck = computed(() => this.backgroundCheckService.lastCheck());
-  backgroundCheckInterval = computed(() => this.backgroundCheckService.checkIntervalMs());
 
   // Signaux pour le thème
   currentTheme = computed(() => this.themeService.selectedTheme());
@@ -37,7 +31,6 @@ export class SettingsComponent implements OnInit {
 
   private storageService = inject(StorageService);
   private apiService = inject(ApiService);
-  private backgroundCheckService = inject(BackgroundCheckService);
   private themeService = inject(ThemeService);
 
   ngOnInit(): void {
@@ -71,10 +64,6 @@ export class SettingsComponent implements OnInit {
     this.connectionStatus.set('Vérification...');
     this.apiService.checkServerStatus();
     this.checkServerStatus();
-  }
-
-  async forceBackgroundCheck(): Promise<void> {
-    await this.backgroundCheckService.forceCheck();
   }
 
   onThemeChange(theme: Theme): void {
