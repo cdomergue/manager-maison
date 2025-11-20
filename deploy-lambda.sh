@@ -108,7 +108,10 @@ sam deploy \
     --region $AWS_REGION \
     --capabilities CAPABILITY_IAM \
     --parameter-overrides \
-        ParameterKey=Environment,ParameterValue=production
+        Environment=production \
+        VapidSubject="$VAPID_SUBJECT" \
+        VapidPublicKey="$VAPID_PUBLIC_KEY" \
+        VapidPrivateKey="$VAPID_PRIVATE_KEY"
 
 if [ $? -eq 0 ]; then
     log_info "Déploiement réussi ! ✅"
@@ -116,24 +119,24 @@ if [ $? -eq 0 ]; then
     mv "$LAMBDA_PKG_BAK" "$LAMBDA_PKG" 2>/dev/null || true
     rm -f "lambda/$TARBALL" 2>/dev/null || true
     rm -f "shared/$TARBALL" 2>/dev/null || true
-    
+
     # Récupérer l'URL de l'API
     API_URL=$(aws cloudformation describe-stacks \
         --stack-name $STACK_NAME \
         --region $AWS_REGION \
         --query 'Stacks[0].Outputs[?OutputKey==`ApiGatewayUrl`].OutputValue' \
         --output text)
-    
+
     log_info "🌐 URL de votre API: $API_URL"
     log_info "📝 Notez cette URL pour la configuration d'Amplify"
-    
+
     echo ""
     echo "🔧 Prochaines étapes :"
     echo "1. Notez l'URL API: $API_URL"
     echo "2. Configurez cette URL dans votre app Angular"
     echo "3. Redéployez sur Amplify"
     echo "4. Votre PWA sera complètement fonctionnelle !"
-    
+
 else
     log_error "Échec du déploiement"
     # Restauration en cas d'erreur

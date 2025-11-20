@@ -9,7 +9,8 @@
   "dependencies": {
     "aws-sdk": "^2.1691.0",
     "rrule": "^2.8.1",
-    "taches-menageres-shared": "file:../shared"
+    "taches-menageres-shared": "file:../shared",
+    "web-push": "^3.6.7"
   },
   "engines": {
     "node": ">=18.0.0"

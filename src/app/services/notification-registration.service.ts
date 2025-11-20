@@ -23,7 +23,7 @@ export class NotificationRegistrationService {
   private readonly platformId = inject(PLATFORM_ID);
 
   private readonly VAPID_PUBLIC_KEY =
-    'BMB8LZ-B0Fin4W_pYzumsB6L6Rqoh1CfO-V3giCPRSy954jXVcE4Sdj99O5epl5Z8cbBY-IkG_IJjIoIYDo8Iss';
+    'BO2fG8n5Za1r06U3lG-2rvcdqZmyiwpKbk18Bpn8Z6GtX80NzETCsu7RoWMylVzeCHfuaAVkRXxFuaDSLs8vMTc';
 
   private readonly STORAGE_KEY = 'device_id';
   private deviceId: string | null = null;

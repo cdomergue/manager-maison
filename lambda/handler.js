@@ -1,25 +1,24 @@
 const AWS = require("aws-sdk");
+const webpush = require("web-push");
 
 // Modules partagés packagés
 const {
   generateId,
   sanitizeString,
-  formatDateISO,
-  getUserId,
-  calculateNextDueDate,
   DEFAULT_CATEGORIES,
   ERROR_MESSAGES,
   DEFAULT_CORS_HEADERS,
   isValidNotificationToken,
   isValidRecurrenceRule,
-  createReminderNotificationPayload,
   calculateNextReminderDate,
   shouldTriggerReminder,
   REMINDER_STATUS,
 } = require("taches-menageres-shared");
 
-// Configuration DynamoDB
+// Configuration DynamoDB et SNS
 const dynamodb = new AWS.DynamoDB.DocumentClient();
+const sns = new AWS.SNS();
+
 const CATEGORIES_TABLE_NAME = process.env.CATEGORIES_TABLE_NAME || "gestion-maison-categories";
 const SHOPPING_ITEMS_TABLE_NAME = process.env.SHOPPING_ITEMS_TABLE_NAME || "gestion-maison-shopping-items";
 const SHOPPING_LIST_TABLE_NAME = process.env.SHOPPING_LIST_TABLE_NAME || "gestion-maison-shopping-list";
@@ -29,12 +28,26 @@ const REMINDER_NOTES_TABLE_NAME = process.env.REMINDER_NOTES_TABLE_NAME || "gest
 const NOTIFICATION_TOKENS_TABLE_NAME =
   process.env.NOTIFICATION_TOKENS_TABLE_NAME || "gestion-maison-notification-tokens";
 
+const REMINDERS_TOPIC_ARN = process.env.REMINDERS_TOPIC_ARN;
+
+// Configuration VAPID unique au démarrage
+if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
+  try {
+    webpush.setVapidDetails(
+      process.env.VAPID_SUBJECT || "mailto:kricridom@gmail.com",
+      process.env.VAPID_PUBLIC_KEY,
+      process.env.VAPID_PRIVATE_KEY,
+    );
+    console.log("VAPID details configured successfully");
+  } catch (err) {
+    console.error("Failed to set VAPID details:", err);
+  }
+}
+
 // Configuration spéciale
 const YOU_KNOW_WHAT = "21cdf2c38551";
 
 // Headers CORS pour toutes les réponses
-// Note: Les en-têtes CORS principaux sont configurés dans API Gateway (template.yaml)
-// Nous ajoutons seulement les en-têtes spécifiques nécessaires ici
 const corsHeaders = DEFAULT_CORS_HEADERS;
 
 // Fonction de vérification d'accès
@@ -61,10 +74,8 @@ const response = (statusCode, body) => ({
 
 // GET /api/status
 exports.getStatus = async (event) => {
-  // Vérification d'accès
   const authError = authenticate(event);
   if (authError) return authError;
-
   try {
     return response(200, {
       status: "online",
@@ -80,12 +91,11 @@ exports.getStatus = async (event) => {
 
 // OPTIONS pour CORS - Gestion des requêtes preflight
 exports.options = async (event) => {
-  // Retourner une réponse OPTIONS complète pour les requêtes preflight
   return {
     statusCode: 200,
     headers: {
       ...corsHeaders,
-      "Access-Control-Allow-Credentials": "false", // Explicitement false pour * origin
+      "Access-Control-Allow-Credentials": "false",
     },
     body: JSON.stringify({ message: "CORS preflight response" }),
   };
@@ -93,7 +103,6 @@ exports.options = async (event) => {
 
 // ========== GESTION DES NOTES ==========
 
-// GET /api/notes
 exports.getNotes = async (event) => {
   const authError = authenticate(event);
   if (authError) return authError;
@@ -106,7 +115,6 @@ exports.getNotes = async (event) => {
   }
 };
 
-// GET /api/notes/:id
 exports.getNote = async (event) => {
   const authError = authenticate(event);
   if (authError) return authError;
@@ -126,7 +134,6 @@ exports.getNote = async (event) => {
   }
 };
 
-// POST /api/notes
 exports.createNote = async (event) => {
   const authError = authenticate(event);
   if (authError) return authError;
@@ -150,7 +157,6 @@ exports.createNote = async (event) => {
   }
 };
 
-// PUT /api/notes/:id
 exports.updateNote = async (event) => {
   const authError = authenticate(event);
   if (authError) return authError;
@@ -166,7 +172,6 @@ exports.updateNote = async (event) => {
       ...existing.Item,
       title: body.title !== undefined ? (body.title || "").trim() : existing.Item.title,
       content: body.content !== undefined ? body.content : existing.Item.content,
-      // sharedWith modifiable via endpoint dédié de partage
       updatedAt: new Date().toISOString(),
     };
     await dynamodb.put({ TableName: NOTES_TABLE_NAME, Item: updated }).promise();
@@ -177,7 +182,6 @@ exports.updateNote = async (event) => {
   }
 };
 
-// DELETE /api/notes/:id
 exports.deleteNote = async (event) => {
   const authError = authenticate(event);
   if (authError) return authError;
@@ -195,11 +199,8 @@ exports.deleteNote = async (event) => {
   }
 };
 
-// partage supprimé
-
 // ========== GESTION LISTE DE COURSES ==========
 
-// GET /api/shopping/items
 exports.getShoppingItems = async (event) => {
   const authError = authenticate(event);
   if (authError) return authError;
@@ -212,7 +213,6 @@ exports.getShoppingItems = async (event) => {
   }
 };
 
-// POST /api/shopping/items
 exports.createShoppingItem = async (event) => {
   const authError = authenticate(event);
   if (authError) return authError;
@@ -236,14 +236,12 @@ exports.createShoppingItem = async (event) => {
   }
 };
 
-// DELETE /api/shopping/items/:id
 exports.deleteShoppingItem = async (event) => {
   const authError = authenticate(event);
   if (authError) return authError;
   try {
     const id = event.pathParameters.id;
     await dynamodb.delete({ TableName: SHOPPING_ITEMS_TABLE_NAME, Key: { id } }).promise();
-    // Supprimer les entrées associées dans la liste
     const list = await dynamodb.scan({ TableName: SHOPPING_LIST_TABLE_NAME }).promise();
     const toDelete = (list.Items || []).filter((e) => e.itemId === id);
     for (const entry of toDelete) {
@@ -256,7 +254,6 @@ exports.deleteShoppingItem = async (event) => {
   }
 };
 
-// PUT /api/shopping/items/:id
 exports.updateShoppingItem = async (event) => {
   const authError = authenticate(event);
   if (authError) return authError;
@@ -278,7 +275,6 @@ exports.updateShoppingItem = async (event) => {
 
     await dynamodb.put({ TableName: SHOPPING_ITEMS_TABLE_NAME, Item: updated }).promise();
 
-    // Propager le nouveau nom dans les entrées de la liste
     if (name !== undefined && name !== "") {
       const list = await dynamodb.scan({ TableName: SHOPPING_LIST_TABLE_NAME }).promise();
       const related = (list.Items || []).filter((e) => e.itemId === id);
@@ -295,7 +291,6 @@ exports.updateShoppingItem = async (event) => {
   }
 };
 
-// GET /api/shopping/list
 exports.getShoppingList = async (event) => {
   const authError = authenticate(event);
   if (authError) return authError;
@@ -308,7 +303,6 @@ exports.getShoppingList = async (event) => {
   }
 };
 
-// POST /api/shopping/list
 exports.addShoppingEntry = async (event) => {
   const authError = authenticate(event);
   if (authError) return authError;
@@ -318,11 +312,9 @@ exports.addShoppingEntry = async (event) => {
     const quantity = Math.max(1, Number(body.quantity || 1));
     if (!itemId) return response(400, { error: "itemId requis" });
 
-    // Récupérer l'item
     const item = await dynamodb.get({ TableName: SHOPPING_ITEMS_TABLE_NAME, Key: { id: itemId } }).promise();
     if (!item.Item) return response(404, { error: "Item non trouvé" });
 
-    // Tenter d'agréger une entrée non cochée existante
     const list = await dynamodb.scan({ TableName: SHOPPING_LIST_TABLE_NAME }).promise();
     const existing = (list.Items || []).find((e) => e.itemId === itemId && !e.checked);
     if (existing) {
@@ -352,7 +344,6 @@ exports.addShoppingEntry = async (event) => {
   }
 };
 
-// PUT /api/shopping/list/:id
 exports.updateShoppingEntry = async (event) => {
   const authError = authenticate(event);
   if (authError) return authError;
@@ -376,7 +367,6 @@ exports.updateShoppingEntry = async (event) => {
   }
 };
 
-// DELETE /api/shopping/list/:id
 exports.deleteShoppingEntry = async (event) => {
   const authError = authenticate(event);
   if (authError) return authError;
@@ -390,7 +380,6 @@ exports.deleteShoppingEntry = async (event) => {
   }
 };
 
-// POST /api/shopping/list/clear-checked
 exports.clearCheckedShoppingEntries = async (event) => {
   const authError = authenticate(event);
   if (authError) return authError;
@@ -407,7 +396,6 @@ exports.clearCheckedShoppingEntries = async (event) => {
   }
 };
 
-// DELETE /api/shopping/list
 exports.clearAllShoppingEntries = async (event) => {
   const authError = authenticate(event);
   if (authError) return authError;
@@ -425,7 +413,6 @@ exports.clearAllShoppingEntries = async (event) => {
 
 // ========== GESTION DES CATÉGORIES ==========
 
-// Initialiser les catégories par défaut si la table est vide
 async function initializeDefaultCategories() {
   try {
     const result = await dynamodb
@@ -436,7 +423,6 @@ async function initializeDefaultCategories() {
       .promise();
 
     if (result.Count === 0) {
-      // Insérer les catégories par défaut
       for (const category of DEFAULT_CATEGORIES) {
         await dynamodb
           .put({
@@ -455,22 +441,13 @@ async function initializeDefaultCategories() {
   }
 }
 
-// GET /api/categories
 exports.getCategories = async (event) => {
-  // Vérification d'accès
   const authError = authenticate(event);
   if (authError) return authError;
 
   try {
-    // Initialiser les catégories par défaut si nécessaire
     await initializeDefaultCategories();
-
-    const result = await dynamodb
-      .scan({
-        TableName: CATEGORIES_TABLE_NAME,
-      })
-      .promise();
-
+    const result = await dynamodb.scan({ TableName: CATEGORIES_TABLE_NAME }).promise();
     return response(200, result.Items || []);
   } catch (error) {
     console.error("Error in getCategories:", error);
@@ -478,26 +455,15 @@ exports.getCategories = async (event) => {
   }
 };
 
-// GET /api/categories/:id
 exports.getCategory = async (event) => {
-  // Vérification d'accès
   const authError = authenticate(event);
   if (authError) return authError;
-
   try {
     const categoryId = event.pathParameters.id;
-
-    const result = await dynamodb
-      .get({
-        TableName: CATEGORIES_TABLE_NAME,
-        Key: { id: categoryId },
-      })
-      .promise();
-
+    const result = await dynamodb.get({ TableName: CATEGORIES_TABLE_NAME, Key: { id: categoryId } }).promise();
     if (!result.Item) {
       return response(404, { error: "Catégorie non trouvée" });
     }
-
     return response(200, result.Item);
   } catch (error) {
     console.error("Error in getCategory:", error);
@@ -505,15 +471,11 @@ exports.getCategory = async (event) => {
   }
 };
 
-// POST /api/categories
 exports.createCategory = async (event) => {
-  // Vérification d'accès
   const authError = authenticate(event);
   if (authError) return authError;
-
   try {
     const body = JSON.parse(event.body);
-
     const newCategory = {
       ...body,
       id: body.id || generateId(),
@@ -521,26 +483,11 @@ exports.createCategory = async (event) => {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
-
-    // Vérifier si l'ID existe déjà
-    const existing = await dynamodb
-      .get({
-        TableName: CATEGORIES_TABLE_NAME,
-        Key: { id: newCategory.id },
-      })
-      .promise();
-
+    const existing = await dynamodb.get({ TableName: CATEGORIES_TABLE_NAME, Key: { id: newCategory.id } }).promise();
     if (existing.Item) {
       return response(400, { error: "Une catégorie avec cet ID existe déjà" });
     }
-
-    await dynamodb
-      .put({
-        TableName: CATEGORIES_TABLE_NAME,
-        Item: newCategory,
-      })
-      .promise();
-
+    await dynamodb.put({ TableName: CATEGORIES_TABLE_NAME, Item: newCategory }).promise();
     return response(201, newCategory);
   } catch (error) {
     console.error("Error in createCategory:", error);
@@ -548,32 +495,18 @@ exports.createCategory = async (event) => {
   }
 };
 
-// PUT /api/categories/:id
 exports.updateCategory = async (event) => {
-  // Vérification d'accès
   const authError = authenticate(event);
   if (authError) return authError;
-
   try {
     const categoryId = event.pathParameters.id;
     const body = JSON.parse(event.body);
-
-    // Récupérer la catégorie existante
-    const existing = await dynamodb
-      .get({
-        TableName: CATEGORIES_TABLE_NAME,
-        Key: { id: categoryId },
-      })
-      .promise();
-
+    const existing = await dynamodb.get({ TableName: CATEGORIES_TABLE_NAME, Key: { id: categoryId } }).promise();
     if (!existing.Item) {
       return response(404, { error: "Catégorie non trouvée" });
     }
-
-    // Empêcher la modification de l'ID et préserver le statut isDefault
     const { id, ...updateData } = body;
     const isDefault = existing.Item.isDefault;
-
     const updatedCategory = {
       ...existing.Item,
       ...updateData,
@@ -581,14 +514,7 @@ exports.updateCategory = async (event) => {
       isDefault,
       updatedAt: new Date().toISOString(),
     };
-
-    await dynamodb
-      .put({
-        TableName: CATEGORIES_TABLE_NAME,
-        Item: updatedCategory,
-      })
-      .promise();
-
+    await dynamodb.put({ TableName: CATEGORIES_TABLE_NAME, Item: updatedCategory }).promise();
     return response(200, updatedCategory);
   } catch (error) {
     console.error("Error in updateCategory:", error);
@@ -596,39 +522,19 @@ exports.updateCategory = async (event) => {
   }
 };
 
-// DELETE /api/categories/:id
 exports.deleteCategory = async (event) => {
-  // Vérification d'accès
   const authError = authenticate(event);
   if (authError) return authError;
-
   try {
     const categoryId = event.pathParameters.id;
-
-    // Récupérer la catégorie pour vérifier si elle est par défaut
-    const existing = await dynamodb
-      .get({
-        TableName: CATEGORIES_TABLE_NAME,
-        Key: { id: categoryId },
-      })
-      .promise();
-
+    const existing = await dynamodb.get({ TableName: CATEGORIES_TABLE_NAME, Key: { id: categoryId } }).promise();
     if (!existing.Item) {
       return response(404, { error: "Catégorie non trouvée" });
     }
-
-    // Empêcher la suppression des catégories par défaut
     if (existing.Item.isDefault) {
       return response(400, { error: "Impossible de supprimer une catégorie par défaut" });
     }
-
-    await dynamodb
-      .delete({
-        TableName: CATEGORIES_TABLE_NAME,
-        Key: { id: categoryId },
-      })
-      .promise();
-
+    await dynamodb.delete({ TableName: CATEGORIES_TABLE_NAME, Key: { id: categoryId } }).promise();
     return response(204, {});
   } catch (error) {
     console.error("Error in deleteCategory:", error);
@@ -636,11 +542,8 @@ exports.deleteCategory = async (event) => {
   }
 };
 
-// Les fonctions de calcul de dates sont maintenant dans le module partagé shared/dates.js
-
 // ========== GESTION DES RECETTES ==========
 
-// GET /api/recipes
 exports.getRecipes = async (event) => {
   const authError = authenticate(event);
   if (authError) return authError;
@@ -653,7 +556,6 @@ exports.getRecipes = async (event) => {
   }
 };
 
-// POST /api/recipes
 exports.createRecipe = async (event) => {
   const authError = authenticate(event);
   if (authError) return authError;
@@ -688,7 +590,6 @@ exports.createRecipe = async (event) => {
   }
 };
 
-// PUT /api/recipes/:id
 exports.updateRecipe = async (event) => {
   const authError = authenticate(event);
   if (authError) return authError;
@@ -724,7 +625,6 @@ exports.updateRecipe = async (event) => {
   }
 };
 
-// DELETE /api/recipes/:id
 exports.deleteRecipe = async (event) => {
   const authError = authenticate(event);
   if (authError) return authError;
@@ -740,7 +640,6 @@ exports.deleteRecipe = async (event) => {
 
 // ========== GESTION DES TOKENS DE NOTIFICATION ==========
 
-// POST /api/notifications/register
 exports.registerNotificationToken = async (event) => {
   const authError = authenticate(event);
   if (authError) return authError;
@@ -762,19 +661,12 @@ exports.registerNotificationToken = async (event) => {
       userId,
       deviceId,
       token,
-      platform, // 'web', 'android', 'ios'
+      platform,
       createdAt: now,
       updatedAt: now,
     };
 
-    // Utiliser deviceId comme clé pour éviter les doublons
-    await dynamodb
-      .put({
-        TableName: NOTIFICATION_TOKENS_TABLE_NAME,
-        Item: tokenRecord,
-      })
-      .promise();
-
+    await dynamodb.put({ TableName: NOTIFICATION_TOKENS_TABLE_NAME, Item: tokenRecord }).promise();
     return response(201, { message: "Token enregistré avec succès" });
   } catch (error) {
     console.error("Error in registerNotificationToken:", error);
@@ -782,7 +674,6 @@ exports.registerNotificationToken = async (event) => {
   }
 };
 
-// DELETE /api/notifications/unregister
 exports.unregisterNotificationToken = async (event) => {
   const authError = authenticate(event);
   if (authError) return authError;
@@ -795,13 +686,7 @@ exports.unregisterNotificationToken = async (event) => {
       return response(400, { error: ERROR_MESSAGES.INVALID_DATA });
     }
 
-    await dynamodb
-      .delete({
-        TableName: NOTIFICATION_TOKENS_TABLE_NAME,
-        Key: { userId, deviceId },
-      })
-      .promise();
-
+    await dynamodb.delete({ TableName: NOTIFICATION_TOKENS_TABLE_NAME, Key: { userId, deviceId } }).promise();
     return response(204, {});
   } catch (error) {
     console.error("Error in unregisterNotificationToken:", error);
@@ -809,23 +694,18 @@ exports.unregisterNotificationToken = async (event) => {
   }
 };
 
-// GET /api/notifications/tokens
 exports.getNotificationTokens = async (event) => {
   const authError = authenticate(event);
   if (authError) return authError;
   try {
     const userId = event.headers["X-User-Id"] || event.headers["x-user-id"];
-
     const result = await dynamodb
       .query({
         TableName: NOTIFICATION_TOKENS_TABLE_NAME,
         KeyConditionExpression: "userId = :userId",
-        ExpressionAttributeValues: {
-          ":userId": userId,
-        },
+        ExpressionAttributeValues: { ":userId": userId },
       })
       .promise();
-
     return response(200, result.Items || []);
   } catch (error) {
     console.error("Error in getNotificationTokens:", error);
@@ -835,7 +715,6 @@ exports.getNotificationTokens = async (event) => {
 
 // ========== GESTION DES NOTES AVEC RAPPELS ==========
 
-// GET /api/reminder-notes
 exports.getReminderNotes = async (event) => {
   const authError = authenticate(event);
   if (authError) return authError;
@@ -848,11 +727,8 @@ exports.getReminderNotes = async (event) => {
   }
 };
 
-// POST /api/reminder-notes
 exports.createReminderNote = async (event) => {
-  // 1. Log initial pour voir les headers et le raw body (utile pour debug l'encodage ou les headers manquants)
   console.log("Incoming event headers:", JSON.stringify(event.headers));
-
   const authError = authenticate(event);
   if (authError) {
     console.warn("Authentication failed for createReminderNote");
@@ -860,14 +736,9 @@ exports.createReminderNote = async (event) => {
   }
 
   try {
-    // Normalisation des headers (minuscules/majuscules)
     const userId = event.headers["X-User-Id"] || event.headers["x-user-id"];
+    if (!userId) console.warn("Error: Missing X-User-Id header");
 
-    if (!userId) {
-      console.warn("Error: Missing X-User-Id header");
-    }
-
-    // 2. Log du body parsé pour vérifier ce qui arrive vraiment
     let body;
     try {
       body = JSON.parse(event.body || "{}");
@@ -879,28 +750,24 @@ exports.createReminderNote = async (event) => {
 
     const { title, content, reminderDate, reminderTime, isRecurring, recurrenceRule } = body;
 
-    // Validation Titre
     if (!title || !title.trim()) {
       console.warn(`Validation Error: Title is missing or empty. Received: "${title}"`);
       return response(400, { error: ERROR_MESSAGES.INVALID_DATA });
     }
 
-    // Validation Présence Date/Heure
     if (!reminderDate || !reminderTime) {
       console.warn(`Validation Error: Missing date fields. Date: ${reminderDate}, Time: ${reminderTime}`);
       return response(400, { error: ERROR_MESSAGES.REMINDER_INVALID_DATE });
     }
 
-    // Vérification Date Future
     const reminderDateTime = new Date(`${reminderDate}T${reminderTime}`);
     const currentTime = new Date();
     const oneHourAgo = new Date(currentTime.getTime() - 60 * 60 * 1000);
 
-    // 3. Log critique pour les dates (souvent la cause des problèmes de timezone)
     if (isNaN(reminderDateTime.getTime()) || reminderDateTime < oneHourAgo) {
       console.warn("Validation Error: Date logic failed.", {
         inputDate: `${reminderDate}T${reminderTime}`,
-        parsedDate: reminderDateTime.toISOString(), // Vérifie si ISO correspond à ce que tu attends
+        parsedDate: reminderDateTime.toISOString(),
         serverCurrentTime: currentTime.toISOString(),
         thresholdTime: oneHourAgo.toISOString(),
         isInvalidDate: isNaN(reminderDateTime.getTime()),
@@ -909,7 +776,6 @@ exports.createReminderNote = async (event) => {
       return response(400, { error: ERROR_MESSAGES.REMINDER_PAST_DATE });
     }
 
-    // Valider la règle de récurrence
     if (isRecurring && !isValidRecurrenceRule(recurrenceRule)) {
       console.warn(`Validation Error: Invalid recurrence rule. Rule received: ${recurrenceRule}`);
       return response(400, { error: ERROR_MESSAGES.REMINDER_INVALID_RECURRENCE });
@@ -931,21 +797,14 @@ exports.createReminderNote = async (event) => {
     };
 
     console.log("Saving reminder note to DynamoDB:", JSON.stringify(reminderNote));
-
     await dynamodb.put({ TableName: REMINDER_NOTES_TABLE_NAME, Item: reminderNote }).promise();
-
     return response(201, reminderNote);
   } catch (error) {
-    // Log complet de l'erreur système (DynamoDB ou autre)
     console.error("CRITICAL Error in createReminderNote:", error, error.stack);
-
-    // Note: Retourner 400 ici masque souvent des 500 réels.
-    // Si c'est une erreur DynamoDB, c'est probablement technique, pas une erreur utilisateur.
     return response(400, { error: ERROR_MESSAGES.REMINDER_NOTE_SAVE_ERROR, details: error.message });
   }
 };
 
-// PUT /api/reminder-notes/:id
 exports.updateReminderNote = async (event) => {
   const authError = authenticate(event);
   if (authError) return authError;
@@ -958,12 +817,10 @@ exports.updateReminderNote = async (event) => {
     if (!existing.Item) {
       return response(404, { error: ERROR_MESSAGES.REMINDER_NOTE_NOT_FOUND });
     }
-
     if (existing.Item.ownerId !== userId) {
       return response(403, { error: ERROR_MESSAGES.UNAUTHORIZED });
     }
 
-    // Si on modifie la date/heure, vérifier qu'elle est dans le futur
     const newDate = body.reminderDate || existing.Item.reminderDate;
     const newTime = body.reminderTime || existing.Item.reminderTime;
     const reminderDateTime = new Date(`${newDate}T${newTime}`);
@@ -972,7 +829,6 @@ exports.updateReminderNote = async (event) => {
       return response(400, { error: ERROR_MESSAGES.REMINDER_PAST_DATE });
     }
 
-    // Valider la règle de récurrence si modifiée
     const newIsRecurring = body.isRecurring !== undefined ? body.isRecurring : existing.Item.isRecurring;
     const newRecurrenceRule = body.recurrenceRule || existing.Item.recurrenceRule;
 
@@ -988,7 +844,7 @@ exports.updateReminderNote = async (event) => {
       reminderTime: newTime,
       isRecurring: newIsRecurring,
       recurrenceRule: newIsRecurring ? newRecurrenceRule : undefined,
-      status: REMINDER_STATUS.ACTIVE, // Réactiver si modifié
+      status: REMINDER_STATUS.ACTIVE,
       updatedAt: new Date().toISOString(),
     };
 
@@ -1000,23 +856,19 @@ exports.updateReminderNote = async (event) => {
   }
 };
 
-// DELETE /api/reminder-notes/:id
 exports.deleteReminderNote = async (event) => {
   const authError = authenticate(event);
   if (authError) return authError;
   try {
     const userId = event.headers["X-User-Id"] || event.headers["x-user-id"];
     const id = event.pathParameters.id;
-
     const existing = await dynamodb.get({ TableName: REMINDER_NOTES_TABLE_NAME, Key: { id } }).promise();
     if (!existing.Item) {
       return response(404, { error: ERROR_MESSAGES.REMINDER_NOTE_NOT_FOUND });
     }
-
     if (existing.Item.ownerId !== userId) {
       return response(403, { error: ERROR_MESSAGES.UNAUTHORIZED });
     }
-
     await dynamodb.delete({ TableName: REMINDER_NOTES_TABLE_NAME, Key: { id } }).promise();
     return response(204, {});
   } catch (error) {
@@ -1031,7 +883,6 @@ exports.triggerReminders = async (event) => {
     console.log("Checking for reminders to trigger...");
     const now = new Date();
 
-    // Récupérer toutes les notes avec rappels actifs
     const result = await dynamodb
       .scan({
         TableName: REMINDER_NOTES_TABLE_NAME,
@@ -1052,31 +903,40 @@ exports.triggerReminders = async (event) => {
       if (shouldTriggerReminder(reminder, now)) {
         console.log(`Triggering reminder: ${reminder.id}`);
 
-        // Récupérer tous les tokens de notification
-        const tokensResult = await dynamodb.scan({ TableName: NOTIFICATION_TOKENS_TABLE_NAME }).promise();
-        const tokens = tokensResult.Items || [];
+        // 1. Envoi SNS pour déclencher la notification push (découplé)
+        const snsPayload = {
+          reminderId: reminder.id,
+          title: reminder.title,
+          content: reminder.content,
+          type: "REMINDER_ALERT",
+        };
 
-        // Créer le payload de notification
-        const notificationPayload = createReminderNotificationPayload(reminder);
+        try {
+          await sns
+            .publish({
+              TopicArn: REMINDERS_TOPIC_ARN,
+              Message: JSON.stringify(snsPayload),
+              MessageAttributes: {
+                type: {
+                  DataType: "String",
+                  StringValue: "REMINDER",
+                },
+              },
+            })
+            .promise();
+          console.log(`Event published to SNS for reminder ${reminder.id}`);
+        } catch (snsError) {
+          console.error(`Failed to publish SNS for reminder ${reminder.id}`, snsError);
+        }
 
-        // Envoyer la notification à tous les appareils enregistrés
-        // Note: Ici on devrait utiliser SNS ou Firebase Cloud Messaging
-        // Pour l'instant, on log juste
-        console.log(`Would send notification to ${tokens.length} devices:`, notificationPayload);
-
-        // TODO: Implémenter l'envoi réel via SNS/FCM
-        // await sendPushNotification(tokens, notificationPayload);
-
-        // Mettre à jour le statut de la note
+        // 2. Mettre à jour le statut de la note (Récurrence ou Terminé)
         if (reminder.isRecurring) {
-          // Calculer la prochaine date de rappel
           const nextDate = calculateNextReminderDate(
             `${reminder.reminderDate}T${reminder.reminderTime}`,
             reminder.recurrenceRule,
           );
 
           if (nextDate) {
-            // Mettre à jour avec la nouvelle date
             const [newDate, newTime] = nextDate.split("T");
             await dynamodb
               .update({
@@ -1085,22 +945,19 @@ exports.triggerReminders = async (event) => {
                 UpdateExpression: "SET reminderDate = :date, reminderTime = :time, updatedAt = :now",
                 ExpressionAttributeValues: {
                   ":date": newDate,
-                  ":time": newTime.substring(0, 5), // HH:mm
+                  ":time": newTime.substring(0, 5),
                   ":now": new Date().toISOString(),
                 },
               })
               .promise();
             console.log(`Updated recurring reminder ${reminder.id} to next date: ${nextDate}`);
           } else {
-            // Fin de la récurrence
             await dynamodb
               .update({
                 TableName: REMINDER_NOTES_TABLE_NAME,
                 Key: { id: reminder.id },
                 UpdateExpression: "SET #status = :triggered, updatedAt = :now",
-                ExpressionAttributeNames: {
-                  "#status": "status",
-                },
+                ExpressionAttributeNames: { "#status": "status" },
                 ExpressionAttributeValues: {
                   ":triggered": REMINDER_STATUS.TRIGGERED,
                   ":now": new Date().toISOString(),
@@ -1110,15 +967,12 @@ exports.triggerReminders = async (event) => {
             console.log(`Recurring reminder ${reminder.id} has ended`);
           }
         } else {
-          // Rappel ponctuel, marquer comme déclenché
           await dynamodb
             .update({
               TableName: REMINDER_NOTES_TABLE_NAME,
               Key: { id: reminder.id },
               UpdateExpression: "SET #status = :triggered, updatedAt = :now",
-              ExpressionAttributeNames: {
-                "#status": "status",
-              },
+              ExpressionAttributeNames: { "#status": "status" },
               ExpressionAttributeValues: {
                 ":triggered": REMINDER_STATUS.TRIGGERED,
                 ":now": new Date().toISOString(),
@@ -1132,7 +986,7 @@ exports.triggerReminders = async (event) => {
 
     return {
       statusCode: 200,
-      body: JSON.stringify({ message: "Reminders checked successfully" }),
+      body: JSON.stringify({ message: "Reminders processed" }),
     };
   } catch (error) {
     console.error("Error in triggerReminders:", error);
@@ -1141,4 +995,79 @@ exports.triggerReminders = async (event) => {
       body: JSON.stringify({ error: "Failed to trigger reminders" }),
     };
   }
+};
+
+// NOUVELLE FONCTION : CONSOMMATEUR SNS -> WEB PUSH
+exports.sendNotification = async (event) => {
+  const tokensTableName = NOTIFICATION_TOKENS_TABLE_NAME;
+
+  for (const record of event.Records) {
+    let snsMessage;
+    try {
+      snsMessage = JSON.parse(record.Sns.Message);
+      console.log("Processing SNS Message:", snsMessage);
+    } catch (e) {
+      console.error("Error parsing SNS message:", e);
+      continue;
+    }
+
+    try {
+      // Récupérer les tokens
+      const tokensResult = await dynamodb.scan({ TableName: tokensTableName }).promise();
+      const tokens = tokensResult.Items || [];
+
+      if (tokens.length === 0) {
+        console.log("No devices registered for notification.");
+        continue;
+      }
+
+      console.log(`Preparing to send to ${tokens.length} devices.`);
+
+      const payload = JSON.stringify({
+        title: snsMessage.title || "Rappel Maison",
+        body: snsMessage.content || "Vous avez un nouveau rappel",
+        icon: "/assets/icons/icon-192x192.png",
+        badge: "/assets/icons/icon-72x72.png",
+        data: {
+          reminderId: snsMessage.reminderId,
+          url: "/",
+        },
+      });
+
+      const sendPromises = tokens.map(async (tokenRecord) => {
+        let subscription;
+        try {
+          subscription = typeof tokenRecord.token === "string" ? JSON.parse(tokenRecord.token) : tokenRecord.token;
+        } catch (e) {
+          console.error("Invalid token format for user", tokenRecord.userId, e);
+          return;
+        }
+
+        try {
+          await webpush.sendNotification(subscription, payload);
+          console.log(`Notification sent to device ${tokenRecord.deviceId}`);
+        } catch (err) {
+          console.error(`Error sending to ${tokenRecord.deviceId}:`, err.statusCode);
+          if (err.statusCode === 410 || err.statusCode === 404) {
+            console.log(`Subscription expired for ${tokenRecord.deviceId}, deleting.`);
+            await dynamodb
+              .delete({
+                TableName: tokensTableName,
+                Key: {
+                  userId: tokenRecord.userId,
+                  deviceId: tokenRecord.deviceId,
+                },
+              })
+              .promise();
+          }
+        }
+      });
+
+      await Promise.all(sendPromises);
+    } catch (error) {
+      console.error("Critical error in sendNotification loop:", error);
+    }
+  }
+
+  return { status: "Success" };
 };

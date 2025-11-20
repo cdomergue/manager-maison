@@ -65,3 +65,5 @@ local-build.sh
 
 # Migration backups
 dynamodb-backup-*
+
+secret

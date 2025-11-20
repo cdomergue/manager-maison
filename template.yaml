@@ -22,6 +22,20 @@ Globals:
       AllowOrigin: "'*'"
       MaxAge: "'86400'"
 
+Parameters:
+  VapidSubject:
+    Type: String
+    Default: "mailto:kricridom@gmail.com"
+    Description: "Email de contact pour les notifs Web Push"
+  VapidPublicKey:
+    Type: String
+    Description: "Clé publique VAPID"
+    NoEcho: true
+  VapidPrivateKey:
+    Type: String
+    Description: "Clé privée VAPID"
+    NoEcho: true
+
 Resources:
   # Tables DynamoDB
   NotesTable:
@@ -111,6 +125,12 @@ Resources:
         - AttributeName: deviceId
           KeyType: RANGE
       BillingMode: PAY_PER_REQUEST
+
+  # ========== SNS TOPIC ==========
+  RemindersTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: gestion-maison-reminders-topic
 
   # API Gateway
   Api:
@@ -655,8 +675,11 @@ Resources:
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref ReminderNotesTable
-        - DynamoDBReadPolicy:
-            TableName: !Ref NotificationTokensTable
+        - SNSPublishMessagePolicy:
+            TopicName: !GetAtt RemindersTopic.TopicName
+      Environment:
+        Variables:
+          REMINDERS_TOPIC_ARN: !Ref RemindersTopic
       Events:
         ScheduledTrigger:
           Type: Schedule
@@ -664,6 +687,26 @@ Resources:
             Schedule: rate(1 minute)
             Description: Check for reminders to trigger every minute
             Enabled: true
+
+  # Nouvelle fonction pour l'envoi réel des notifications via SNS -> WebPush
+  SendNotificationFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda/
+      Handler: handler.sendNotification
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref NotificationTokensTable
+      Environment:
+        Variables:
+          VAPID_SUBJECT: !Ref VapidSubject
+          VAPID_PUBLIC_KEY: !Ref VapidPublicKey
+          VAPID_PRIVATE_KEY: !Ref VapidPrivateKey
+      Events:
+        SnsTrigger:
+          Type: SNS
+          Properties:
+            Topic: !Ref RemindersTopic
 
   # CORS Options
   OptionsFunction:
