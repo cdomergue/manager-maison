@@ -8,12 +8,11 @@ import {
   ViewEncapsulation,
   AfterViewInit,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 
 @Component({
   selector: 'app-rich-text-editor',
-  imports: [CommonModule],
   encapsulation: ViewEncapsulation.None,
   templateUrl: './rich-text-editor.component.html',
   styles: [

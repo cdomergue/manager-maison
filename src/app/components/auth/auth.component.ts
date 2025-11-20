@@ -2,11 +2,10 @@ import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
-import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-auth',
-  imports: [CommonModule, FormsModule],
+  imports: [FormsModule],
   templateUrl: './auth.component.html',
 })
 export class AuthComponent {

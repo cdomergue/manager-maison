@@ -1,6 +1,5 @@
 import { Component, computed, ElementRef, forwardRef, input, output, signal, ViewChild } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
-import { CommonModule } from '@angular/common';
 
 export interface AutocompleteOption {
   id: string;
@@ -10,7 +9,6 @@ export interface AutocompleteOption {
 
 @Component({
   selector: 'app-autocomplete',
-  imports: [CommonModule],
   providers: [
     {
       provide: NG_VALUE_ACCESSOR,

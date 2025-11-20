@@ -8,7 +8,6 @@ Globals:
     Runtime: nodejs20.x
     Environment:
       Variables:
-        TABLE_NAME: !Ref TasksTable
         CATEGORIES_TABLE_NAME: !Ref CategoriesTable
         SHOPPING_ITEMS_TABLE_NAME: !Ref ShoppingItemsTable
         SHOPPING_LIST_TABLE_NAME: !Ref ShoppingListTable
@@ -23,18 +22,6 @@ Globals:
 
 Resources:
   # Tables DynamoDB
-  TasksTable:
-    Type: AWS::DynamoDB::Table
-    Properties:
-      TableName: gestion-maison-tasks
-      AttributeDefinitions:
-        - AttributeName: id
-          AttributeType: S
-      KeySchema:
-        - AttributeName: id
-          KeyType: HASH
-      BillingMode: PAY_PER_REQUEST
-
   NotesTable:
     Type: AWS::DynamoDB::Table
     Properties:
@@ -112,9 +99,6 @@ Resources:
     Properties:
       CodeUri: lambda/
       Handler: handler.getStatus
-      Policies:
-        - DynamoDBReadPolicy:
-            TableName: !Ref TasksTable
       Events:
         GetStatus:
           Type: Api
@@ -122,86 +106,6 @@ Resources:
             RestApiId: !Ref Api
             Path: /api/status
             Method: get
-
-  GetTasksFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: lambda/
-      Handler: handler.getTasks
-      Policies:
-        - DynamoDBReadPolicy:
-            TableName: !Ref TasksTable
-      Events:
-        GetTasks:
-          Type: Api
-          Properties:
-            RestApiId: !Ref Api
-            Path: /api/tasks
-            Method: get
-
-  CreateTaskFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: lambda/
-      Handler: handler.createTask
-      Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref TasksTable
-      Events:
-        CreateTask:
-          Type: Api
-          Properties:
-            RestApiId: !Ref Api
-            Path: /api/tasks
-            Method: post
-
-  UpdateTaskFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: lambda/
-      Handler: handler.updateTask
-      Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref TasksTable
-      Events:
-        UpdateTask:
-          Type: Api
-          Properties:
-            RestApiId: !Ref Api
-            Path: /api/tasks/{id}
-            Method: put
-
-  DeleteTaskFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: lambda/
-      Handler: handler.deleteTask
-      Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref TasksTable
-      Events:
-        DeleteTask:
-          Type: Api
-          Properties:
-            RestApiId: !Ref Api
-            Path: /api/tasks/{id}
-            Method: delete
-
-  CompleteTaskFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: lambda/
-      Handler: handler.completeTask
-      Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref TasksTable
-      Events:
-        CompleteTask:
-          Type: Api
-          Properties:
-            RestApiId: !Ref Api
-            Path: /api/tasks/{id}/complete
-            Method: post
 
   # ========== NOTES FUNCTIONS ==========
   GetNotesFunction:
@@ -623,12 +527,6 @@ Outputs:
     Value: !Sub "https://${Api}.execute-api.${AWS::Region}.amazonaws.com/prod/"
     Export:
       Name: !Sub "${AWS::StackName}-ApiUrl"
-
-  TasksTableName:
-    Description: "DynamoDB table name"
-    Value: !Ref TasksTable
-    Export:
-      Name: !Sub "${AWS::StackName}-TableName"
 
   CategoriesTableName:
     Description: "Categories DynamoDB table name"

@@ -1,12 +1,12 @@
 import { Component, computed, effect, inject, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { ShoppingListService } from '../../services/shopping-list.service';
 import { ShoppingListEntry } from '../../models/shopping-item.model';
 
 @Component({
   selector: 'app-shopping-list',
-  imports: [CommonModule, FormsModule],
+  imports: [FormsModule],
   templateUrl: 'shopping-list.component.html',
 })
 export class ShoppingListComponent {

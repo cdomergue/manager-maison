@@ -14,7 +14,6 @@ const {
 
 // Configuration DynamoDB
 const dynamodb = new AWS.DynamoDB.DocumentClient();
-const TABLE_NAME = process.env.TABLE_NAME || "gestion-maison-tasks";
 const CATEGORIES_TABLE_NAME = process.env.CATEGORIES_TABLE_NAME || "gestion-maison-categories";
 const SHOPPING_ITEMS_TABLE_NAME = process.env.SHOPPING_ITEMS_TABLE_NAME || "gestion-maison-shopping-items";
 const SHOPPING_LIST_TABLE_NAME = process.env.SHOPPING_LIST_TABLE_NAME || "gestion-maison-shopping-list";
@@ -58,17 +57,8 @@ exports.getStatus = async (event) => {
   if (authError) return authError;
 
   try {
-    // Compter les tâches
-    const result = await dynamodb
-      .scan({
-        TableName: TABLE_NAME,
-        Select: "COUNT",
-      })
-      .promise();
-
     return response(200, {
       status: "online",
-      totalTasks: result.Count,
       lastUpdated: new Date().toISOString(),
       serverTime: new Date().toISOString(),
       environment: "lambda",
@@ -76,172 +66,6 @@ exports.getStatus = async (event) => {
   } catch (error) {
     console.error("Error in getStatus:", error);
     return response(500, { error: ERROR_MESSAGES.STATUS_ERROR });
-  }
-};
-
-// GET /api/tasks
-exports.getTasks = async (event) => {
-  // Vérification d'accès
-  const authError = authenticate(event);
-  if (authError) return authError;
-
-  try {
-    const result = await dynamodb
-      .scan({
-        TableName: TABLE_NAME,
-      })
-      .promise();
-
-    return response(200, result.Items || []);
-  } catch (error) {
-    console.error("Error in getTasks:", error);
-    return response(500, { error: ERROR_MESSAGES.TASK_RETRIEVE_ERROR });
-  }
-};
-
-// POST /api/tasks
-exports.createTask = async (event) => {
-  // Vérification d'accès
-  const authError = authenticate(event);
-  if (authError) return authError;
-
-  try {
-    const body = JSON.parse(event.body);
-
-    const newTask = {
-      ...body,
-      id: generateId(),
-      nextDueDate: formatDateISO(body.nextDueDate),
-      lastCompleted: formatDateISO(body.lastCompleted),
-      isActive: true,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-
-    await dynamodb
-      .put({
-        TableName: TABLE_NAME,
-        Item: newTask,
-      })
-      .promise();
-
-    return response(201, newTask);
-  } catch (error) {
-    console.error("Error in createTask:", error);
-    return response(400, { error: ERROR_MESSAGES.INVALID_DATA });
-  }
-};
-
-// PUT /api/tasks/:id
-exports.updateTask = async (event) => {
-  // Vérification d'accès
-  const authError = authenticate(event);
-  if (authError) return authError;
-
-  try {
-    const taskId = event.pathParameters.id;
-    const body = JSON.parse(event.body);
-
-    // Récupérer la tâche existante
-    const existing = await dynamodb
-      .get({
-        TableName: TABLE_NAME,
-        Key: { id: taskId },
-      })
-      .promise();
-
-    if (!existing.Item) {
-      return response(404, { error: "Tâche non trouvée" });
-    }
-
-    const updatedTask = {
-      ...existing.Item,
-      ...body,
-      id: taskId,
-      nextDueDate: body.nextDueDate ? new Date(body.nextDueDate).toISOString() : existing.Item.nextDueDate,
-      lastCompleted: body.lastCompleted ? new Date(body.lastCompleted).toISOString() : existing.Item.lastCompleted,
-      updatedAt: new Date().toISOString(),
-    };
-
-    await dynamodb
-      .put({
-        TableName: TABLE_NAME,
-        Item: updatedTask,
-      })
-      .promise();
-
-    return response(200, updatedTask);
-  } catch (error) {
-    console.error("Error in updateTask:", error);
-    return response(400, { error: ERROR_MESSAGES.INVALID_DATA });
-  }
-};
-
-// DELETE /api/tasks/:id
-exports.deleteTask = async (event) => {
-  // Vérification d'accès
-  const authError = authenticate(event);
-  if (authError) return authError;
-
-  try {
-    const taskId = event.pathParameters.id;
-
-    await dynamodb
-      .delete({
-        TableName: TABLE_NAME,
-        Key: { id: taskId },
-      })
-      .promise();
-
-    return response(204, {});
-  } catch (error) {
-    console.error("Error in deleteTask:", error);
-    return response(500, { error: "Erreur lors de la suppression" });
-  }
-};
-
-// POST /api/tasks/:id/complete
-exports.completeTask = async (event) => {
-  // Vérification d'accès
-  const authError = authenticate(event);
-  if (authError) return authError;
-
-  try {
-    const taskId = event.pathParameters.id;
-
-    // Récupérer la tâche existante
-    const existing = await dynamodb
-      .get({
-        TableName: TABLE_NAME,
-        Key: { id: taskId },
-      })
-      .promise();
-
-    if (!existing.Item) {
-      return response(404, { error: "Tâche non trouvée" });
-    }
-
-    const task = existing.Item;
-    const nowIso = new Date().toISOString();
-    task.lastCompleted = nowIso;
-    task.nextDueDate = calculateNextDueDate(task).toISOString();
-    task.updatedAt = new Date().toISOString();
-    task.isActive = true; // Réactiver la tâche
-    task.history = Array.isArray(task.history) ? task.history : [];
-    const author = getUserId(event.headers) || task.assignee || "unknown";
-    task.history.push({ date: nowIso, author });
-
-    await dynamodb
-      .put({
-        TableName: TABLE_NAME,
-        Item: task,
-      })
-      .promise();
-
-    return response(200, task);
-  } catch (error) {
-    console.error("Error in completeTask:", error);
-    return response(500, { error: "Erreur lors de la mise à jour" });
   }
 };
 

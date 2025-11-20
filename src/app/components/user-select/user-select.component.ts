@@ -1,11 +1,10 @@
 import { Component, OnInit, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { UserService } from '../../services/user.service';
 import { User } from '../../models/user.model';
 
 @Component({
   selector: 'app-user-select',
-  imports: [CommonModule],
   templateUrl: './user-select.component.html',
 })
 export class UserSelectComponent implements OnInit {
