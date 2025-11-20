@@ -850,34 +850,68 @@ exports.getReminderNotes = async (event) => {
 
 // POST /api/reminder-notes
 exports.createReminderNote = async (event) => {
+  // 1. Log initial pour voir les headers et le raw body (utile pour debug l'encodage ou les headers manquants)
+  console.log("Incoming event headers:", JSON.stringify(event.headers));
+
   const authError = authenticate(event);
-  if (authError) return authError;
+  if (authError) {
+    console.warn("Authentication failed for createReminderNote");
+    return authError;
+  }
+
   try {
+    // Normalisation des headers (minuscules/majuscules)
     const userId = event.headers["X-User-Id"] || event.headers["x-user-id"];
-    const body = JSON.parse(event.body || "{}");
+
+    if (!userId) {
+      console.warn("Error: Missing X-User-Id header");
+    }
+
+    // 2. Log du body parsé pour vérifier ce qui arrive vraiment
+    let body;
+    try {
+      body = JSON.parse(event.body || "{}");
+      console.log("Parsed Payload:", JSON.stringify(body));
+    } catch (e) {
+      console.error("Error parsing JSON body:", e);
+      return response(400, { error: "Invalid JSON format" });
+    }
 
     const { title, content, reminderDate, reminderTime, isRecurring, recurrenceRule } = body;
 
-    // Validation
+    // Validation Titre
     if (!title || !title.trim()) {
+      console.warn(`Validation Error: Title is missing or empty. Received: "${title}"`);
       return response(400, { error: ERROR_MESSAGES.INVALID_DATA });
     }
 
+    // Validation Présence Date/Heure
     if (!reminderDate || !reminderTime) {
+      console.warn(`Validation Error: Missing date fields. Date: ${reminderDate}, Time: ${reminderTime}`);
       return response(400, { error: ERROR_MESSAGES.REMINDER_INVALID_DATE });
     }
 
-    // Vérifier que la date est dans le futur (avec tolérance d'1 heure pour les fuseaux horaires)
+    // Vérification Date Future
     const reminderDateTime = new Date(`${reminderDate}T${reminderTime}`);
     const currentTime = new Date();
     const oneHourAgo = new Date(currentTime.getTime() - 60 * 60 * 1000);
 
+    // 3. Log critique pour les dates (souvent la cause des problèmes de timezone)
     if (isNaN(reminderDateTime.getTime()) || reminderDateTime < oneHourAgo) {
+      console.warn("Validation Error: Date logic failed.", {
+        inputDate: `${reminderDate}T${reminderTime}`,
+        parsedDate: reminderDateTime.toISOString(), // Vérifie si ISO correspond à ce que tu attends
+        serverCurrentTime: currentTime.toISOString(),
+        thresholdTime: oneHourAgo.toISOString(),
+        isInvalidDate: isNaN(reminderDateTime.getTime()),
+        isPast: reminderDateTime < oneHourAgo,
+      });
       return response(400, { error: ERROR_MESSAGES.REMINDER_PAST_DATE });
     }
 
-    // Valider la règle de récurrence si présente
+    // Valider la règle de récurrence
     if (isRecurring && !isValidRecurrenceRule(recurrenceRule)) {
+      console.warn(`Validation Error: Invalid recurrence rule. Rule received: ${recurrenceRule}`);
       return response(400, { error: ERROR_MESSAGES.REMINDER_INVALID_RECURRENCE });
     }
 
@@ -896,11 +930,18 @@ exports.createReminderNote = async (event) => {
       updatedAt: now,
     };
 
+    console.log("Saving reminder note to DynamoDB:", JSON.stringify(reminderNote));
+
     await dynamodb.put({ TableName: REMINDER_NOTES_TABLE_NAME, Item: reminderNote }).promise();
+
     return response(201, reminderNote);
   } catch (error) {
-    console.error("Error in createReminderNote:", error);
-    return response(400, { error: ERROR_MESSAGES.REMINDER_NOTE_SAVE_ERROR });
+    // Log complet de l'erreur système (DynamoDB ou autre)
+    console.error("CRITICAL Error in createReminderNote:", error, error.stack);
+
+    // Note: Retourner 400 ici masque souvent des 500 réels.
+    // Si c'est une erreur DynamoDB, c'est probablement technique, pas une erreur utilisateur.
+    return response(400, { error: ERROR_MESSAGES.REMINDER_NOTE_SAVE_ERROR, details: error.message });
   }
 };
 
