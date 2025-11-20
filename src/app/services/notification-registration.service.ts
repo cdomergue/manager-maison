@@ -116,17 +116,42 @@ export class NotificationRegistrationService {
     return Notification.permission;
   }
 
+  /**
+   * Affiche une notification de test (Compatible Android & PC)
+   */
   async showTestNotification(): Promise<void> {
     if (!isPlatformBrowser(this.platformId)) return;
 
+    // 1. Demander la permission si nécessaire
     if (this.permissionStatus !== 'granted') {
       const result = await Notification.requestPermission();
       if (result !== 'granted') return;
     }
 
-    const notification = new Notification('🔔 Test de notification', {
+    const title = '🔔 Test de notification';
+    const options: NotificationOptions = {
       body: 'Les notifications fonctionnent correctement !',
-    });
-    setTimeout(() => notification.close(), 5000);
+      data: {
+        dateOfArrival: Date.now(),
+        primaryKey: 1,
+      },
+    };
+
+    if ('serviceWorker' in navigator) {
+      try {
+        const registration = await navigator.serviceWorker.ready;
+
+        await registration.showNotification(title, options);
+        return;
+      } catch (error) {
+        console.warn('[Notification] SW method failed, falling back to native constructor', error);
+      }
+    }
+
+    try {
+      new Notification(title, options);
+    } catch (error) {
+      console.error('[Notification] All methods failed', error);
+    }
   }
 }
