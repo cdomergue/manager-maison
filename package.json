@@ -58,5 +58,10 @@
   },
   "lint-staged": {
     "**/*": "prettier --write --ignore-unknown"
+  },
+  "overrides": {
+    "typescript-eslint": {
+      "typescript": "$typescript"
+    }
   }
 }
