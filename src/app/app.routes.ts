@@ -25,6 +25,12 @@ export const routes: Routes = [
     canActivate: [authGuard],
   },
   {
+    path: 'reminder-notes',
+    loadComponent: () =>
+      import('./components/reminder-notes/reminder-notes.component').then((m) => m.ReminderNotesComponent),
+    canActivate: [authGuard],
+  },
+  {
     path: 'settings',
     loadComponent: () => import('./components/settings/settings.component').then((m) => m.SettingsComponent),
     canActivate: [authGuard],

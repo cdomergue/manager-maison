@@ -6,10 +6,12 @@ const utils = require("./utils");
 const dates = require("./dates");
 const constants = require("./constants");
 const recipes = require("./recipes");
+const notifications = require("./notifications");
 
 module.exports = {
   ...utils,
   ...dates,
   ...constants,
   ...recipes,
+  ...notifications,
 };

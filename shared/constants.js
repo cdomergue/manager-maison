@@ -108,6 +108,23 @@ const ERROR_MESSAGES = {
   RECIPE_RETRIEVE_ERROR: "Erreur lors de la récupération des recettes",
   RECIPE_INVALID_INGREDIENT: "Ingrédient invalide dans la recette",
 
+  // Erreurs spécifiques aux notes avec rappels
+  REMINDER_NOTE_NOT_FOUND: "Note avec rappel non trouvée",
+  REMINDER_NOTE_SAVE_ERROR: "Erreur lors de la sauvegarde de la note avec rappel",
+  REMINDER_NOTE_DELETE_ERROR: "Erreur lors de la suppression de la note avec rappel",
+  REMINDER_NOTE_RETRIEVE_ERROR: "Erreur lors de la récupération des notes avec rappels",
+  REMINDER_INVALID_DATE: "Date de rappel invalide",
+  REMINDER_INVALID_TIME: "Heure de rappel invalide",
+  REMINDER_PAST_DATE: "La date de rappel doit être dans le futur",
+  REMINDER_INVALID_RECURRENCE: "Règle de récurrence invalide",
+
+  // Erreurs spécifiques aux tokens de notification
+  NOTIFICATION_TOKEN_INVALID: "Token de notification invalide",
+  NOTIFICATION_TOKEN_SAVE_ERROR: "Erreur lors de l'enregistrement du token",
+  NOTIFICATION_TOKEN_DELETE_ERROR: "Erreur lors de la suppression du token",
+  NOTIFICATION_TOKEN_RETRIEVE_ERROR: "Erreur lors de la récupération des tokens",
+  NOTIFICATION_SEND_ERROR: "Erreur lors de l'envoi de la notification",
+
   // Erreurs serveur
   STATUS_ERROR: "Erreur lors de la récupération du statut",
   API_ROUTE_NOT_FOUND: "Route API non trouvée",

@@ -1,12 +1,12 @@
 import { Component, computed, effect, inject, signal } from '@angular/core';
-
+import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ShoppingListService } from '../../services/shopping-list.service';
 import { ShoppingListEntry } from '../../models/shopping-item.model';
 
 @Component({
   selector: 'app-shopping-list',
-  imports: [FormsModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: 'shopping-list.component.html',
 })
 export class ShoppingListComponent {
@@ -19,6 +19,18 @@ export class ShoppingListComponent {
   autoRefresh = signal<boolean>(false);
 
   public shopping = inject(ShoppingListService);
+
+  sortedCurrentList = computed(() => {
+    const list = this.shopping.currentList();
+    return [...list].sort((a, b) => {
+      if (a.checked !== b.checked) return a.checked ? 1 : -1; // non cochés d'abord
+      const an = (a.name || '').toLocaleLowerCase();
+      const bn = (b.name || '').toLocaleLowerCase();
+      if (an < bn) return -1;
+      if (an > bn) return 1;
+      return 0;
+    });
+  });
 
   private getEntryCategory(entry: ShoppingListEntry): string {
     const item = this.shopping.items().find((i) => i.id === entry.itemId);

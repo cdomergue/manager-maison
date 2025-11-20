@@ -1,0 +1,50 @@
+/* Animations pour les rappels imminents */
+@keyframes pulse-border {
+  0%,
+  100% {
+    border-color: rgb(234, 179, 8);
+  }
+  50% {
+    border-color: rgb(250, 204, 21);
+  }
+}
+
+.border-yellow-500 {
+  animation: pulse-border 2s ease-in-out infinite;
+}
+
+/* Styles pour le rich text editor dans le contexte des rappels */
+:host ::ng-deep .prose {
+  max-width: none;
+}
+
+:host ::ng-deep .prose p {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+/* Transitions douces */
+button {
+  transition: all 0.2s ease-in-out;
+}
+
+/* Style pour les détails/summary */
+details summary {
+  list-style: none;
+}
+
+details summary::-webkit-details-marker {
+  display: none;
+}
+
+details[open] summary {
+  border-bottom: 1px solid #e5e7eb;
+  margin-bottom: 1rem;
+}
+
+/* Dark mode pour les détails */
+@media (prefers-color-scheme: dark) {
+  details[open] summary {
+    border-bottom-color: #374151;
+  }
+}

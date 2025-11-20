@@ -1,0 +1,314 @@
+<div class="container mx-auto p-4 max-w-6xl">
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-3xl font-bold text-gray-800 dark:text-gray-100">🔔 Rappels</h1>
+    <div class="flex gap-2">
+      <button
+        (click)="testNotification()"
+        class="px-4 py-2 bg-purple-500 dark:bg-purple-600/80 text-white rounded-lg hover:bg-purple-600 dark:hover:bg-purple-500 transition-colors backdrop-blur-sm"
+        title="Tester les notifications"
+      >
+        🔔 Test
+      </button>
+      <button
+        (click)="refresh()"
+        class="px-4 py-2 bg-blue-500 dark:bg-blue-600/80 text-white rounded-lg hover:bg-blue-600 dark:hover:bg-blue-500 transition-colors backdrop-blur-sm"
+      >
+        🔄 Actualiser
+      </button>
+    </div>
+  </div>
+
+  <div class="mb-6 flex gap-2 bg-gray-100 dark:bg-gray-900/50 p-1 rounded-xl w-fit">
+    <button
+      (click)="setFilter('active')"
+      [ngClass]="
+        filterStatus() === 'active'
+          ? 'bg-blue-500 text-white shadow-md'
+          : 'text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+      "
+      class="px-4 py-2 rounded-lg transition-all duration-200 font-medium text-sm"
+    >
+      Actifs
+    </button>
+
+    <button
+      (click)="setFilter('triggered')"
+      [ngClass]="
+        filterStatus() === 'triggered'
+          ? 'bg-blue-500 text-white shadow-md'
+          : 'text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+      "
+      class="px-4 py-2 rounded-lg transition-all duration-200 font-medium text-sm"
+    >
+      Déclenchés
+    </button>
+
+    <button
+      (click)="setFilter('all')"
+      [ngClass]="
+        filterStatus() === 'all'
+          ? 'bg-blue-500 text-white shadow-md'
+          : 'text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+      "
+      class="px-4 py-2 rounded-lg transition-all duration-200 font-medium text-sm"
+    >
+      Tous
+    </button>
+  </div>
+
+  <details
+    class="mb-6 bg-white dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm overflow-hidden"
+  >
+    <summary
+      class="cursor-pointer p-4 font-semibold text-lg text-gray-800 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors select-none list-none flex justify-between items-center"
+    >
+      <span>➕ Nouveau rappel</span>
+      <span class="transform transition-transform duration-200 text-gray-400 text-sm">▼</span>
+    </summary>
+    <form [formGroup]="newReminderForm" (ngSubmit)="createReminder()" class="p-4 space-y-4">
+      <div>
+        <label for="title" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"> Titre * </label>
+        <input
+          type="text"
+          id="title"
+          formControlName="title"
+          class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+          placeholder="Ex: Rendez-vous médecin"
+        />
+      </div>
+
+      <div>
+        <label for="content" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          Description
+        </label>
+        <app-rich-text-editor id="content" formControlName="content"></app-rich-text-editor>
+      </div>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label for="reminderDate" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            Date *
+          </label>
+          <input
+            type="date"
+            id="reminderDate"
+            formControlName="reminderDate"
+            [min]="getMinDate()"
+            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+          />
+        </div>
+        <div>
+          <label for="reminderTime" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            Heure *
+          </label>
+          <input
+            type="time"
+            id="reminderTime"
+            formControlName="reminderTime"
+            [min]="getMinTime(newReminderForm)"
+            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+          />
+        </div>
+      </div>
+
+      <div>
+        <label class="flex items-center gap-2 cursor-pointer">
+          <input
+            type="checkbox"
+            formControlName="isRecurring"
+            (change)="toggleRecurrence(newReminderForm, true)"
+            class="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+          />
+          <span class="text-sm font-medium text-gray-700 dark:text-gray-300"> Rappel récurrent </span>
+        </label>
+      </div>
+
+      @if (showRecurrenceOptions()) {
+        <div class="pl-6 space-y-4 border-l-2 border-blue-500">
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label for="recurrenceFrequency" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Fréquence
+              </label>
+              <select
+                id="recurrenceFrequency"
+                formControlName="recurrenceFrequency"
+                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+              >
+                <option value="daily">Quotidien</option>
+                <option value="weekly">Hebdomadaire</option>
+                <option value="monthly">Mensuel</option>
+              </select>
+            </div>
+            <div>
+              <label for="recurrenceInterval" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Tous les
+              </label>
+              <input
+                type="number"
+                id="recurrenceInterval"
+                formControlName="recurrenceInterval"
+                min="1"
+                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+              />
+            </div>
+          </div>
+
+          @if (newReminderForm.get("recurrenceFrequency")?.value === "weekly") {
+            <div>
+              <span class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"> Jours de la semaine </span>
+              <div class="flex gap-2">
+                @for (day of weekDays; track day.value) {
+                  <button
+                    type="button"
+                    (click)="toggleDayOfWeek(day.value, newReminderForm)"
+                    [class.bg-blue-500]="isDaySelected(day.value, newReminderForm)"
+                    [class.text-white]="isDaySelected(day.value, newReminderForm)"
+                    [class.bg-gray-200]="!isDaySelected(day.value, newReminderForm)"
+                    [class.text-gray-700]="!isDaySelected(day.value, newReminderForm)"
+                    class="px-3 py-2 rounded-lg transition-colors"
+                  >
+                    {{ day.label }}
+                  </button>
+                }
+              </div>
+            </div>
+          }
+
+          <div>
+            <label for="recurrenceEndDate" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Date de fin (optionnel)
+            </label>
+            <input
+              type="date"
+              id="recurrenceEndDate"
+              formControlName="recurrenceEndDate"
+              [min]="newReminderForm.get('reminderDate')?.value"
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+            />
+          </div>
+        </div>
+      }
+
+      <button
+        type="submit"
+        [disabled]="newReminderForm.invalid"
+        class="px-4 py-2 rounded-lg transition-colors font-medium bg-blue-500 text-white hover:bg-blue-600 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-500 dark:disabled:bg-gray-700 dark:disabled:text-gray-500"
+      >
+        ✅ Créer le rappel
+      </button>
+    </form>
+  </details>
+
+  <div class="space-y-4">
+    @if (filteredReminders().length === 0) {
+      <div class="text-center py-12 text-gray-500 dark:text-gray-400">
+        <p class="text-xl">Aucun rappel {{ filterStatus() === "all" ? "" : filterStatus() }}</p>
+      </div>
+    }
+
+    @for (reminder of filteredReminders(); track reminder.id) {
+      <div
+        [class.border-l-4]="true"
+        [class.border-yellow-500]="isImminent(reminder)"
+        [class.border-green-500]="!isImminent(reminder) && reminder.status === 'active'"
+        [class.border-gray-400]="reminder.status === 'triggered'"
+        class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4"
+      >
+        @if (editingId() === reminder.id) {
+          <form [formGroup]="editReminderForm" (ngSubmit)="saveEdit()" class="space-y-4">
+            <input
+              type="text"
+              formControlName="title"
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+            />
+            <app-rich-text-editor formControlName="content"></app-rich-text-editor>
+
+            <div class="grid grid-cols-2 gap-4">
+              <input
+                type="date"
+                formControlName="reminderDate"
+                [min]="getMinDate()"
+                class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+              />
+              <input
+                type="time"
+                formControlName="reminderTime"
+                class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+              />
+            </div>
+
+            <div class="flex gap-2">
+              <button
+                type="submit"
+                class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+              >
+                💾 Enregistrer
+              </button>
+              <button
+                type="button"
+                (click)="cancelEdit()"
+                class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+              >
+                ❌ Annuler
+              </button>
+            </div>
+          </form>
+        } @else {
+          <div class="flex justify-between items-start">
+            <div class="flex-1">
+              <h3 class="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-2">
+                {{ reminder.title }}
+                @if (reminder.isRecurring) {
+                  <span
+                    class="ml-2 text-sm bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 px-2 py-1 rounded"
+                  >
+                    🔁 Récurrent
+                  </span>
+                }
+                @if (reminder.status === "triggered") {
+                  <span
+                    class="ml-2 text-sm bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 px-2 py-1 rounded"
+                  >
+                    ✓ Déclenché
+                  </span>
+                }
+              </h3>
+
+              @if (reminder.content) {
+                <div class="prose dark:prose-invert max-w-none mb-3" [innerHTML]="reminder.content"></div>
+              }
+
+              <div class="space-y-1 text-sm text-gray-600 dark:text-gray-400">
+                <p><strong>📅 Date:</strong> {{ formatDateTime(reminder) }}</p>
+                @if (reminder.status === "active") {
+                  <p [class.text-yellow-600]="isImminent(reminder)" [class.font-semibold]="isImminent(reminder)">
+                    <strong>⏰ Dans:</strong> {{ getTimeUntil(reminder) }}
+                  </p>
+                }
+                @if (reminder.isRecurring && reminder.recurrenceRule) {
+                  <p><strong>🔁 Récurrence:</strong> {{ getRecurrenceText(reminder.recurrenceRule) }}</p>
+                }
+              </div>
+            </div>
+
+            <div class="flex gap-2 ml-4">
+              <button
+                (click)="startEdit(reminder)"
+                class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors text-sm"
+              >
+                ✏️
+              </button>
+              <button
+                (click)="deleteReminder(reminder.id)"
+                class="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors text-sm"
+              >
+                🗑️
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </div>
+</div>

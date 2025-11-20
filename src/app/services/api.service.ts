@@ -270,10 +270,32 @@ export class ApiService {
       errorMessage = `Erreur: ${error.error.message}`;
     } else {
       // Erreur côté serveur
-      errorMessage = `Code d'erreur: ${error.status}, Message: ${error.message}`;
+      const status = error.status || 'unknown';
+      const statusText = error.statusText || 'unknown';
+      const errorBody = error.error || {};
+
+      errorMessage = `Code d'erreur: ${status}, Message: ${statusText}`;
+
+      // Logger plus de détails pour les erreurs 500
+      if (status === 500) {
+        console.error('Erreur 500 - Détails:', {
+          url: error.url,
+          status,
+          statusText,
+          error: errorBody,
+          headers: error.headers,
+        });
+
+        // Si le body contient un message d'erreur, l'ajouter
+        if (typeof errorBody === 'object' && errorBody.message) {
+          errorMessage += ` - ${errorBody.message}`;
+        } else if (typeof errorBody === 'string') {
+          errorMessage += ` - ${errorBody}`;
+        }
+      }
     }
 
-    console.error('Erreur API:', errorMessage);
+    console.error('Erreur API:', errorMessage, error);
     return throwError(() => new Error(errorMessage));
   }
 }

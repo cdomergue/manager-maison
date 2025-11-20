@@ -2,9 +2,8 @@ import { inject, Injectable, signal } from '@angular/core';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { ApiService } from './api.service';
 import { StorageService } from './storage.service';
-import { CacheService } from './cache.service';
 import { ShoppingListService } from './shopping-list.service';
-import { Recipe, CreateRecipeData, UpdateRecipeData } from '../models/recipe.model';
+import { CreateRecipeData, Recipe, UpdateRecipeData } from '../models/recipe.model';
 
 @Injectable({ providedIn: 'root' })
 export class RecipeService {
@@ -18,13 +17,9 @@ export class RecipeService {
   private readonly STORAGE_KEY = 'shared_recipes';
   private api = inject(ApiService);
   private storage = inject(StorageService);
-  private cacheService = inject(CacheService);
   private shoppingService = inject(ShoppingListService);
 
   constructor() {
-    // Charger d'abord depuis le cache si disponible
-    this.loadFromCache();
-
     setTimeout(() => {
       this.api.getConnectionStatus().subscribe((isConnected) => {
         if (isConnected) {
@@ -41,24 +36,6 @@ export class RecipeService {
   refresh(): void {
     if (this.useLocalStorageSignal()) this.loadFromLocal();
     else this.loadFromAPI();
-  }
-
-  private async loadFromCache(): Promise<void> {
-    try {
-      const cached = await this.cacheService.loadFromCache();
-      if (cached && cached.recipes.length > 0) {
-        // Normaliser les dates des recettes depuis le cache
-        const recipes = cached.recipes.map((recipe) => ({
-          ...recipe,
-          createdAt: new Date(recipe.createdAt),
-          updatedAt: new Date(recipe.updatedAt),
-        }));
-        this.recipesSignal.set(recipes);
-        console.log('Recettes chargées depuis le cache');
-      }
-    } catch (error) {
-      console.warn('Erreur lors du chargement depuis le cache:', error);
-    }
   }
 
   private loadFromAPI(): void {

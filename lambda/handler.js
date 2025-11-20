@@ -10,6 +10,12 @@ const {
   DEFAULT_CATEGORIES,
   ERROR_MESSAGES,
   DEFAULT_CORS_HEADERS,
+  isValidNotificationToken,
+  isValidRecurrenceRule,
+  createReminderNotificationPayload,
+  calculateNextReminderDate,
+  shouldTriggerReminder,
+  REMINDER_STATUS,
 } = require("taches-menageres-shared");
 
 // Configuration DynamoDB
@@ -19,6 +25,9 @@ const SHOPPING_ITEMS_TABLE_NAME = process.env.SHOPPING_ITEMS_TABLE_NAME || "gest
 const SHOPPING_LIST_TABLE_NAME = process.env.SHOPPING_LIST_TABLE_NAME || "gestion-maison-shopping-list";
 const NOTES_TABLE_NAME = process.env.NOTES_TABLE_NAME || "gestion-maison-notes";
 const RECIPES_TABLE_NAME = process.env.RECIPES_TABLE_NAME || "gestion-maison-recipes";
+const REMINDER_NOTES_TABLE_NAME = process.env.REMINDER_NOTES_TABLE_NAME || "gestion-maison-reminder-notes";
+const NOTIFICATION_TOKENS_TABLE_NAME =
+  process.env.NOTIFICATION_TOKENS_TABLE_NAME || "gestion-maison-notification-tokens";
 
 // Configuration spéciale
 const YOU_KNOW_WHAT = "21cdf2c38551";
@@ -726,5 +735,369 @@ exports.deleteRecipe = async (event) => {
   } catch (error) {
     console.error("Error in deleteRecipe:", error);
     return response(500, { error: ERROR_MESSAGES.RECIPE_DELETE_ERROR });
+  }
+};
+
+// ========== GESTION DES TOKENS DE NOTIFICATION ==========
+
+// POST /api/notifications/register
+exports.registerNotificationToken = async (event) => {
+  const authError = authenticate(event);
+  if (authError) return authError;
+  try {
+    const userId = event.headers["X-User-Id"] || event.headers["x-user-id"];
+    const body = JSON.parse(event.body || "{}");
+    const { token, deviceId, platform } = body;
+
+    if (!isValidNotificationToken(token)) {
+      return response(400, { error: ERROR_MESSAGES.NOTIFICATION_TOKEN_INVALID });
+    }
+
+    if (!deviceId || !platform) {
+      return response(400, { error: ERROR_MESSAGES.INVALID_DATA });
+    }
+
+    const now = new Date().toISOString();
+    const tokenRecord = {
+      userId,
+      deviceId,
+      token,
+      platform, // 'web', 'android', 'ios'
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    // Utiliser deviceId comme clé pour éviter les doublons
+    await dynamodb
+      .put({
+        TableName: NOTIFICATION_TOKENS_TABLE_NAME,
+        Item: tokenRecord,
+      })
+      .promise();
+
+    return response(201, { message: "Token enregistré avec succès" });
+  } catch (error) {
+    console.error("Error in registerNotificationToken:", error);
+    return response(500, { error: ERROR_MESSAGES.NOTIFICATION_TOKEN_SAVE_ERROR });
+  }
+};
+
+// DELETE /api/notifications/unregister
+exports.unregisterNotificationToken = async (event) => {
+  const authError = authenticate(event);
+  if (authError) return authError;
+  try {
+    const userId = event.headers["X-User-Id"] || event.headers["x-user-id"];
+    const body = JSON.parse(event.body || "{}");
+    const { deviceId } = body;
+
+    if (!deviceId) {
+      return response(400, { error: ERROR_MESSAGES.INVALID_DATA });
+    }
+
+    await dynamodb
+      .delete({
+        TableName: NOTIFICATION_TOKENS_TABLE_NAME,
+        Key: { userId, deviceId },
+      })
+      .promise();
+
+    return response(204, {});
+  } catch (error) {
+    console.error("Error in unregisterNotificationToken:", error);
+    return response(500, { error: ERROR_MESSAGES.NOTIFICATION_TOKEN_DELETE_ERROR });
+  }
+};
+
+// GET /api/notifications/tokens
+exports.getNotificationTokens = async (event) => {
+  const authError = authenticate(event);
+  if (authError) return authError;
+  try {
+    const userId = event.headers["X-User-Id"] || event.headers["x-user-id"];
+
+    const result = await dynamodb
+      .query({
+        TableName: NOTIFICATION_TOKENS_TABLE_NAME,
+        KeyConditionExpression: "userId = :userId",
+        ExpressionAttributeValues: {
+          ":userId": userId,
+        },
+      })
+      .promise();
+
+    return response(200, result.Items || []);
+  } catch (error) {
+    console.error("Error in getNotificationTokens:", error);
+    return response(500, { error: ERROR_MESSAGES.NOTIFICATION_TOKEN_RETRIEVE_ERROR });
+  }
+};
+
+// ========== GESTION DES NOTES AVEC RAPPELS ==========
+
+// GET /api/reminder-notes
+exports.getReminderNotes = async (event) => {
+  const authError = authenticate(event);
+  if (authError) return authError;
+  try {
+    const result = await dynamodb.scan({ TableName: REMINDER_NOTES_TABLE_NAME }).promise();
+    return response(200, result.Items || []);
+  } catch (error) {
+    console.error("Error in getReminderNotes:", error);
+    return response(500, { error: ERROR_MESSAGES.REMINDER_NOTE_RETRIEVE_ERROR });
+  }
+};
+
+// POST /api/reminder-notes
+exports.createReminderNote = async (event) => {
+  const authError = authenticate(event);
+  if (authError) return authError;
+  try {
+    const userId = event.headers["X-User-Id"] || event.headers["x-user-id"];
+    const body = JSON.parse(event.body || "{}");
+
+    const { title, content, reminderDate, reminderTime, isRecurring, recurrenceRule } = body;
+
+    // Validation
+    if (!title || !title.trim()) {
+      return response(400, { error: ERROR_MESSAGES.INVALID_DATA });
+    }
+
+    if (!reminderDate || !reminderTime) {
+      return response(400, { error: ERROR_MESSAGES.REMINDER_INVALID_DATE });
+    }
+
+    // Vérifier que la date est dans le futur (avec tolérance d'1 heure pour les fuseaux horaires)
+    const reminderDateTime = new Date(`${reminderDate}T${reminderTime}`);
+    const currentTime = new Date();
+    const oneHourAgo = new Date(currentTime.getTime() - 60 * 60 * 1000);
+
+    if (isNaN(reminderDateTime.getTime()) || reminderDateTime < oneHourAgo) {
+      return response(400, { error: ERROR_MESSAGES.REMINDER_PAST_DATE });
+    }
+
+    // Valider la règle de récurrence si présente
+    if (isRecurring && !isValidRecurrenceRule(recurrenceRule)) {
+      return response(400, { error: ERROR_MESSAGES.REMINDER_INVALID_RECURRENCE });
+    }
+
+    const now = new Date().toISOString();
+    const reminderNote = {
+      id: generateId(),
+      title: sanitizeString(title),
+      content: content || "",
+      ownerId: userId,
+      reminderDate,
+      reminderTime,
+      isRecurring: !!isRecurring,
+      recurrenceRule: isRecurring ? recurrenceRule : undefined,
+      status: REMINDER_STATUS.ACTIVE,
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    await dynamodb.put({ TableName: REMINDER_NOTES_TABLE_NAME, Item: reminderNote }).promise();
+    return response(201, reminderNote);
+  } catch (error) {
+    console.error("Error in createReminderNote:", error);
+    return response(400, { error: ERROR_MESSAGES.REMINDER_NOTE_SAVE_ERROR });
+  }
+};
+
+// PUT /api/reminder-notes/:id
+exports.updateReminderNote = async (event) => {
+  const authError = authenticate(event);
+  if (authError) return authError;
+  try {
+    const userId = event.headers["X-User-Id"] || event.headers["x-user-id"];
+    const id = event.pathParameters.id;
+    const body = JSON.parse(event.body || "{}");
+
+    const existing = await dynamodb.get({ TableName: REMINDER_NOTES_TABLE_NAME, Key: { id } }).promise();
+    if (!existing.Item) {
+      return response(404, { error: ERROR_MESSAGES.REMINDER_NOTE_NOT_FOUND });
+    }
+
+    if (existing.Item.ownerId !== userId) {
+      return response(403, { error: ERROR_MESSAGES.UNAUTHORIZED });
+    }
+
+    // Si on modifie la date/heure, vérifier qu'elle est dans le futur
+    const newDate = body.reminderDate || existing.Item.reminderDate;
+    const newTime = body.reminderTime || existing.Item.reminderTime;
+    const reminderDateTime = new Date(`${newDate}T${newTime}`);
+
+    if (isNaN(reminderDateTime.getTime()) || reminderDateTime <= new Date()) {
+      return response(400, { error: ERROR_MESSAGES.REMINDER_PAST_DATE });
+    }
+
+    // Valider la règle de récurrence si modifiée
+    const newIsRecurring = body.isRecurring !== undefined ? body.isRecurring : existing.Item.isRecurring;
+    const newRecurrenceRule = body.recurrenceRule || existing.Item.recurrenceRule;
+
+    if (newIsRecurring && !isValidRecurrenceRule(newRecurrenceRule)) {
+      return response(400, { error: ERROR_MESSAGES.REMINDER_INVALID_RECURRENCE });
+    }
+
+    const updated = {
+      ...existing.Item,
+      title: body.title !== undefined ? sanitizeString(body.title) : existing.Item.title,
+      content: body.content !== undefined ? body.content : existing.Item.content,
+      reminderDate: newDate,
+      reminderTime: newTime,
+      isRecurring: newIsRecurring,
+      recurrenceRule: newIsRecurring ? newRecurrenceRule : undefined,
+      status: REMINDER_STATUS.ACTIVE, // Réactiver si modifié
+      updatedAt: new Date().toISOString(),
+    };
+
+    await dynamodb.put({ TableName: REMINDER_NOTES_TABLE_NAME, Item: updated }).promise();
+    return response(200, updated);
+  } catch (error) {
+    console.error("Error in updateReminderNote:", error);
+    return response(400, { error: ERROR_MESSAGES.REMINDER_NOTE_SAVE_ERROR });
+  }
+};
+
+// DELETE /api/reminder-notes/:id
+exports.deleteReminderNote = async (event) => {
+  const authError = authenticate(event);
+  if (authError) return authError;
+  try {
+    const userId = event.headers["X-User-Id"] || event.headers["x-user-id"];
+    const id = event.pathParameters.id;
+
+    const existing = await dynamodb.get({ TableName: REMINDER_NOTES_TABLE_NAME, Key: { id } }).promise();
+    if (!existing.Item) {
+      return response(404, { error: ERROR_MESSAGES.REMINDER_NOTE_NOT_FOUND });
+    }
+
+    if (existing.Item.ownerId !== userId) {
+      return response(403, { error: ERROR_MESSAGES.UNAUTHORIZED });
+    }
+
+    await dynamodb.delete({ TableName: REMINDER_NOTES_TABLE_NAME, Key: { id } }).promise();
+    return response(204, {});
+  } catch (error) {
+    console.error("Error in deleteReminderNote:", error);
+    return response(500, { error: ERROR_MESSAGES.REMINDER_NOTE_DELETE_ERROR });
+  }
+};
+
+// Fonction déclenchée par EventBridge pour vérifier et envoyer les rappels
+exports.triggerReminders = async (event) => {
+  try {
+    console.log("Checking for reminders to trigger...");
+    const now = new Date();
+
+    // Récupérer toutes les notes avec rappels actifs
+    const result = await dynamodb
+      .scan({
+        TableName: REMINDER_NOTES_TABLE_NAME,
+        FilterExpression: "#status = :active",
+        ExpressionAttributeNames: {
+          "#status": "status",
+        },
+        ExpressionAttributeValues: {
+          ":active": REMINDER_STATUS.ACTIVE,
+        },
+      })
+      .promise();
+
+    const reminders = result.Items || [];
+    console.log(`Found ${reminders.length} active reminders`);
+
+    for (const reminder of reminders) {
+      if (shouldTriggerReminder(reminder, now)) {
+        console.log(`Triggering reminder: ${reminder.id}`);
+
+        // Récupérer tous les tokens de notification
+        const tokensResult = await dynamodb.scan({ TableName: NOTIFICATION_TOKENS_TABLE_NAME }).promise();
+        const tokens = tokensResult.Items || [];
+
+        // Créer le payload de notification
+        const notificationPayload = createReminderNotificationPayload(reminder);
+
+        // Envoyer la notification à tous les appareils enregistrés
+        // Note: Ici on devrait utiliser SNS ou Firebase Cloud Messaging
+        // Pour l'instant, on log juste
+        console.log(`Would send notification to ${tokens.length} devices:`, notificationPayload);
+
+        // TODO: Implémenter l'envoi réel via SNS/FCM
+        // await sendPushNotification(tokens, notificationPayload);
+
+        // Mettre à jour le statut de la note
+        if (reminder.isRecurring) {
+          // Calculer la prochaine date de rappel
+          const nextDate = calculateNextReminderDate(
+            `${reminder.reminderDate}T${reminder.reminderTime}`,
+            reminder.recurrenceRule,
+          );
+
+          if (nextDate) {
+            // Mettre à jour avec la nouvelle date
+            const [newDate, newTime] = nextDate.split("T");
+            await dynamodb
+              .update({
+                TableName: REMINDER_NOTES_TABLE_NAME,
+                Key: { id: reminder.id },
+                UpdateExpression: "SET reminderDate = :date, reminderTime = :time, updatedAt = :now",
+                ExpressionAttributeValues: {
+                  ":date": newDate,
+                  ":time": newTime.substring(0, 5), // HH:mm
+                  ":now": new Date().toISOString(),
+                },
+              })
+              .promise();
+            console.log(`Updated recurring reminder ${reminder.id} to next date: ${nextDate}`);
+          } else {
+            // Fin de la récurrence
+            await dynamodb
+              .update({
+                TableName: REMINDER_NOTES_TABLE_NAME,
+                Key: { id: reminder.id },
+                UpdateExpression: "SET #status = :triggered, updatedAt = :now",
+                ExpressionAttributeNames: {
+                  "#status": "status",
+                },
+                ExpressionAttributeValues: {
+                  ":triggered": REMINDER_STATUS.TRIGGERED,
+                  ":now": new Date().toISOString(),
+                },
+              })
+              .promise();
+            console.log(`Recurring reminder ${reminder.id} has ended`);
+          }
+        } else {
+          // Rappel ponctuel, marquer comme déclenché
+          await dynamodb
+            .update({
+              TableName: REMINDER_NOTES_TABLE_NAME,
+              Key: { id: reminder.id },
+              UpdateExpression: "SET #status = :triggered, updatedAt = :now",
+              ExpressionAttributeNames: {
+                "#status": "status",
+              },
+              ExpressionAttributeValues: {
+                ":triggered": REMINDER_STATUS.TRIGGERED,
+                ":now": new Date().toISOString(),
+              },
+            })
+            .promise();
+          console.log(`Marked reminder ${reminder.id} as triggered`);
+        }
+      }
+    }
+
+    return {
+      statusCode: 200,
+      body: JSON.stringify({ message: "Reminders checked successfully" }),
+    };
+  } catch (error) {
+    console.error("Error in triggerReminders:", error);
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ error: "Failed to trigger reminders" }),
+    };
   }
 };

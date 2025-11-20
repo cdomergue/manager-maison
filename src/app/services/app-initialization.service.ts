@@ -1,11 +1,17 @@
 import { inject, Injectable } from '@angular/core';
 import { CacheService } from './cache.service';
+import { ShoppingListService } from './shopping-list.service';
+import { NotesService } from './notes.service';
+import { RecipeService } from './recipe.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class AppInitializationService {
   private cacheService = inject(CacheService);
+  private shoppingListService = inject(ShoppingListService);
+  private notesService = inject(NotesService);
+  private recipeService = inject(RecipeService);
 
   /**
    * Initialise l'application en chargeant les données depuis le cache

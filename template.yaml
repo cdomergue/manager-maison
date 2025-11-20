@@ -13,6 +13,8 @@ Globals:
         SHOPPING_LIST_TABLE_NAME: !Ref ShoppingListTable
         NOTES_TABLE_NAME: !Ref NotesTable
         RECIPES_TABLE_NAME: !Ref RecipesTable
+        REMINDER_NOTES_TABLE_NAME: !Ref ReminderNotesTable
+        NOTIFICATION_TOKENS_TABLE_NAME: !Ref NotificationTokensTable
   Api:
     Cors:
       AllowMethods: "'GET,POST,PUT,DELETE,OPTIONS'"
@@ -80,6 +82,34 @@ Resources:
       KeySchema:
         - AttributeName: id
           KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
+
+  ReminderNotesTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: gestion-maison-reminder-notes
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
+
+  NotificationTokensTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: gestion-maison-notification-tokens
+      AttributeDefinitions:
+        - AttributeName: userId
+          AttributeType: S
+        - AttributeName: deviceId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: userId
+          KeyType: HASH
+        - AttributeName: deviceId
+          KeyType: RANGE
       BillingMode: PAY_PER_REQUEST
 
   # API Gateway
@@ -500,6 +530,140 @@ Resources:
             RestApiId: !Ref Api
             Path: /api/shopping/list
             Method: delete
+
+  # ========== NOTIFICATION TOKENS FUNCTIONS ==========
+  RegisterNotificationTokenFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda/
+      Handler: handler.registerNotificationToken
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref NotificationTokensTable
+      Events:
+        RegisterToken:
+          Type: Api
+          Properties:
+            RestApiId: !Ref Api
+            Path: /api/notifications/register
+            Method: post
+
+  UnregisterNotificationTokenFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda/
+      Handler: handler.unregisterNotificationToken
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref NotificationTokensTable
+      Events:
+        UnregisterToken:
+          Type: Api
+          Properties:
+            RestApiId: !Ref Api
+            Path: /api/notifications/unregister
+            Method: delete
+
+  GetNotificationTokensFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda/
+      Handler: handler.getNotificationTokens
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref NotificationTokensTable
+      Events:
+        GetTokens:
+          Type: Api
+          Properties:
+            RestApiId: !Ref Api
+            Path: /api/notifications/tokens
+            Method: get
+
+  # ========== REMINDER NOTES FUNCTIONS ==========
+  GetReminderNotesFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda/
+      Handler: handler.getReminderNotes
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref ReminderNotesTable
+      Events:
+        GetReminderNotes:
+          Type: Api
+          Properties:
+            RestApiId: !Ref Api
+            Path: /api/reminder-notes
+            Method: get
+
+  CreateReminderNoteFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda/
+      Handler: handler.createReminderNote
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ReminderNotesTable
+      Events:
+        CreateReminderNote:
+          Type: Api
+          Properties:
+            RestApiId: !Ref Api
+            Path: /api/reminder-notes
+            Method: post
+
+  UpdateReminderNoteFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda/
+      Handler: handler.updateReminderNote
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ReminderNotesTable
+      Events:
+        UpdateReminderNote:
+          Type: Api
+          Properties:
+            RestApiId: !Ref Api
+            Path: /api/reminder-notes/{id}
+            Method: put
+
+  DeleteReminderNoteFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda/
+      Handler: handler.deleteReminderNote
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ReminderNotesTable
+      Events:
+        DeleteReminderNote:
+          Type: Api
+          Properties:
+            RestApiId: !Ref Api
+            Path: /api/reminder-notes/{id}
+            Method: delete
+
+  # Function déclenchée par EventBridge pour vérifier les rappels
+  TriggerRemindersFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda/
+      Handler: handler.triggerReminders
+      Timeout: 60
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ReminderNotesTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref NotificationTokensTable
+      Events:
+        ScheduledTrigger:
+          Type: Schedule
+          Properties:
+            Schedule: rate(1 minute)
+            Description: Check for reminders to trigger every minute
+            Enabled: true
 
   # CORS Options
   OptionsFunction:
