@@ -177,15 +177,18 @@ function calculateNextReminderDate(currentDate, recurrenceRule) {
  * @returns {boolean}
  */
 function shouldTriggerReminder(reminderNote, now = new Date()) {
-  if (reminderNote.status !== REMINDER_STATUS.ACTIVE) {
+  if (reminderNote.status !== "active") {
+    // Utilise ta constante REMINDER_STATUS.ACTIVE
     return false;
   }
 
   const reminderDateTime = new Date(`${reminderNote.reminderDate}T${reminderNote.reminderTime}`);
+  const parisTimeStr = now.toLocaleString("en-US", { timeZone: "Europe/Paris" });
+  const nowInParisContext = new Date(parisTimeStr);
 
-  // Vérifier si le rappel est dans la minute actuelle
-  const diffMs = now - reminderDateTime;
-  return diffMs >= 0 && diffMs < 60000; // Dans les 60 dernières secondes
+  const diffMs = nowInParisContext.getTime() - reminderDateTime.getTime();
+
+  return diffMs >= 0 && diffMs < 60000;
 }
 
 module.exports = {

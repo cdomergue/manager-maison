@@ -900,6 +900,7 @@ exports.triggerReminders = async (event) => {
     console.log(`Found ${reminders.length} active reminders`);
 
     for (const reminder of reminders) {
+      console.log("Reminder:", reminder);
       if (shouldTriggerReminder(reminder, now)) {
         console.log(`Triggering reminder: ${reminder.id}`);
 
