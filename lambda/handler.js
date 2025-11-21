@@ -881,6 +881,7 @@ exports.deleteReminderNote = async (event) => {
 exports.triggerReminders = async (event) => {
   try {
     console.log("Checking for reminders to trigger...");
+    console.log("Current time (ISO):", now.toISOString());
     const now = new Date();
 
     const result = await dynamodb
@@ -1023,12 +1024,13 @@ exports.sendNotification = async (event) => {
       }
 
       console.log(`Preparing to send to ${tokens.length} devices.`);
+      console.log("Tokens found:", JSON.stringify(tokens.map((t) => ({ userId: t.userId, deviceId: t.deviceId }))));
 
       const payload = JSON.stringify({
         title: snsMessage.title || "Rappel Maison",
         body: snsMessage.content || "Vous avez un nouveau rappel",
-        icon: "/assets/icons/icon-192x192.png",
-        badge: "/assets/icons/icon-72x72.png",
+        icon: "/icons/android/android-launchericon-192-192.png",
+        badge: "/icons/android/android-launchericon-72-72.png",
         data: {
           reminderId: snsMessage.reminderId,
           url: "/",

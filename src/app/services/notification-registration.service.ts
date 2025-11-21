@@ -4,6 +4,7 @@ import { SwPush } from '@angular/service-worker';
 import { firstValueFrom } from 'rxjs';
 import { ApiService } from './api.service';
 import { UserService } from './user.service';
+import { DebugService } from './debug.service';
 
 // Interface pour typer l'envoi au backend
 interface NotificationRegisterPayload {
@@ -21,6 +22,7 @@ export class NotificationRegistrationService {
   private readonly userService = inject(UserService);
   private readonly swPush = inject(SwPush);
   private readonly platformId = inject(PLATFORM_ID);
+  private readonly debugService = inject(DebugService);
 
   private readonly VAPID_PUBLIC_KEY =
     'BO2fG8n5Za1r06U3lG-2rvcdqZmyiwpKbk18Bpn8Z6GtX80NzETCsu7RoWMylVzeCHfuaAVkRXxFuaDSLs8vMTc';
@@ -64,9 +66,11 @@ export class NotificationRegistrationService {
       });
 
       await this.registerToken(subscription.toJSON(), currentUser.id);
+      this.debugService.log('Subscribed to push notifications', subscription.toJSON());
       return true;
     } catch (error) {
       console.error('[Notification] Subscription failed:', error);
+      this.debugService.log('Subscription failed', error);
       return false;
     }
   }
@@ -83,8 +87,10 @@ export class NotificationRegistrationService {
 
     try {
       await firstValueFrom(this.apiService.post('/notifications/register', payload));
+      this.debugService.log('Token registered with backend');
     } catch (error) {
       console.error('[Notification] Backend registration failed:', error);
+      this.debugService.log('Backend registration failed', error);
       throw error;
     }
   }

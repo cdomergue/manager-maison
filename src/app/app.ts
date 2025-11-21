@@ -5,6 +5,7 @@ import { LoadingService } from './services/loading.service';
 import { NgOptimizedImage } from '@angular/common';
 import { PwaUpdateService } from './services/pwa-update.service';
 import { ThemeService } from './services/theme.service';
+import { DebugService } from './services/debug.service';
 
 @Component({
   selector: 'app-root',
@@ -27,4 +28,16 @@ export class App {
 
   // Signaux pour le thème
   protected readonly isDarkMode = computed(() => this.themeService.isDarkMode());
+
+  private readonly debugService = inject(DebugService);
+
+  constructor() {
+    if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
+      navigator.serviceWorker.addEventListener('message', (event) => {
+        if (event.data && event.data.type === 'DEBUG_LOG') {
+          this.debugService.log(event.data.message, event.data.details);
+        }
+      });
+    }
+  }
 }

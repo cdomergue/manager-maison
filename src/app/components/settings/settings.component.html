@@ -140,6 +140,29 @@
     </div>
   </div>
 
+  <!-- Debug Logs -->
+  <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
+    <h3
+      class="text-xl font-semibold text-gray-800 dark:text-white mb-4 pb-2 border-b-2 border-gray-200 dark:border-gray-600"
+    >
+      Logs de débogage
+    </h3>
+    <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 space-y-2 max-h-60 overflow-y-auto font-mono text-xs">
+      @if (logs().length === 0) {
+        <p class="text-gray-500 dark:text-gray-400 italic">Aucun log pour le moment.</p>
+      }
+      @for (log of logs(); track log.timestamp) {
+        <div class="border-b border-gray-200 dark:border-gray-600 last:border-0 pb-2">
+          <span class="text-gray-500 dark:text-gray-400">[{{ log.timestamp | date: "HH:mm:ss" }}]</span>
+          <span class="font-bold text-blue-600 dark:text-blue-400"> {{ log.message }}</span>
+          @if (log.details) {
+            <pre class="mt-1 text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{{ log.details | json }}</pre>
+          }
+        </div>
+      }
+    </div>
+  </div>
+
   <!-- Informations -->
   <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
     <h3

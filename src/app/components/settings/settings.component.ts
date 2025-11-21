@@ -5,6 +5,7 @@ import { RouterModule } from '@angular/router';
 import { StorageService } from '../../services/storage.service';
 import { ApiService } from '../../services/api.service';
 import { Theme, ThemeService } from '../../services/theme.service';
+import { DebugService } from '../../services/debug.service';
 
 @Component({
   selector: 'app-settings',
@@ -32,6 +33,9 @@ export class SettingsComponent implements OnInit {
   private storageService = inject(StorageService);
   private apiService = inject(ApiService);
   private themeService = inject(ThemeService);
+  private debugService = inject(DebugService);
+
+  logs = this.debugService.logs;
 
   ngOnInit(): void {
     this.updateStorageInfo();
