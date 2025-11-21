@@ -28,11 +28,21 @@ const RECURRENCE_FREQUENCY = {
  * @returns {boolean}
  */
 function isValidNotificationToken(token) {
-  if (!token || typeof token !== "string") {
+  if (!token) {
     return false;
   }
-  // Les tokens FCM/VAPID sont généralement assez longs
-  return token.length > 20;
+
+  // Si c'est un objet (PushSubscriptionJSON), on vérifie qu'il a un endpoint
+  if (typeof token === "object") {
+    return !!token.endpoint;
+  }
+
+  // Si c'est une chaîne, on vérifie la longueur
+  if (typeof token === "string") {
+    return token.length > 20;
+  }
+
+  return false;
 }
 
 /**

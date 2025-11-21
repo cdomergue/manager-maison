@@ -881,8 +881,8 @@ exports.deleteReminderNote = async (event) => {
 exports.triggerReminders = async (event) => {
   try {
     console.log("Checking for reminders to trigger...");
-    console.log("Current time (ISO):", now.toISOString());
     const now = new Date();
+    console.log("Current time (ISO):", now.toISOString());
 
     const result = await dynamodb
       .scan({
