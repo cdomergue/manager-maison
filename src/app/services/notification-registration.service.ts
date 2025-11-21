@@ -53,10 +53,13 @@ export class NotificationRegistrationService {
     if (!isPlatformBrowser(this.platformId)) return false;
 
     const currentUser = this.userService.getCurrentUser();
-    if (!currentUser) return false;
+    if (!currentUser) {
+      this.debugService.log('Subscription failed: No user logged in');
+      return false;
+    }
 
     if (!this.swPush.isEnabled) {
-      console.warn('[Notification] Service Worker disabled.');
+      this.debugService.log('Subscription failed: Service Worker disabled or not supported');
       return false;
     }
 
@@ -69,7 +72,6 @@ export class NotificationRegistrationService {
       this.debugService.log('Subscribed to push notifications', subscription.toJSON());
       return true;
     } catch (error) {
-      console.error('[Notification] Subscription failed:', error);
       this.debugService.log('Subscription failed', error);
       return false;
     }
@@ -89,7 +91,6 @@ export class NotificationRegistrationService {
       await firstValueFrom(this.apiService.post('/notifications/register', payload));
       this.debugService.log('Token registered with backend');
     } catch (error) {
-      console.error('[Notification] Backend registration failed:', error);
       this.debugService.log('Backend registration failed', error);
       throw error;
     }
@@ -108,9 +109,9 @@ export class NotificationRegistrationService {
 
       await firstValueFrom(this.apiService.delete('/notifications/unregister'));
 
-      console.log('Token unregistered successfully');
+      this.debugService.log('Token unregistered successfully');
     } catch (error) {
-      console.error('Error unregistering notification token:', error);
+      this.debugService.log('Error unregistering notification token', error);
       throw error;
     }
   }
@@ -150,14 +151,14 @@ export class NotificationRegistrationService {
         await registration.showNotification(title, options);
         return;
       } catch (error) {
-        console.warn('[Notification] SW method failed, falling back to native constructor', error);
+        this.debugService.log('SW method failed, falling back to native constructor', error);
       }
     }
 
     try {
       new Notification(title, options);
     } catch (error) {
-      console.error('[Notification] All methods failed', error);
+      this.debugService.log('All methods failed', error);
     }
   }
 }
