@@ -72,7 +72,7 @@ export class ReminderNotesComponent {
     this.editReminderForm = this.createReminderForm();
 
     // Demander la permission de notification au démarrage
-    this.requestNotificationPermission();
+    // this.requestNotificationPermission(); // Removed: requires user gesture
   }
 
   private createReminderForm(): ReminderNoteForm {
@@ -89,6 +89,21 @@ export class ReminderNotesComponent {
     });
   }
 
+  async enableNotifications(): Promise<void> {
+    try {
+      const granted = await this.notificationService.requestPermissionAndRegister();
+      if (granted) {
+        alert('Notifications activées avec succès !');
+      } else {
+        alert("Impossible d'activer les notifications. Vérifiez vos paramètres.");
+      }
+    } catch (error) {
+      console.error('Failed to enable notifications:', error);
+      alert("Erreur lors de l'activation des notifications");
+    }
+  }
+
+  // Old method kept for reference or if needed internally, but not called on init
   async requestNotificationPermission(): Promise<void> {
     try {
       await this.notificationService.requestPermissionAndRegister();
