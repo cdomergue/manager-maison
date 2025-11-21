@@ -71,7 +71,36 @@ export class NotificationRegistrationService {
       await this.registerToken(subscription.toJSON(), currentUser.id);
       this.debugService.log('Subscribed to push notifications', subscription.toJSON());
       return true;
-    } catch (error) {
+    } catch (error: unknown) {
+      // Handle VAPID key mismatch
+      if (
+        error instanceof Error &&
+        (error.name === 'InvalidStateError' || error.message?.includes('applicationServerKey'))
+      ) {
+        this.debugService.log('VAPID key mismatch detected. Unsubscribing and retrying...');
+        try {
+          // Force unsubscribe
+          const reg = await navigator.serviceWorker.getRegistration();
+          const sub = await reg?.pushManager.getSubscription();
+          if (sub) {
+            await sub.unsubscribe();
+            this.debugService.log('Old subscription removed.');
+          }
+
+          // Retry subscription
+          const subscription: PushSubscription = await this.swPush.requestSubscription({
+            serverPublicKey: this.VAPID_PUBLIC_KEY,
+          });
+
+          await this.registerToken(subscription.toJSON(), currentUser.id);
+          this.debugService.log('Subscribed to push notifications (after retry)', subscription.toJSON());
+          return true;
+        } catch (retryError) {
+          this.debugService.log('Retry subscription failed', retryError);
+          return false;
+        }
+      }
+
       this.debugService.log('Subscription failed', error);
       return false;
     }
