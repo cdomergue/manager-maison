@@ -748,7 +748,7 @@ exports.createReminderNote = async (event) => {
       return response(400, { error: "Invalid JSON format" });
     }
 
-    const { title, content, reminderDate, reminderTime, isRecurring, recurrenceRule } = body;
+    const { title, content, reminderDate, reminderTime, isRecurring, recurrenceRule, alertBeforeMinutes } = body;
 
     if (!title || !title.trim()) {
       console.warn(`Validation Error: Title is missing or empty. Received: "${title}"`);
@@ -791,6 +791,7 @@ exports.createReminderNote = async (event) => {
       reminderTime,
       isRecurring: !!isRecurring,
       recurrenceRule: isRecurring ? recurrenceRule : undefined,
+      alertBeforeMinutes: alertBeforeMinutes ? Number(alertBeforeMinutes) : 0,
       status: REMINDER_STATUS.ACTIVE,
       createdAt: now,
       updatedAt: now,
@@ -831,6 +832,8 @@ exports.updateReminderNote = async (event) => {
 
     const newIsRecurring = body.isRecurring !== undefined ? body.isRecurring : existing.Item.isRecurring;
     const newRecurrenceRule = body.recurrenceRule || existing.Item.recurrenceRule;
+    const newAlertBeforeMinutes =
+      body.alertBeforeMinutes !== undefined ? Number(body.alertBeforeMinutes) : existing.Item.alertBeforeMinutes;
 
     if (newIsRecurring && !isValidRecurrenceRule(newRecurrenceRule)) {
       return response(400, { error: ERROR_MESSAGES.REMINDER_INVALID_RECURRENCE });
@@ -844,6 +847,7 @@ exports.updateReminderNote = async (event) => {
       reminderTime: newTime,
       isRecurring: newIsRecurring,
       recurrenceRule: newIsRecurring ? newRecurrenceRule : undefined,
+      alertBeforeMinutes: newAlertBeforeMinutes || 0,
       status: REMINDER_STATUS.ACTIVE,
       updatedAt: new Date().toISOString(),
     };

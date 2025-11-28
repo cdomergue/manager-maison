@@ -193,6 +193,12 @@ function shouldTriggerReminder(reminderNote, now = new Date()) {
   }
 
   const reminderDateTime = new Date(`${reminderNote.reminderDate}T${reminderNote.reminderTime}`);
+
+  // Ajuster pour le rappel en avance si configuré
+  if (reminderNote.alertBeforeMinutes && reminderNote.alertBeforeMinutes > 0) {
+    reminderDateTime.setMinutes(reminderDateTime.getMinutes() - reminderNote.alertBeforeMinutes);
+  }
+
   const parisTimeStr = now.toLocaleString("en-US", { timeZone: "Europe/Paris" });
   const nowInParisContext = new Date(parisTimeStr);
 

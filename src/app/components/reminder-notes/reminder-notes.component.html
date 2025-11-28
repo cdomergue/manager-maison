@@ -119,6 +119,26 @@
       </div>
 
       <div>
+        <label for="alertBeforeMinutes" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          Rappel à l'avance
+        </label>
+        <select
+          id="alertBeforeMinutes"
+          formControlName="alertBeforeMinutes"
+          class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+        >
+          <option [ngValue]="0">À l'heure du rappel</option>
+          <option [ngValue]="5">5 minutes avant</option>
+          <option [ngValue]="10">10 minutes avant</option>
+          <option [ngValue]="15">15 minutes avant</option>
+          <option [ngValue]="30">30 minutes avant</option>
+          <option [ngValue]="60">1 heure avant</option>
+          <option [ngValue]="120">2 heures avant</option>
+          <option [ngValue]="1440">1 jour avant</option>
+        </select>
+      </div>
+
+      <div>
         <label class="flex items-center gap-2 cursor-pointer">
           <input
             type="checkbox"
@@ -243,6 +263,29 @@
                 formControlName="reminderTime"
                 class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
               />
+            </div>
+
+            <div>
+              <label
+                for="editAlertBeforeMinutes"
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              >
+                Rappel à l'avance
+              </label>
+              <select
+                id="editAlertBeforeMinutes"
+                formControlName="alertBeforeMinutes"
+                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+              >
+                <option [ngValue]="0">À l'heure du rappel</option>
+                <option [ngValue]="5">5 minutes avant</option>
+                <option [ngValue]="10">10 minutes avant</option>
+                <option [ngValue]="15">15 minutes avant</option>
+                <option [ngValue]="30">30 minutes avant</option>
+                <option [ngValue]="60">1 heure avant</option>
+                <option [ngValue]="120">2 heures avant</option>
+                <option [ngValue]="1440">1 jour avant</option>
+              </select>
             </div>
 
             <div class="flex gap-2">

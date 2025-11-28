@@ -86,6 +86,7 @@ export class ReminderNotesComponent {
       recurrenceInterval: [1, [Validators.min(1)]],
       recurrenceDaysOfWeek: [[] as number[]],
       recurrenceEndDate: [null as string | null],
+      alertBeforeMinutes: [0],
     });
   }
 
@@ -130,6 +131,7 @@ export class ReminderNotesComponent {
         reminderDate: formValue.reminderDate,
         reminderTime: formValue.reminderTime,
         isRecurring: formValue.isRecurring || false,
+        alertBeforeMinutes: formValue.alertBeforeMinutes || 0,
       };
 
       if (data.isRecurring) {
@@ -171,6 +173,7 @@ export class ReminderNotesComponent {
       recurrenceInterval: note.recurrenceRule?.interval || 1,
       recurrenceDaysOfWeek: note.recurrenceRule?.daysOfWeek || [],
       recurrenceEndDate: note.recurrenceRule?.endDate || null,
+      alertBeforeMinutes: note.alertBeforeMinutes || 0,
     });
 
     this.showEditRecurrenceOptions.set(note.isRecurring);
@@ -192,6 +195,7 @@ export class ReminderNotesComponent {
         reminderDate: formValue.reminderDate ?? undefined,
         reminderTime: formValue.reminderTime ?? undefined,
         isRecurring: formValue.isRecurring ?? undefined,
+        alertBeforeMinutes: formValue.alertBeforeMinutes ?? undefined,
       };
 
       if (data.isRecurring) {

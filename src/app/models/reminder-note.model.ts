@@ -7,6 +7,7 @@ export interface ReminderNote {
   reminderTime: string; // HH:mm
   isRecurring: boolean;
   recurrenceRule?: RecurrenceRule;
+  alertBeforeMinutes?: number;
   status: 'active' | 'triggered' | 'cancelled';
   createdAt: string;
   updatedAt: string;
@@ -26,6 +27,7 @@ export interface CreateReminderNoteData {
   reminderTime: string;
   isRecurring: boolean;
   recurrenceRule?: RecurrenceRule;
+  alertBeforeMinutes?: number;
 }
 
 export interface UpdateReminderNoteData {
@@ -35,6 +37,7 @@ export interface UpdateReminderNoteData {
   reminderTime?: string;
   isRecurring?: boolean;
   recurrenceRule?: RecurrenceRule;
+  alertBeforeMinutes?: number;
 }
 
 // Types pour les Reactive Forms typés
@@ -50,6 +53,7 @@ export type ReminderNoteForm = FormGroup<{
   recurrenceInterval: FormControl<number | null>;
   recurrenceDaysOfWeek: FormControl<number[] | null>;
   recurrenceEndDate: FormControl<string | null>;
+  alertBeforeMinutes: FormControl<number | null>;
 }>;
 
 // Helper pour formater la date de rappel
