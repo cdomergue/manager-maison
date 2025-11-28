@@ -15,18 +15,18 @@ import { DebugService } from './services/debug.service';
 })
 export class App {
   protected readonly loading = inject(LoadingService);
-  // BackgroundCheckService temporairement désactivé (polling tâches)
+  // BackgroundCheckService temporarily disabled (task polling)
   // private readonly backgroundCheckService = inject(BackgroundCheckService);
-  // Injection pour initialiser le suivi des mises à jour PWA
+  // Injection to initialize PWA update tracking
   private readonly pwaUpdateService = inject(PwaUpdateService);
-  // Service de thème exposé pour le template
+  // Theme service exposed for the template
   protected readonly themeService = inject(ThemeService);
 
-  // Signaux globaux pour l'état du serveur
+  // Global signals for server state
   // protected readonly isCheckingBackground = computed(() => this.backgroundCheckService.isCheckingBackground());
   // protected readonly lastBackgroundCheck = computed(() => this.backgroundCheckService.lastCheck());
 
-  // Signaux pour le thème
+  // Signals for the theme
   protected readonly isDarkMode = computed(() => this.themeService.isDarkMode());
 
   private readonly debugService = inject(DebugService);

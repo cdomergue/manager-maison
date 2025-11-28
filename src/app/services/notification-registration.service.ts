@@ -6,7 +6,7 @@ import { ApiService } from './api.service';
 import { UserService } from './user.service';
 import { DebugService } from './debug.service';
 
-// Interface pour typer l'envoi au backend
+// Interface to type the payload sent to the backend
 interface NotificationRegisterPayload {
   token: PushSubscriptionJSON;
   deviceId: string;
@@ -127,7 +127,7 @@ export class NotificationRegistrationService {
 
   async unregister(): Promise<void> {
     try {
-      // On désabonne localement le SW pour être propre
+      // Unsubscribe locally from SW to be clean
       if (this.swPush.isEnabled) {
         await this.swPush.unsubscribe();
       }
@@ -153,12 +153,12 @@ export class NotificationRegistrationService {
   }
 
   /**
-   * Affiche une notification de test (Compatible Android & PC)
+   * Displays a test notification (Android & PC compatible)
    */
   async showTestNotification(): Promise<void> {
     if (!isPlatformBrowser(this.platformId)) return;
 
-    // 1. Demander la permission si nécessaire
+    // 1. Request permission if necessary
     if (this.permissionStatus !== 'granted') {
       const result = await Notification.requestPermission();
       if (result !== 'granted') return;

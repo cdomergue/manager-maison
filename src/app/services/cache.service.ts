@@ -21,10 +21,10 @@ export class CacheService {
   private api = inject(ApiService);
 
   private readonly CACHE_KEY = 'lambda_cache_data';
-  private readonly CACHE_EXPIRY_HOURS = 24; // Cache valide 24h
+  private readonly CACHE_EXPIRY_HOURS = 24; // Cache valid for 24h
 
   /**
-   * Charge les données depuis le cache si disponible et valide
+   * Load data from cache if available and valid
    */
   async loadFromCache(): Promise<CacheData | null> {
     const cached = this.storage.getItem<CacheData>(this.CACHE_KEY);
@@ -34,7 +34,7 @@ export class CacheService {
       return null;
     }
 
-    // Vérifier si le cache n'est pas expiré
+    // Check if cache is not expired
     const lastUpdated = new Date(cached.lastUpdated);
     const now = new Date();
     const hoursDiff = (now.getTime() - lastUpdated.getTime()) / (1000 * 60 * 60);
@@ -49,7 +49,7 @@ export class CacheService {
   }
 
   /**
-   * Sauvegarde les données dans le cache
+   * Save data to cache
    */
   saveToCache(data: Omit<CacheData, 'lastUpdated'>): void {
     const cacheData: CacheData = {
@@ -62,7 +62,7 @@ export class CacheService {
   }
 
   /**
-   * Charge les données depuis la lambda et met à jour le cache
+   * Load data from lambda and update cache
    */
   async refreshFromLambda(): Promise<CacheData> {
     console.log('Mise à jour depuis la lambda...');
@@ -92,31 +92,31 @@ export class CacheService {
   }
 
   /**
-   * Charge les données : d'abord depuis le cache, puis mise à jour depuis la lambda
+   * Load data: first from cache, then update from lambda
    */
   async loadData(): Promise<CacheData> {
-    // Essayer de charger depuis le cache
+    // Try to load from cache
     const cached = await this.loadFromCache();
 
     if (cached) {
-      // Charger les données du cache immédiatement
+      // Load cache data immediately
       console.log('Données chargées depuis le cache');
 
-      // Mettre à jour depuis la lambda en arrière-plan (sans bloquer)
+      // Update from lambda in background (non-blocking)
       this.refreshFromLambda().catch((error) => {
         console.warn('Échec de la mise à jour en arrière-plan:', error);
       });
 
       return cached;
     } else {
-      // Pas de cache valide, charger depuis la lambda
+      // No valid cache, load from lambda
       console.log('Chargement depuis la lambda...');
       return await this.refreshFromLambda();
     }
   }
 
   /**
-   * Vide le cache
+   * Clear cache
    */
   clearCache(): void {
     this.storage.removeItem(this.CACHE_KEY);
@@ -124,7 +124,7 @@ export class CacheService {
   }
 
   /**
-   * Vérifie si le cache existe et est valide
+   * Check if cache exists and is valid
    */
   hasValidCache(): boolean {
     const cached = this.storage.getItem<CacheData>(this.CACHE_KEY);

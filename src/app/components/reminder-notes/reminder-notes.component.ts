@@ -26,21 +26,21 @@ export class ReminderNotesComponent {
   private notificationService = inject(NotificationRegistrationService);
   private fb = inject(FormBuilder);
 
-  // Formulaires
+  // Forms
   newReminderForm: ReminderNoteForm;
   editReminderForm: ReminderNoteForm;
 
-  // État
+  // State
   editingId = signal<string | null>(null);
   filterStatus = signal<'all' | 'active' | 'triggered'>('active');
   showRecurrenceOptions = signal(false);
   showEditRecurrenceOptions = signal(false);
 
-  // Données
+  // Data
   reminderNotes = this.reminderNotesService.reminderNotes;
   myReminders = this.reminderNotesService.myReminders;
 
-  // Notes filtrées
+  // Filtered notes
   filteredReminders = computed(() => {
     const filter = this.filterStatus();
     const notes = this.myReminders();
@@ -49,13 +49,13 @@ export class ReminderNotesComponent {
     return notes.filter((note) => note.status === filter);
   });
 
-  // Helpers exposés au template
+  // Helpers exposed to the template
   formatDateTime = formatReminderDateTime;
   isImminent = isReminderImminent;
   getTimeUntil = getTimeUntilReminder;
   getRecurrenceText = getRecurrenceLabel;
 
-  // Jours de la semaine pour la sélection
+  // Days of the week for selection
   weekDays = [
     { value: 1, label: 'Lun' },
     { value: 2, label: 'Mar' },
@@ -67,11 +67,11 @@ export class ReminderNotesComponent {
   ];
 
   constructor() {
-    // Initialiser les formulaires
+    // Initialize forms
     this.newReminderForm = this.createReminderForm();
     this.editReminderForm = this.createReminderForm();
 
-    // Demander la permission de notification au démarrage
+    // Request notification permission on startup
     // this.requestNotificationPermission(); // Removed: requires user gesture
   }
 
@@ -147,7 +147,7 @@ export class ReminderNotesComponent {
       this.newReminderForm.reset();
       this.showRecurrenceOptions.set(false);
 
-      // Fermer l'expansion panel si présent
+      // Close expansion panel if present
       try {
         const panel = document.querySelector('details') as HTMLDetailsElement | null;
         if (panel) panel.open = false;
@@ -280,7 +280,7 @@ export class ReminderNotesComponent {
   }
 
   getMinDate(): string {
-    // Date minimale = aujourd'hui
+    // Minimum date = today
     return new Date().toISOString().split('T')[0];
   }
 
@@ -288,7 +288,7 @@ export class ReminderNotesComponent {
     const selectedDate = form.get('reminderDate')?.value;
     const today = new Date().toISOString().split('T')[0];
 
-    // Si la date sélectionnée est aujourd'hui, heure minimale = maintenant
+    // If selected date is today, minimum time = now
     if (selectedDate === today) {
       const now = new Date();
       return `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;

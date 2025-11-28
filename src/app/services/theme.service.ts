@@ -10,13 +10,13 @@ export class ThemeService {
   private readonly THEME_KEY = 'app_theme';
   private storageService = inject(StorageService);
 
-  // Signal pour le thème sélectionné par l'utilisateur
+  // Signal for the theme selected by the user
   private selectedThemeSignal = signal<Theme>('auto');
 
-  // Signal pour détecter la préférence système
+  // Signal to detect system preference
   private systemPrefersDarkSignal = signal<boolean>(false);
 
-  // Signal calculé pour le thème effectif appliqué
+  // Computed signal for the effective applied theme
   readonly effectiveTheme = computed(() => {
     const selected = this.selectedThemeSignal();
     if (selected === 'auto') {
@@ -25,10 +25,10 @@ export class ThemeService {
     return selected;
   });
 
-  // Signal en lecture seule pour le thème sélectionné
+  // Read-only signal for the selected theme
   readonly selectedTheme = this.selectedThemeSignal.asReadonly();
 
-  // Signal calculé pour savoir si le mode sombre est actif
+  // Computed signal to know if dark mode is active
   readonly isDarkMode = computed(() => this.effectiveTheme() === 'dark');
 
   constructor() {
@@ -37,20 +37,20 @@ export class ThemeService {
   }
 
   private initializeTheme(): void {
-    // Charger la préférence sauvegardée
+    // Load saved preference
     const savedTheme = this.storageService.getItem<Theme>(this.THEME_KEY);
     if (savedTheme && ['light', 'dark', 'auto'].includes(savedTheme)) {
       this.selectedThemeSignal.set(savedTheme);
     } else {
-      // Premier utilisateur - définir automatique par défaut et le sauvegarder
+      // First user - set automatic by default and save it
       this.selectedThemeSignal.set('auto');
       this.storageService.setItem(this.THEME_KEY, 'auto');
     }
 
-    // Détecter la préférence système initiale
+    // Detect initial system preference
     this.updateSystemPreference();
 
-    // Appliquer le thème initial
+    // Apply initial theme
     this.applyTheme();
   }
 
@@ -58,7 +58,7 @@ export class ThemeService {
     if (typeof window !== 'undefined' && window.matchMedia) {
       const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
 
-      // Écouter les changements de préférence système
+      // Listen for system preference changes
       mediaQuery.addEventListener('change', (e) => {
         this.systemPrefersDarkSignal.set(e.matches);
         this.applyTheme();
@@ -83,7 +83,7 @@ export class ThemeService {
         document.documentElement.classList.remove('dark');
       }
 
-      // Mettre à jour la couleur du thème pour la barre d'état mobile
+      // Update theme color for mobile status bar
       const metaThemeColor = document.querySelector('meta[name="theme-color"]');
       if (metaThemeColor) {
         metaThemeColor.setAttribute('content', isDark ? '#1f2937' : '#3b82f6');

@@ -23,10 +23,10 @@ export class ShoppingListService {
   readonly isUsingApi = computed(() => !this.useLocalStorageSignal());
 
   constructor() {
-    // Charger d'abord depuis le cache si disponible
+    // Load from cache first if available
     this.loadFromCache();
 
-    // Décider du mode de synchronisation en fonction de l'API
+    // Decide synchronization mode based on API
     this.api.getConnectionStatus().subscribe((isConnected) => {
       this.useLocalStorageSignal.set(!isConnected);
       if (isConnected) {
@@ -72,7 +72,7 @@ export class ShoppingListService {
     this.api.getShoppingList().subscribe((list) => this.currentListSignal.set(list));
   }
 
-  // Permet de forcer un rafraîchissement depuis la source active (API ou storage)
+  // Force refresh from active source (API or storage)
   refreshFromApi(): void {
     if (this.useLocalStorageSignal()) {
       this.loadFromStorage();
@@ -100,7 +100,7 @@ export class ShoppingListService {
         created = item;
         this.itemsSignal.set([item, ...this.itemsSignal()]);
       });
-      // Retour optimiste si besoin
+      // Optimistic return if needed
       return created || ({ id: 'pending', name: trimmed, category } as ShoppingItem);
     }
   }
@@ -115,7 +115,7 @@ export class ShoppingListService {
     };
 
     if (this.useLocalStorageSignal()) {
-      // Mettre à jour le catalogue
+      // Update catalog
       const updatedItems = this.itemsSignal().map((i) =>
         i.id === itemId
           ? {
@@ -127,7 +127,7 @@ export class ShoppingListService {
       );
       this.itemsSignal.set(updatedItems);
 
-      // Mettre à jour le nom dans les entrées de liste courante associées
+      // Update name in associated current list entries
       const updatedList = this.currentListSignal().map((e) =>
         e.itemId === itemId
           ? {
@@ -143,7 +143,7 @@ export class ShoppingListService {
         // Catalogue
         const updatedItems = this.itemsSignal().map((i) => (i.id === itemId ? serverItem : i));
         this.itemsSignal.set(updatedItems);
-        // Liste courante (synchroniser le nom)
+        // Current list (synchronize name)
         if (serverItem.name) {
           const updatedList = this.currentListSignal().map((e) =>
             e.itemId === itemId ? { ...e, name: serverItem.name } : e,
@@ -191,7 +191,7 @@ export class ShoppingListService {
       this.persist();
     } else {
       this.api.addShoppingEntry(itemId, quantity).subscribe((entry) => {
-        // Si l'API a agrégé, remplacer/mettre à jour l'entrée
+        // If API aggregated, replace/update entry
         const idx = this.currentListSignal().findIndex((e) => e.id === entry.id);
         if (idx !== -1) {
           const updated = [...this.currentListSignal()];

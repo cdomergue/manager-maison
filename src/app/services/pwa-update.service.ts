@@ -20,7 +20,7 @@ export class PwaUpdateService {
     this.swUpdate.versionUpdates.subscribe((event: VersionEvent) => {
       switch (event.type) {
         case 'VERSION_READY':
-          // Une nouvelle version est prête: on l'active puis on recharge l'application
+          // A new version is ready: activate it and reload the application
           this.activateAndReload();
           break;
         case 'VERSION_INSTALLATION_FAILED':
@@ -34,17 +34,17 @@ export class PwaUpdateService {
   }
 
   private setupProactiveChecks(): void {
-    // Vérification au focus de la fenêtre
+    // Check on window focus
     window.addEventListener('focus', () => {
       void this.safeCheckForUpdate();
     });
 
-    // Vérification quand on revient en ligne
+    // Check when back online
     window.addEventListener('online', () => {
       void this.safeCheckForUpdate();
     });
 
-    // Vérification périodique (toutes les 6 heures)
+    // Periodic check (every 6 hours)
     const sixHoursMs = 6 * 60 * 60 * 1000;
     window.setInterval(() => {
       void this.safeCheckForUpdate();
@@ -55,7 +55,7 @@ export class PwaUpdateService {
     try {
       await this.swUpdate.checkForUpdate();
     } catch {
-      // Silencieux: peut échouer si offline ou si le SW n'est pas encore prêt
+      // Silent: may fail if offline or if SW is not ready yet
     }
   }
 
@@ -63,7 +63,7 @@ export class PwaUpdateService {
     try {
       const activated = await this.swUpdate.activateUpdate();
       if (activated) {
-        // Recharger pour servir les nouveaux assets
+        // Reload to serve new assets
         location.reload();
       }
     } catch (err) {

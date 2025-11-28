@@ -41,7 +41,7 @@ export class RecipeService {
   private loadFromAPI(): void {
     this.api.getRecipes().subscribe({
       next: (recipes) => {
-        // normaliser dates
+        // normalize dates
         const normalized = (recipes as Recipe[]).map((r) => ({
           ...r,
           createdAt: new Date((r as Recipe & { createdAt: string }).createdAt),
@@ -59,7 +59,7 @@ export class RecipeService {
   private loadFromLocal(): void {
     const stored = this.storage.getItem<Recipe[]>(this.STORAGE_KEY);
     if (stored) {
-      // Convertir les dates string en Date objects
+      // Convert string dates to Date objects
       const recipes = stored.map((recipe) => ({
         ...recipe,
         createdAt: new Date(recipe.createdAt),
@@ -151,23 +151,23 @@ export class RecipeService {
     }
   }
 
-  // Ajouter tous les ingrédients d'une recette à la liste de courses
+  // Add all ingredients of a recipe to the shopping list
   addRecipeToShoppingList(recipeId: string): void {
     const recipe = this.recipesSignal().find((r) => r.id === recipeId);
     if (!recipe) return;
 
-    // Ajouter chaque ingrédient à la liste de courses
+    // Add each ingredient to the shopping list
     recipe.ingredients.forEach((ingredient) => {
       this.shoppingService.addToCurrentList(ingredient.itemId, ingredient.quantity);
     });
   }
 
-  // Obtenir une recette par ID
+  // Get a recipe by ID
   getRecipeById(id: string): Recipe | undefined {
     return this.recipesSignal().find((recipe) => recipe.id === id);
   }
 
-  // Rechercher des recettes par titre ou catégorie
+  // Search recipes by title or category
   searchRecipes(searchTerm: string): Recipe[] {
     const term = searchTerm.toLowerCase().trim();
     if (!term) return this.recipesSignal();
