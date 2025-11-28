@@ -1,98 +1,124 @@
-# TachesMenageres
+# Gestion Maison (Taches Ménagères)
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 20.1.4.
+Application de gestion de tâches ménagères, liste de courses, notes et recettes.
 
 ## Architecture
 
-The application is built with two deployment modes:
+Le projet utilise une architecture serverless moderne :
 
-### Production (AWS)
+- **Frontend** : Angular (hébergé sur AWS Amplify)
+- **Backend** : AWS Lambda + API Gateway + DynamoDB
+- **Stockage** :
+  - **Cloud** : DynamoDB (via Lambda) pour la persistance des données partagées.
+  - **Local** : LocalStorage pour le fonctionnement hors ligne et le fallback en cas d'indisponibilité du réseau.
 
-- Frontend: AWS Amplify
-- Backend: AWS Lambda + API Gateway
-- Automatic deployments from the main branch
+## Prérequis
 
-### Development
+- Node.js (>= 20.0.0)
+- NPM (>= 10.0.0)
+- Angular CLI (`npm install -g @angular/cli`)
 
-- Frontend: Angular development server
-- Backend: Unified Node.js server (static files + API)
-- All-in-one local development experience
+## Installation
 
-## Development Setup
+```bash
+npm install
+```
 
-1. **Install dependencies:**
+## Développement Local
+
+Pour lancer l'application en mode développement :
+
+```bash
+npm start
+```
+
+ou
+
+```bash
+ng serve
+```
+
+L'application sera accessible sur `http://localhost:4200/`.
+
+### Configuration de l'environnement
+
+- `src/environments/environment.ts` : Configuration de développement par défaut.
+- `src/environments/environment.prod.ts` : Configuration de production (utilisée par le build Amplify).
+- `src/environments/environment.prod.local.ts` : Configuration locale pointant vers l'API de production (pour tests spécifiques).
+
+## Build
+
+Pour construire l'application pour la production :
+
+```bash
+npm run build
+```
+
+Les fichiers compilés seront générés dans le dossier `dist/`.
+
+## Déploiement
+
+### Frontend
+
+Le frontend est configuré pour être déployé automatiquement via **AWS Amplify** à chaque push sur la branche principale (`main` ou `master`).
+
+### Backend (Lambda)
+
+Le code backend se trouve dans le dossier `lambda/`. Il contient le handler unique pour toutes les fonctions API.
+
+Pour déployer les mises à jour de la Lambda, il est nécessaire de charger les variables d'environnement secrètes (VAPID keys) avant de lancer le script.
+
+1. Créez un fichier `secret` à la racine du projet (s'il n'existe pas) avec le contenu suivant :
 
    ```bash
-   npm install
-   cd server && npm install
+   export VAPID_SUBJECT="mailto:votre-email@example.com"
+   export VAPID_PUBLIC_KEY="votre-cle-publique"
+   export VAPID_PRIVATE_KEY="votre-cle-privee"
    ```
 
-2. **Start the development server:**
-
-   ```bash
-   # In one terminal, start the unified server (API + static files)
-   cd server
-   npm run dev
-
-   # In another terminal, start the Angular development server
-   ng serve
-   ```
-
-The application will be available at:
-
-- Angular dev server: `http://localhost:4200/`
-- Unified server: `http://localhost:3001/`
-
-The application will automatically reload whenever you modify any of the source files.
-
-## Building
-
-### For Production (AWS)
+2. Lancez le déploiement en sourçant ce fichier :
 
 ```bash
-ng build
+source secret && ./deploy-lambda.sh
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. The build is automatically deployed to AWS Amplify when pushed to the main branch.
+Ce script met à jour le code de la fonction Lambda sur AWS.
 
-### For Development
+## Tests
+
+### Tests Unitaires
 
 ```bash
-ng build
-cd server
-npm run build-and-start
+npm test
 ```
 
-This will build the Angular app and serve it through the unified server.
+## Qualité du Code
 
-## Lambda Functions
-
-The `lambda/` directory contains AWS Lambda functions that provide the backend API in production. To deploy Lambda functions:
+### Linting
 
 ```bash
-./deploy-lambda.sh
+npm run lint
 ```
 
-## Running Tests
-
-### Unit Tests
+### Formatage
 
 ```bash
-ng test
+npm run format
 ```
 
-Executes unit tests via [Karma](https://karma-runner.github.io).
+## Notifications
 
-### End-to-End Tests
+L'application utilise un système de notifications push pour les rappels de tâches.
 
-```bash
-ng e2e
-```
+### Architecture
 
-Note: Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+- **Service Worker** : `src/sw-custom.js` gère la réception des notifications push en arrière-plan et leur affichage.
+- **Backend** : AWS Lambda utilise la bibliothèque `web-push` pour envoyer les notifications via le protocole VAPID.
+- **Amazon SNS** : Utilisé pour orchestrer l'envoi de messages (si configuré) ou pour des notifications système.
 
-## Additional Resources
+### Flux
 
-- [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli)
-- [AWS Amplify Documentation](https://docs.aws.amazon.com/amplify/)
-- [AWS Lambda Documentation](https://docs.aws.amazon.com/lambda/)
+1. L'utilisateur autorise les notifications dans le navigateur.
+2. Le Service Worker génère un token d'abonnement (PushSubscription).
+3. Ce token est envoyé au backend et stocké dans DynamoDB (`NOTIFICATION_TOKENS_TABLE_NAME`).
+4. La Lambda vérifie périodiquement les rappels à envoyer et utilise ces tokens pour pusher les notifications.
