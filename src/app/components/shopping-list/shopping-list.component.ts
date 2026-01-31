@@ -117,6 +117,12 @@ export class ShoppingListComponent {
     return groups;
   });
 
+  uniqueCategories = computed(() => {
+    const items = this.shopping.items();
+    const categories = new Set(items.map((i) => i.category).filter((c): c is string => !!c && c.trim() !== ''));
+    return Array.from(categories).sort();
+  });
+
   constructor() {
     effect((onCleanup) => {
       const enabled = this.autoRefresh();
