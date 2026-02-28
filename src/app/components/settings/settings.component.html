@@ -43,13 +43,6 @@
         <div
           class="flex items-center justify-between py-2 border-b border-gray-200 dark:border-gray-600 last:border-b-0"
         >
-          <span class="font-medium text-gray-700 dark:text-gray-300 min-w-[150px]">Tâches totales :</span>
-          <span class="font-semibold text-gray-900 dark:text-white">{{ serverStatus()?.totalTasks }}</span>
-        </div>
-
-        <div
-          class="flex items-center justify-between py-2 border-b border-gray-200 dark:border-gray-600 last:border-b-0"
-        >
           <span class="font-medium text-gray-700 dark:text-gray-300 min-w-[150px]">Dernière mise à jour :</span>
           <span class="font-semibold text-gray-900 dark:text-white">{{
             serverStatus()?.lastUpdated | date: "dd/MM/yyyy HH:mm"
@@ -176,11 +169,12 @@
         <ul class="list-none pl-0 space-y-1">
           @if (isServerConnected()) {
             <li class="text-gray-600 dark:text-gray-400 text-sm">
-              ✅ Mode serveur : Les données sont synchronisées avec le serveur local
+              ✅ Mode connecté : Vos listes, recettes et notes sont synchronisées en temps réel.
             </li>
           } @else {
             <li class="text-gray-600 dark:text-gray-400 text-sm">
-              ⚠️ Mode local : Les données sont stockées uniquement dans le navigateur
+              ⚠️ Mode hors ligne : Les modifications sont sauvegardées localement et seront automatiquement
+              synchronisées au retour de la connexion.
             </li>
           }
         </ul>
@@ -191,11 +185,11 @@
         <ul class="list-none pl-0 space-y-1">
           @if (isServerConnected()) {
             <li class="text-gray-600 dark:text-gray-400 text-sm">
-              ✅ Les tâches sont partagées entre tous les utilisateurs connectés au serveur
+              ✅ Les données sont partagées entre tous les utilisateurs connectés à la maison.
             </li>
           } @else {
             <li class="text-gray-600 dark:text-gray-400 text-sm">
-              ❌ Les tâches ne sont pas partagées (mode hors ligne)
+              ❌ Les données ne sont pas partagées temporairement (mode hors ligne).
             </li>
           }
         </ul>

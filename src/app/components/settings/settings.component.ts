@@ -88,7 +88,6 @@ export class SettingsComponent implements OnInit {
 }
 
 interface ServerStatus {
-  totalTasks: number;
   lastUpdated: string | Date;
   serverTime: string | Date;
 }
