@@ -8,6 +8,8 @@ import { ThemeService } from './services/theme.service';
 import { DebugService } from './services/debug.service';
 import { NotificationService } from './services/notification.service';
 import { ApiService } from './services/api.service';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { map } from 'rxjs';
 
 @Component({
   selector: 'app-root',
@@ -28,11 +30,9 @@ export class App {
   protected readonly notificationService = inject(NotificationService);
   protected readonly apiService = inject(ApiService);
 
-  // Track network status via signal-like observable mapping or direct signals
-  protected readonly isOffline = computed(() => {
-    let offline = false;
-    this.apiService.getConnectionStatus().subscribe((status) => (offline = !status));
-    return offline;
+  // Track network status
+  protected readonly isOffline = toSignal(this.apiService.getConnectionStatus().pipe(map((status) => !status)), {
+    initialValue: false,
   });
 
   // Global signals for server state
