@@ -170,11 +170,7 @@ export class ApiService {
 
   async getShoppingItemsAsync(): Promise<ShoppingItem[]> {
     try {
-      const response = await this.http
-        .get<ShoppingItem[]>(`${this.API_BASE_URL}/shopping/items`, {
-          headers: this.getHeaders(),
-        })
-        .toPromise();
+      const response = await this.get<ShoppingItem[]>('/shopping/items').toPromise();
       return response || [];
     } catch (error) {
       console.error('Erreur lors de la récupération des items de courses:', error);
@@ -184,11 +180,7 @@ export class ApiService {
 
   async getShoppingListAsync(): Promise<ShoppingListEntry[]> {
     try {
-      const response = await this.http
-        .get<ShoppingListEntry[]>(`${this.API_BASE_URL}/shopping/list`, {
-          headers: this.getHeaders(),
-        })
-        .toPromise();
+      const response = await this.get<ShoppingListEntry[]>('/shopping/list').toPromise();
       return response || [];
     } catch (error) {
       console.error('Erreur lors de la récupération de la liste de courses:', error);
@@ -226,11 +218,7 @@ export class ApiService {
 
   async getNotesAsync(): Promise<unknown[]> {
     try {
-      const response = await this.http
-        .get<unknown[]>(`${this.API_BASE_URL}/notes`, {
-          headers: this.getHeaders(),
-        })
-        .toPromise();
+      const response = await this.get<unknown[]>('/notes').toPromise();
       return response || [];
     } catch (error) {
       console.error('Erreur lors de la récupération des notes:', error);
@@ -263,11 +251,7 @@ export class ApiService {
 
   async getRecipesAsync(): Promise<unknown[]> {
     try {
-      const response = await this.http
-        .get<unknown[]>(`${this.API_BASE_URL}/recipes`, {
-          headers: this.getHeaders(),
-        })
-        .toPromise();
+      const response = await this.get<unknown[]>('/recipes').toPromise();
       return response || [];
     } catch (error) {
       console.error('Erreur lors de la récupération des recettes:', error);
@@ -288,7 +272,7 @@ export class ApiService {
   }
 
   // Gestion des erreurs
-  private handleError(error: HttpErrorResponse): Observable<never> {
+  private handleError = (error: HttpErrorResponse): Observable<never> => {
     let errorMessage = 'Une erreur est survenue';
 
     if (error.error instanceof ErrorEvent) {
@@ -337,5 +321,5 @@ export class ApiService {
 
     console.error('Erreur API:', errorMessage, error);
     return throwError(() => new Error(errorMessage));
-  }
+  };
 }
