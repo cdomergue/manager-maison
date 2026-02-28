@@ -6,6 +6,8 @@ import { NgOptimizedImage } from '@angular/common';
 import { PwaUpdateService } from './services/pwa-update.service';
 import { ThemeService } from './services/theme.service';
 import { DebugService } from './services/debug.service';
+import { NotificationService } from './services/notification.service';
+import { ApiService } from './services/api.service';
 
 @Component({
   selector: 'app-root',
@@ -21,6 +23,17 @@ export class App {
   private readonly pwaUpdateService = inject(PwaUpdateService);
   // Theme service exposed for the template
   protected readonly themeService = inject(ThemeService);
+
+  // Notification and Network status exposed for the template
+  protected readonly notificationService = inject(NotificationService);
+  protected readonly apiService = inject(ApiService);
+
+  // Track network status via signal-like observable mapping or direct signals
+  protected readonly isOffline = computed(() => {
+    let offline = false;
+    this.apiService.getConnectionStatus().subscribe((status) => (offline = !status));
+    return offline;
+  });
 
   // Global signals for server state
   // protected readonly isCheckingBackground = computed(() => this.backgroundCheckService.isCheckingBackground());

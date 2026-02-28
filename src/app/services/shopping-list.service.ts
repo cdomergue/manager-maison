@@ -2,13 +2,16 @@ import { computed, inject, Injectable, signal } from '@angular/core';
 import { StorageService } from './storage.service';
 import { ShoppingItem, ShoppingListEntry } from '../models/shopping-item.model';
 import { ApiService } from './api.service';
+import { firstValueFrom } from 'rxjs';
 import { CacheService } from './cache.service';
+import { NotificationService } from './notification.service';
 
 @Injectable({ providedIn: 'root' })
 export class ShoppingListService {
   private storage = inject(StorageService);
   private api = inject(ApiService);
   private cacheService = inject(CacheService);
+  private notificationService = inject(NotificationService);
 
   private readonly ITEMS_KEY = 'shopping_items_catalog';
   private readonly CURRENT_LIST_KEY = 'shopping_current_list';
@@ -26,12 +29,23 @@ export class ShoppingListService {
     // Load from cache first if available
     this.loadFromCache();
 
+    let wasOffline = false;
+
     // Decide synchronization mode based on API
     this.api.getConnectionStatus().subscribe((isConnected) => {
       this.useLocalStorageSignal.set(!isConnected);
       if (isConnected) {
-        this.loadFromApi();
+        if (wasOffline) {
+          // Si on revient en ligne, on synchronise les modifications locales
+          this.syncOfflineChanges().then(() => {
+            this.loadFromApi();
+          });
+        } else {
+          this.loadFromApi();
+        }
+        wasOffline = false;
       } else {
+        wasOffline = true;
         this.loadFromStorage();
       }
     });
@@ -213,9 +227,15 @@ export class ShoppingListService {
       this.currentListSignal.set(updated);
       this.persist();
     } else {
-      this.api.updateShoppingEntry(entryId, { quantity: newQty }).subscribe((updatedEntry) => {
-        const updated = this.currentListSignal().map((e) => (e.id === entryId ? updatedEntry : e));
-        this.currentListSignal.set(updated);
+      this.api.updateShoppingEntry(entryId, { quantity: newQty }).subscribe({
+        next: (updatedEntry) => {
+          const updated = this.currentListSignal().map((e) => (e.id === entryId ? updatedEntry : e));
+          this.currentListSignal.set(updated);
+        },
+        error: () => {
+          this.notificationService.showError('Échec de la mise à jour de la quantité');
+          this.refreshFromApi();
+        },
       });
     }
   }
@@ -229,9 +249,15 @@ export class ShoppingListService {
       this.currentListSignal.set(updated);
       this.persist();
     } else {
-      this.api.updateShoppingEntry(entryId, { checked: newChecked }).subscribe((updatedEntry) => {
-        const updated = this.currentListSignal().map((e) => (e.id === entryId ? updatedEntry : e));
-        this.currentListSignal.set(updated);
+      this.api.updateShoppingEntry(entryId, { checked: newChecked }).subscribe({
+        next: (updatedEntry) => {
+          const updated = this.currentListSignal().map((e) => (e.id === entryId ? updatedEntry : e));
+          this.currentListSignal.set(updated);
+        },
+        error: () => {
+          this.notificationService.showError("Échec de la mise à jour de l'article");
+          this.refreshFromApi();
+        },
       });
     }
   }
@@ -241,8 +267,14 @@ export class ShoppingListService {
       this.currentListSignal.set(this.currentListSignal().filter((e) => e.id !== entryId));
       this.persist();
     } else {
-      this.api.deleteShoppingEntry(entryId).subscribe(() => {
-        this.currentListSignal.set(this.currentListSignal().filter((e) => e.id !== entryId));
+      this.api.deleteShoppingEntry(entryId).subscribe({
+        next: () => {
+          this.currentListSignal.set(this.currentListSignal().filter((e) => e.id !== entryId));
+        },
+        error: () => {
+          this.notificationService.showError("Échec de la suppression de l'article");
+          this.refreshFromApi();
+        },
       });
     }
   }
@@ -266,6 +298,81 @@ export class ShoppingListService {
       this.api.clearAllShoppingList().subscribe(() => {
         this.currentListSignal.set([]);
       });
+    }
+  }
+
+  async syncOfflineChanges(): Promise<void> {
+    try {
+      this.notificationService.showInfo('Synchronisation en cours...');
+
+      const serverItems = await this.api.getShoppingItemsAsync();
+      const serverList = await this.api.getShoppingListAsync();
+
+      const localItems = this.itemsSignal();
+      const localList = this.currentListSignal();
+
+      // 1. Sync Catalog Items
+      // Si un item local n'est pas sur le serveur (basé sur le nom car l'ID local est temporaire), on le crée
+      // On garde une map des nouveaux IDs pour associer correctement la liste de courses
+      const nameToNewIdMap = new Map<string, string>();
+
+      for (const localItem of localItems) {
+        const found = serverItems.find((si) => si.name.toLowerCase() === localItem.name.toLowerCase());
+        if (!found) {
+          // Création serveur
+          const created = await firstValueFrom(this.api.createShoppingItem(localItem.name, localItem.category));
+          nameToNewIdMap.set(localItem.name, created.id);
+        } else {
+          nameToNewIdMap.set(localItem.name, found.id);
+        }
+      }
+
+      // 2. Sync Shopping List
+      for (const localEntry of localList) {
+        // L'ID associé via la map ci-dessus (qui correspond au vrai ID serveur)
+        const realItemId = nameToNewIdMap.get(localEntry.name) || localEntry.itemId;
+
+        // Chercher l'entrée sur le serveur par l'itemId
+        const serverEntry = serverList.find((se) => se.itemId === realItemId);
+
+        if (!serverEntry) {
+          // N'existe pas sur le serveur => Ajouté hors ligne
+          const createdEntry = await firstValueFrom(this.api.addShoppingEntry(realItemId, localEntry.quantity));
+          if (localEntry.checked) {
+            await firstValueFrom(this.api.updateShoppingEntry(createdEntry.id, { checked: true }));
+          }
+        } else {
+          // Existe sur le serveur => Résolution des conflits
+          let quantityToUpdate = undefined;
+          let checkedToUpdate = undefined;
+
+          // Règle 1: L'état "coché" est toujours prioritaire
+          if (localEntry.checked && !serverEntry.checked) {
+            checkedToUpdate = true;
+          }
+
+          // Règle 2: On prend la plus grande quantité
+          if (localEntry.quantity > serverEntry.quantity) {
+            quantityToUpdate = localEntry.quantity;
+          }
+
+          if (quantityToUpdate !== undefined || checkedToUpdate !== undefined) {
+            const patch: Partial<Pick<ShoppingListEntry, 'quantity' | 'checked'>> = {};
+            if (quantityToUpdate !== undefined) patch.quantity = quantityToUpdate;
+            if (checkedToUpdate !== undefined) patch.checked = checkedToUpdate;
+
+            await firstValueFrom(this.api.updateShoppingEntry(serverEntry.id, patch));
+          }
+        }
+      }
+
+      // 3. Cleanup local modifications
+      this.storage.removeItem(this.ITEMS_KEY);
+      this.storage.removeItem(this.CURRENT_LIST_KEY);
+      this.notificationService.showSuccess('Synchronisation hors-ligne terminée !');
+    } catch (e) {
+      console.error('Erreur lors de la synchronisation hors ligne:', e);
+      this.notificationService.showError('Erreur lors de la synchronisation de vos achats');
     }
   }
 }

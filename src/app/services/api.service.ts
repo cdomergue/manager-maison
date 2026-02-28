@@ -5,6 +5,7 @@ import { catchError } from 'rxjs/operators';
 import { ShoppingItem, ShoppingListEntry } from '../models/shopping-item.model';
 import { SKIP_GLOBAL_LOADING } from '../http/http-context.tokens';
 import { environment } from '../../environments/environment';
+import { NotificationService } from './notification.service';
 
 @Injectable({
   providedIn: 'root',
@@ -13,12 +14,37 @@ export class ApiService {
   // URL AWS Lambda en production, local en développement
   private readonly API_BASE_URL = this.getApiBaseUrl();
   private readonly YOU_KNOW_WHAT = '21cdf2c38551';
-  private connectionStatus = new BehaviorSubject<boolean>(false);
+  private connectionStatus = new BehaviorSubject<boolean>(true);
   private serverStatus = new BehaviorSubject<unknown | null>(null);
 
   private http = inject(HttpClient);
+  private notificationService = inject(NotificationService);
+
   constructor() {
     this.checkServerStatus();
+
+    // Écouteurs d'événements navigateur pour la détection dynamique du réseau
+    if (typeof window !== 'undefined') {
+      window.addEventListener('online', () => {
+        this.setConnection(true);
+        this.checkServerStatus(); // Re-vérifier l'API quand internet revient
+      });
+      window.addEventListener('offline', () => {
+        this.setConnection(false);
+      });
+    }
+  }
+
+  // Permet de forcer manuellement le statut (ex: suite à une erreur HTTP)
+  private setConnection(isOnline: boolean): void {
+    if (this.connectionStatus.value !== isOnline) {
+      this.connectionStatus.next(isOnline);
+      if (!isOnline) {
+        this.notificationService.showError('Réseau indisponible. Passage en mode hors ligne.', 5000);
+      } else {
+        this.notificationService.showSuccess('Réseau rétabli ! Mode en ligne actif.', 3000);
+      }
+    }
   }
 
   // Créer les headers avec le truc spécial
@@ -56,12 +82,12 @@ export class ApiService {
       .pipe(catchError(this.handleError))
       .subscribe({
         next: (status: unknown) => {
-          this.connectionStatus.next(true);
+          this.setConnection(true);
           this.serverStatus.next(status);
         },
         error: () => {
-          console.warn('Serveur non accessible');
-          this.connectionStatus.next(false);
+          console.warn('Serveur non accessible (check initial)');
+          this.setConnection(false);
           this.serverStatus.next(null);
         },
       });
@@ -76,11 +102,11 @@ export class ApiService {
           context: new HttpContext().set(SKIP_GLOBAL_LOADING, true),
         })
         .toPromise();
-      this.connectionStatus.next(true);
+      this.setConnection(true);
       this.serverStatus.next(status ?? null);
       return true;
     } catch {
-      this.connectionStatus.next(false);
+      this.setConnection(false);
       this.serverStatus.next(null);
       return false;
     }
@@ -293,6 +319,20 @@ export class ApiService {
           errorMessage += ` - ${errorBody}`;
         }
       }
+    }
+
+    // Basculer en mode hors ligne si l'erreur ressemble à une perte de connexion
+    if (error.status === 0 || error.status === 504 || error.status === 502) {
+      if (typeof window !== 'undefined' && !window.navigator.onLine) {
+        // Le navigateur sait qu'il est hors ligne
+        this.setConnection(false);
+      } else if (this.connectionStatus.value) {
+        // Erreur réseau même si le navigateur se croit en ligne, déclencher le hors ligne forcé
+        this.setConnection(false);
+      }
+    } else {
+      // Pour les autres erreurs HTTP, afficher un toast si désiré
+      this.notificationService.showError(errorMessage);
     }
 
     console.error('Erreur API:', errorMessage, error);
