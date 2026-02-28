@@ -142,6 +142,15 @@ export class ShoppingListComponent {
     this.newItemCategory.set('');
   }
 
+  removeCatalogItem(itemId: string): void {
+    const confirmDelete = window.confirm(
+      'Voulez-vous vraiment supprimer cet article de votre catalogue ? Il sera également supprimé de toutes les listes de courses.',
+    );
+    if (confirmDelete) {
+      this.shopping.removeCatalogItem(itemId);
+    }
+  }
+
   addToList(itemId: string): void {
     this.shopping.addToCurrentList(itemId, 1);
   }
