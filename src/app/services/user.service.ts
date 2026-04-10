@@ -10,7 +10,6 @@ export class UserService {
   private readonly AVAILABLE_USERS: User[] = [
     { id: 'Christophe', displayName: 'Christophe' },
     { id: 'Laurence', displayName: 'Laurence' },
-    { id: 'Elsa', displayName: 'Elsa' },
   ];
 
   private currentUserSubject = new BehaviorSubject<User | null>(null);

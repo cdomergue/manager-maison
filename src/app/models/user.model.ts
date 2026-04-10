@@ -1,4 +1,4 @@
-export type UserType = 'Christophe' | 'Laurence' | 'Elsa';
+export type UserType = 'Christophe' | 'Laurence';
 
 export interface User {
   id: UserType;

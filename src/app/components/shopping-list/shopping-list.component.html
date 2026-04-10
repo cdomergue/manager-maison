@@ -109,19 +109,15 @@
     <div class="space-y-3 mb-4">
       <input
         type="text"
-        name="name"
+        [field]="addItemForm.name"
         placeholder="Nom de l'article"
-        [ngModel]="newItemName()"
-        (ngModelChange)="newItemName.set($event)"
         class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
       />
       <input
         type="text"
-        name="category"
+        [field]="addItemForm.category"
         placeholder="Catégorie (optionnel)"
         list="category-suggestions"
-        [ngModel]="newItemCategory()"
-        (ngModelChange)="newItemCategory.set($event)"
         class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
       />
       <datalist id="category-suggestions">
@@ -140,10 +136,8 @@
     <div class="mb-2">
       <input
         type="text"
-        id="search"
+        [field]="searchForm.search"
         placeholder="Rechercher..."
-        [ngModel]="search()"
-        (ngModelChange)="search.set($event)"
         class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
       />
     </div>
@@ -167,18 +161,14 @@
                       <div class="flex flex-col gap-2">
                         <input
                           type="text"
-                          name="name"
+                          [field]="editItemForm.name"
                           placeholder="Nom"
-                          [ngModel]="editName()"
-                          (ngModelChange)="editName.set($event)"
                           class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
                         />
                         <input
                           type="text"
-                          name="category"
+                          [field]="editItemForm.category"
                           placeholder="Catégorie (optionnel)"
-                          [ngModel]="editCategory()"
-                          (ngModelChange)="editCategory.set($event)"
                           class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
                         />
                       </div>

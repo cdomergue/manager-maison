@@ -1,6 +1,6 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { form, Field, submit, required, min, FieldTree } from '@angular/forms/signals';
 import { ReminderNotesService } from '../../services/reminder-notes.service';
 import { NotificationRegistrationService } from '../../services/notification-registration.service';
 import { RichTextEditorComponent } from '../rich-text-editor/rich-text-editor.component';
@@ -11,24 +11,61 @@ import {
   getTimeUntilReminder,
   isReminderImminent,
   ReminderNote,
-  ReminderNoteForm,
   UpdateReminderNoteData,
 } from '../../models/reminder-note.model';
 
+interface ReminderFormModel {
+  title: string;
+  content: string;
+  reminderDate: string;
+  reminderTime: string;
+  isRecurring: boolean;
+  recurrenceFrequency: 'daily' | 'weekly' | 'monthly';
+  recurrenceInterval: number;
+  recurrenceDaysOfWeek: number[];
+  recurrenceEndDate: string;
+  alertBeforeMinutes: number;
+}
+
+const defaultReminderModel = (): ReminderFormModel => ({
+  title: '',
+  content: '',
+  reminderDate: '',
+  reminderTime: '',
+  isRecurring: false,
+  recurrenceFrequency: 'daily',
+  recurrenceInterval: 1,
+  recurrenceDaysOfWeek: [],
+  recurrenceEndDate: '',
+  alertBeforeMinutes: 0,
+});
+
 @Component({
   selector: 'app-reminder-notes',
-  imports: [CommonModule, ReactiveFormsModule, RichTextEditorComponent],
+  imports: [CommonModule, Field, RichTextEditorComponent],
   templateUrl: './reminder-notes.component.html',
   styleUrls: ['./reminder-notes.component.css'],
 })
 export class ReminderNotesComponent {
   private reminderNotesService = inject(ReminderNotesService);
   private notificationService = inject(NotificationRegistrationService);
-  private fb = inject(FormBuilder);
 
   // Forms
-  newReminderForm: ReminderNoteForm;
-  editReminderForm: ReminderNoteForm;
+  newReminderModel = signal<ReminderFormModel>(defaultReminderModel());
+  newReminderForm: FieldTree<ReminderFormModel> = form(this.newReminderModel, (p) => {
+    required(p.title);
+    required(p.reminderDate);
+    required(p.reminderTime);
+    min(p.recurrenceInterval, 1);
+  });
+
+  editReminderModel = signal<ReminderFormModel>(defaultReminderModel());
+  editReminderForm: FieldTree<ReminderFormModel> = form(this.editReminderModel, (p) => {
+    required(p.title);
+    required(p.reminderDate);
+    required(p.reminderTime);
+    min(p.recurrenceInterval, 1);
+  });
 
   // State
   editingId = signal<string | null>(null);
@@ -66,30 +103,6 @@ export class ReminderNotesComponent {
     { value: 0, label: 'Dim' },
   ];
 
-  constructor() {
-    // Initialize forms
-    this.newReminderForm = this.createReminderForm();
-    this.editReminderForm = this.createReminderForm();
-
-    // Request notification permission on startup
-    // this.requestNotificationPermission(); // Removed: requires user gesture
-  }
-
-  private createReminderForm(): ReminderNoteForm {
-    return this.fb.group({
-      title: ['', Validators.required],
-      content: [''],
-      reminderDate: ['', Validators.required],
-      reminderTime: ['', Validators.required],
-      isRecurring: [false],
-      recurrenceFrequency: ['daily' as 'daily' | 'weekly' | 'monthly'],
-      recurrenceInterval: [1, [Validators.min(1)]],
-      recurrenceDaysOfWeek: [[] as number[]],
-      recurrenceEndDate: [null as string | null],
-      alertBeforeMinutes: [0],
-    });
-  }
-
   async enableNotifications(): Promise<void> {
     try {
       const granted = await this.notificationService.requestPermissionAndRegister();
@@ -104,7 +117,6 @@ export class ReminderNotesComponent {
     }
   }
 
-  // Old method kept for reference or if needed internally, but not called on init
   async requestNotificationPermission(): Promise<void> {
     try {
       await this.notificationService.requestPermissionAndRegister();
@@ -113,57 +125,50 @@ export class ReminderNotesComponent {
     }
   }
 
-  async createReminder(): Promise<void> {
-    if (this.newReminderForm.invalid) {
-      this.newReminderForm.markAllAsTouched();
-      return;
-    }
+  createReminder(): void {
+    submit(this.newReminderForm, async () => {
+      const m = this.newReminderModel();
 
-    const formValue = this.newReminderForm.value;
-    if (!formValue.title || !formValue.reminderDate || !formValue.reminderTime) {
-      return;
-    }
-
-    try {
-      const data: CreateReminderNoteData = {
-        title: formValue.title,
-        content: formValue.content || '',
-        reminderDate: formValue.reminderDate,
-        reminderTime: formValue.reminderTime,
-        isRecurring: formValue.isRecurring || false,
-        alertBeforeMinutes: formValue.alertBeforeMinutes || 0,
-      };
-
-      if (data.isRecurring) {
-        data.recurrenceRule = {
-          frequency: formValue.recurrenceFrequency || 'daily',
-          interval: formValue.recurrenceInterval || 1,
-          daysOfWeek: formValue.recurrenceFrequency === 'weekly' ? formValue.recurrenceDaysOfWeek || [] : undefined,
-          endDate: formValue.recurrenceEndDate || undefined,
-        };
-      }
-
-      await this.reminderNotesService.create(data);
-      this.newReminderForm.reset();
-      this.showRecurrenceOptions.set(false);
-
-      // Close expansion panel if present
       try {
-        const panel = document.querySelector('details') as HTMLDetailsElement | null;
-        if (panel) panel.open = false;
-      } catch {
-        // ignore
+        const data: CreateReminderNoteData = {
+          title: m.title,
+          content: m.content || '',
+          reminderDate: m.reminderDate,
+          reminderTime: m.reminderTime,
+          isRecurring: m.isRecurring,
+          alertBeforeMinutes: m.alertBeforeMinutes,
+        };
+
+        if (data.isRecurring) {
+          data.recurrenceRule = {
+            frequency: m.recurrenceFrequency,
+            interval: m.recurrenceInterval,
+            daysOfWeek: m.recurrenceFrequency === 'weekly' ? m.recurrenceDaysOfWeek : undefined,
+            endDate: m.recurrenceEndDate || undefined,
+          };
+        }
+
+        await this.reminderNotesService.create(data);
+        this.newReminderModel.set(defaultReminderModel());
+        this.newReminderForm().reset();
+        this.showRecurrenceOptions.set(false);
+
+        try {
+          const panel = document.querySelector('details') as HTMLDetailsElement | null;
+          if (panel) panel.open = false;
+        } catch {
+          // ignore
+        }
+      } catch (error) {
+        console.error('Error creating reminder:', error);
+        alert('Erreur lors de la création du rappel');
       }
-    } catch (error) {
-      console.error('Error creating reminder:', error);
-      alert('Erreur lors de la création du rappel');
-    }
+    });
   }
 
   startEdit(note: ReminderNote): void {
     this.editingId.set(note.id);
-
-    this.editReminderForm.patchValue({
+    this.editReminderModel.set({
       title: note.title,
       content: note.content,
       reminderDate: note.reminderDate,
@@ -172,52 +177,52 @@ export class ReminderNotesComponent {
       recurrenceFrequency: note.recurrenceRule?.frequency || 'daily',
       recurrenceInterval: note.recurrenceRule?.interval || 1,
       recurrenceDaysOfWeek: note.recurrenceRule?.daysOfWeek || [],
-      recurrenceEndDate: note.recurrenceRule?.endDate || null,
+      recurrenceEndDate: note.recurrenceRule?.endDate || '',
       alertBeforeMinutes: note.alertBeforeMinutes || 0,
     });
-
+    this.editReminderForm().reset();
     this.showEditRecurrenceOptions.set(note.isRecurring);
   }
 
-  async saveEdit(): Promise<void> {
-    const id = this.editingId();
-    if (!id || this.editReminderForm.invalid) {
-      this.editReminderForm.markAllAsTouched();
-      return;
-    }
+  saveEdit(): void {
+    submit(this.editReminderForm, async () => {
+      const id = this.editingId();
+      if (!id) return;
 
-    const formValue = this.editReminderForm.value;
+      const m = this.editReminderModel();
 
-    try {
-      const data: UpdateReminderNoteData = {
-        title: formValue.title ?? undefined,
-        content: formValue.content ?? undefined,
-        reminderDate: formValue.reminderDate ?? undefined,
-        reminderTime: formValue.reminderTime ?? undefined,
-        isRecurring: formValue.isRecurring ?? undefined,
-        alertBeforeMinutes: formValue.alertBeforeMinutes ?? undefined,
-      };
-
-      if (data.isRecurring) {
-        data.recurrenceRule = {
-          frequency: formValue.recurrenceFrequency || 'daily',
-          interval: formValue.recurrenceInterval || 1,
-          daysOfWeek: formValue.recurrenceFrequency === 'weekly' ? formValue.recurrenceDaysOfWeek || [] : undefined,
-          endDate: formValue.recurrenceEndDate || undefined,
+      try {
+        const data: UpdateReminderNoteData = {
+          title: m.title,
+          content: m.content,
+          reminderDate: m.reminderDate,
+          reminderTime: m.reminderTime,
+          isRecurring: m.isRecurring,
+          alertBeforeMinutes: m.alertBeforeMinutes,
         };
-      }
 
-      await this.reminderNotesService.update(id, data);
-      this.cancelEdit();
-    } catch (error) {
-      console.error('Error updating reminder:', error);
-      alert('Erreur lors de la mise à jour du rappel');
-    }
+        if (data.isRecurring) {
+          data.recurrenceRule = {
+            frequency: m.recurrenceFrequency,
+            interval: m.recurrenceInterval,
+            daysOfWeek: m.recurrenceFrequency === 'weekly' ? m.recurrenceDaysOfWeek : undefined,
+            endDate: m.recurrenceEndDate || undefined,
+          };
+        }
+
+        await this.reminderNotesService.update(id, data);
+        this.cancelEdit();
+      } catch (error) {
+        console.error('Error updating reminder:', error);
+        alert('Erreur lors de la mise à jour du rappel');
+      }
+    });
   }
 
   cancelEdit(): void {
     this.editingId.set(null);
-    this.editReminderForm.reset();
+    this.editReminderModel.set(defaultReminderModel());
+    this.editReminderForm().reset();
     this.showEditRecurrenceOptions.set(false);
   }
 
@@ -250,29 +255,44 @@ export class ReminderNotesComponent {
     }
   }
 
-  toggleRecurrence(form: ReminderNoteForm, isNew: boolean): void {
-    const isRecurring = form.get('isRecurring')?.value;
+  toggleRecurrence(isNew: boolean): void {
+    const isRecurring = isNew ? this.newReminderModel().isRecurring : this.editReminderModel().isRecurring;
     if (isNew) {
-      this.showRecurrenceOptions.set(!!isRecurring);
+      this.showRecurrenceOptions.set(isRecurring);
     } else {
-      this.showEditRecurrenceOptions.set(!!isRecurring);
+      this.showEditRecurrenceOptions.set(isRecurring);
     }
   }
 
-  toggleDayOfWeek(day: number, form: ReminderNoteForm): void {
-    const daysControl = form.get('recurrenceDaysOfWeek');
-    const currentDays = daysControl?.value || [];
-
+  toggleDayOfWeek(day: number, isNew: boolean): void {
+    const model = isNew ? this.newReminderModel : this.editReminderModel;
+    const currentDays = model().recurrenceDaysOfWeek;
     if (currentDays.includes(day)) {
-      daysControl?.setValue(currentDays.filter((d: number) => d !== day));
+      model.update((m) => ({ ...m, recurrenceDaysOfWeek: currentDays.filter((d) => d !== day) }));
     } else {
-      daysControl?.setValue([...currentDays, day].sort());
+      model.update((m) => ({ ...m, recurrenceDaysOfWeek: [...currentDays, day].sort() }));
     }
   }
 
-  isDaySelected(day: number, form: ReminderNoteForm): boolean {
-    const days = form.get('recurrenceDaysOfWeek')?.value || [];
+  isDaySelected(day: number, isNew: boolean): boolean {
+    const days = isNew ? this.newReminderModel().recurrenceDaysOfWeek : this.editReminderModel().recurrenceDaysOfWeek;
     return days.includes(day);
+  }
+
+  setNewAlertBeforeMinutes(value: string): void {
+    this.newReminderModel.update((m) => ({ ...m, alertBeforeMinutes: +value }));
+  }
+
+  setNewRecurrenceFrequency(value: string): void {
+    this.newReminderModel.update((m) => ({ ...m, recurrenceFrequency: value as 'daily' | 'weekly' | 'monthly' }));
+  }
+
+  setEditAlertBeforeMinutes(value: string): void {
+    this.editReminderModel.update((m) => ({ ...m, alertBeforeMinutes: +value }));
+  }
+
+  setEditRecurrenceFrequency(value: string): void {
+    this.editReminderModel.update((m) => ({ ...m, recurrenceFrequency: value as 'daily' | 'weekly' | 'monthly' }));
   }
 
   setFilter(status: 'all' | 'active' | 'triggered'): void {
@@ -280,20 +300,15 @@ export class ReminderNotesComponent {
   }
 
   getMinDate(): string {
-    // Minimum date = today
     return new Date().toISOString().split('T')[0];
   }
 
-  getMinTime(form: ReminderNoteForm): string {
-    const selectedDate = form.get('reminderDate')?.value;
+  getMinTime(reminderDate: string): string {
     const today = new Date().toISOString().split('T')[0];
-
-    // If selected date is today, minimum time = now
-    if (selectedDate === today) {
+    if (reminderDate === today) {
       const now = new Date();
       return `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
     }
-
     return '00:00';
   }
 }

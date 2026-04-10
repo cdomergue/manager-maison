@@ -1,41 +1,45 @@
 import { Component, inject } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { form, Field, submit, required } from '@angular/forms/signals';
+import { signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-auth',
-  imports: [FormsModule],
+  imports: [Field],
   templateUrl: './auth.component.html',
 })
 export class AuthComponent {
-  password = '';
   error = '';
-  isAuthenticated = false;
+
+  private authModel = signal({ password: '' });
+  authForm = form(this.authModel, (p) => {
+    required(p.password);
+  });
 
   private authService = inject(AuthService);
   private router = inject(Router);
 
   constructor() {
     this.authService.isAuthenticated$.subscribe((isAuth) => {
-      this.isAuthenticated = isAuth;
       if (isAuth) {
         this.router.navigate(['/']);
       }
     });
   }
 
-  async onSubmit() {
-    if (!this.password) return;
-
-    try {
-      const isValid = await this.authService.validatePassword(this.password);
-      if (!isValid) {
-        this.error = 'Mot de passe incorrect';
+  onSubmit() {
+    submit(this.authForm, async () => {
+      try {
+        const isValid = await this.authService.validatePassword(this.authModel().password);
+        if (!isValid) {
+          this.error = 'Mot de passe incorrect';
+        }
+      } catch {
+        this.error = 'Une erreur est survenue';
       }
-    } catch {
-      this.error = 'Une erreur est survenue';
-    }
-    this.password = '';
+      this.authModel.set({ password: '' });
+      this.authForm().reset();
+    });
   }
 }

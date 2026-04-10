@@ -72,13 +72,13 @@
       <span>➕ Nouveau rappel</span>
       <span class="transform transition-transform duration-200 text-gray-400 text-sm">▼</span>
     </summary>
-    <form [formGroup]="newReminderForm" (ngSubmit)="createReminder()" class="p-4 space-y-4">
+    <form (ngSubmit)="createReminder()" class="p-4 space-y-4">
       <div>
         <label for="title" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"> Titre * </label>
         <input
           type="text"
           id="title"
-          formControlName="title"
+          [field]="newReminderForm.title"
           class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
           placeholder="Ex: Rendez-vous médecin"
         />
@@ -88,7 +88,7 @@
         <label for="content" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           Description
         </label>
-        <app-rich-text-editor id="content" formControlName="content"></app-rich-text-editor>
+        <app-rich-text-editor id="content" [field]="newReminderForm.content"></app-rich-text-editor>
       </div>
 
       <div class="grid grid-cols-2 gap-4">
@@ -99,8 +99,7 @@
           <input
             type="date"
             id="reminderDate"
-            formControlName="reminderDate"
-            [min]="getMinDate()"
+            [field]="newReminderForm.reminderDate"
             class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
           />
         </div>
@@ -111,8 +110,7 @@
           <input
             type="time"
             id="reminderTime"
-            formControlName="reminderTime"
-            [min]="getMinTime(newReminderForm)"
+            [field]="newReminderForm.reminderTime"
             class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
           />
         </div>
@@ -124,17 +122,18 @@
         </label>
         <select
           id="alertBeforeMinutes"
-          formControlName="alertBeforeMinutes"
+          [value]="newReminderModel().alertBeforeMinutes"
+          (change)="setNewAlertBeforeMinutes($any($event.target).value)"
           class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
         >
-          <option [ngValue]="0">À l'heure du rappel</option>
-          <option [ngValue]="5">5 minutes avant</option>
-          <option [ngValue]="10">10 minutes avant</option>
-          <option [ngValue]="15">15 minutes avant</option>
-          <option [ngValue]="30">30 minutes avant</option>
-          <option [ngValue]="60">1 heure avant</option>
-          <option [ngValue]="120">2 heures avant</option>
-          <option [ngValue]="1440">1 jour avant</option>
+          <option value="0">À l'heure du rappel</option>
+          <option value="5">5 minutes avant</option>
+          <option value="10">10 minutes avant</option>
+          <option value="15">15 minutes avant</option>
+          <option value="30">30 minutes avant</option>
+          <option value="60">1 heure avant</option>
+          <option value="120">2 heures avant</option>
+          <option value="1440">1 jour avant</option>
         </select>
       </div>
 
@@ -142,8 +141,8 @@
         <label class="flex items-center gap-2 cursor-pointer">
           <input
             type="checkbox"
-            formControlName="isRecurring"
-            (change)="toggleRecurrence(newReminderForm, true)"
+            [field]="newReminderForm.isRecurring"
+            (change)="toggleRecurrence(true)"
             class="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
           />
           <span class="text-sm font-medium text-gray-700 dark:text-gray-300"> Rappel récurrent </span>
@@ -159,7 +158,8 @@
               </label>
               <select
                 id="recurrenceFrequency"
-                formControlName="recurrenceFrequency"
+                [value]="newReminderModel().recurrenceFrequency"
+                (change)="setNewRecurrenceFrequency($any($event.target).value)"
                 class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
               >
                 <option value="daily">Quotidien</option>
@@ -174,25 +174,24 @@
               <input
                 type="number"
                 id="recurrenceInterval"
-                formControlName="recurrenceInterval"
-                min="1"
+                [field]="newReminderForm.recurrenceInterval"
                 class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
               />
             </div>
           </div>
 
-          @if (newReminderForm.get("recurrenceFrequency")?.value === "weekly") {
+          @if (newReminderModel().recurrenceFrequency === "weekly") {
             <div>
               <span class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"> Jours de la semaine </span>
               <div class="flex gap-2">
                 @for (day of weekDays; track day.value) {
                   <button
                     type="button"
-                    (click)="toggleDayOfWeek(day.value, newReminderForm)"
-                    [class.bg-blue-500]="isDaySelected(day.value, newReminderForm)"
-                    [class.text-white]="isDaySelected(day.value, newReminderForm)"
-                    [class.bg-gray-200]="!isDaySelected(day.value, newReminderForm)"
-                    [class.text-gray-700]="!isDaySelected(day.value, newReminderForm)"
+                    (click)="toggleDayOfWeek(day.value, true)"
+                    [class.bg-blue-500]="isDaySelected(day.value, true)"
+                    [class.text-white]="isDaySelected(day.value, true)"
+                    [class.bg-gray-200]="!isDaySelected(day.value, true)"
+                    [class.text-gray-700]="!isDaySelected(day.value, true)"
                     class="px-3 py-2 rounded-lg transition-colors"
                   >
                     {{ day.label }}
@@ -209,8 +208,7 @@
             <input
               type="date"
               id="recurrenceEndDate"
-              formControlName="recurrenceEndDate"
-              [min]="newReminderForm.get('reminderDate')?.value"
+              [field]="newReminderForm.recurrenceEndDate"
               class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
             />
           </div>
@@ -219,7 +217,7 @@
 
       <button
         type="submit"
-        [disabled]="newReminderForm.invalid"
+        [disabled]="newReminderForm().invalid()"
         class="px-4 py-2 rounded-lg transition-colors font-medium bg-blue-500 text-white hover:bg-blue-600 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-500 dark:disabled:bg-gray-700 dark:disabled:text-gray-500"
       >
         ✅ Créer le rappel
@@ -243,24 +241,23 @@
         class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4"
       >
         @if (editingId() === reminder.id) {
-          <form [formGroup]="editReminderForm" (ngSubmit)="saveEdit()" class="space-y-4">
+          <form (ngSubmit)="saveEdit()" class="space-y-4">
             <input
               type="text"
-              formControlName="title"
+              [field]="editReminderForm.title"
               class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
             />
-            <app-rich-text-editor formControlName="content"></app-rich-text-editor>
+            <app-rich-text-editor [field]="editReminderForm.content"></app-rich-text-editor>
 
             <div class="grid grid-cols-2 gap-4">
               <input
                 type="date"
-                formControlName="reminderDate"
-                [min]="getMinDate()"
+                [field]="editReminderForm.reminderDate"
                 class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
               />
               <input
                 type="time"
-                formControlName="reminderTime"
+                [field]="editReminderForm.reminderTime"
                 class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
               />
             </div>
@@ -274,19 +271,107 @@
               </label>
               <select
                 id="editAlertBeforeMinutes"
-                formControlName="alertBeforeMinutes"
+                [value]="editReminderModel().alertBeforeMinutes"
+                (change)="setEditAlertBeforeMinutes($any($event.target).value)"
                 class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
               >
-                <option [ngValue]="0">À l'heure du rappel</option>
-                <option [ngValue]="5">5 minutes avant</option>
-                <option [ngValue]="10">10 minutes avant</option>
-                <option [ngValue]="15">15 minutes avant</option>
-                <option [ngValue]="30">30 minutes avant</option>
-                <option [ngValue]="60">1 heure avant</option>
-                <option [ngValue]="120">2 heures avant</option>
-                <option [ngValue]="1440">1 jour avant</option>
+                <option value="0">À l'heure du rappel</option>
+                <option value="5">5 minutes avant</option>
+                <option value="10">10 minutes avant</option>
+                <option value="15">15 minutes avant</option>
+                <option value="30">30 minutes avant</option>
+                <option value="60">1 heure avant</option>
+                <option value="120">2 heures avant</option>
+                <option value="1440">1 jour avant</option>
               </select>
             </div>
+
+            <div>
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  [field]="editReminderForm.isRecurring"
+                  (change)="toggleRecurrence(false)"
+                  class="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+                />
+                <span class="text-sm font-medium text-gray-700 dark:text-gray-300"> Rappel récurrent </span>
+              </label>
+            </div>
+
+            @if (showEditRecurrenceOptions()) {
+              <div class="pl-6 space-y-4 border-l-2 border-blue-500">
+                <div class="grid grid-cols-2 gap-4">
+                  <div>
+                    <label
+                      for="editRecurrenceFrequency"
+                      class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                      >Fréquence</label
+                    >
+                    <select
+                      id="editRecurrenceFrequency"
+                      [value]="editReminderModel().recurrenceFrequency"
+                      (change)="setEditRecurrenceFrequency($any($event.target).value)"
+                      class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                    >
+                      <option value="daily">Quotidien</option>
+                      <option value="weekly">Hebdomadaire</option>
+                      <option value="monthly">Mensuel</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label
+                      for="editRecurrenceInterval"
+                      class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                      >Tous les</label
+                    >
+                    <input
+                      type="number"
+                      id="editRecurrenceInterval"
+                      [field]="editReminderForm.recurrenceInterval"
+                      class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                    />
+                  </div>
+                </div>
+
+                @if (editReminderModel().recurrenceFrequency === "weekly") {
+                  <div>
+                    <span class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Jours de la semaine
+                    </span>
+                    <div class="flex gap-2">
+                      @for (day of weekDays; track day.value) {
+                        <button
+                          type="button"
+                          (click)="toggleDayOfWeek(day.value, false)"
+                          [class.bg-blue-500]="isDaySelected(day.value, false)"
+                          [class.text-white]="isDaySelected(day.value, false)"
+                          [class.bg-gray-200]="!isDaySelected(day.value, false)"
+                          [class.text-gray-700]="!isDaySelected(day.value, false)"
+                          class="px-3 py-2 rounded-lg transition-colors"
+                        >
+                          {{ day.label }}
+                        </button>
+                      }
+                    </div>
+                  </div>
+                }
+
+                <div>
+                  <label
+                    for="editRecurrenceEndDate"
+                    class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                  >
+                    Date de fin (optionnel)
+                  </label>
+                  <input
+                    type="date"
+                    id="editRecurrenceEndDate"
+                    [field]="editReminderForm.recurrenceEndDate"
+                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                  />
+                </div>
+              </div>
+            }
 
             <div class="flex gap-2">
               <button
