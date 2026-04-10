@@ -1,25 +1,21 @@
 import { Component, computed, effect, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { form, Field, submit } from '@angular/forms/signals';
+import { FormsModule } from '@angular/forms';
 import { ShoppingListService } from '../../services/shopping-list.service';
 import { ShoppingListEntry } from '../../models/shopping-item.model';
 
 @Component({
   selector: 'app-shopping-list',
-  imports: [CommonModule, Field],
+  imports: [CommonModule, FormsModule],
   templateUrl: 'shopping-list.component.html',
 })
 export class ShoppingListComponent {
-  private addItemModel = signal({ name: '', category: '' });
-  addItemForm = form(this.addItemModel);
-
-  private editItemModel = signal({ name: '', category: '' });
-  editItemForm = form(this.editItemModel);
-
-  private searchModel = signal({ search: '' });
-  searchForm = form(this.searchModel);
-
+  newItemName = signal<string>('');
+  newItemCategory = signal<string>('');
+  search = signal<string>('');
   editingId = signal<string | null>(null);
+  editName = signal<string>('');
+  editCategory = signal<string>('');
   autoRefresh = signal<boolean>(false);
 
   public shopping = inject(ShoppingListService);
@@ -27,7 +23,7 @@ export class ShoppingListComponent {
   sortedCurrentList = computed(() => {
     const list = this.shopping.currentList();
     return [...list].sort((a, b) => {
-      if (a.checked !== b.checked) return a.checked ? 1 : -1; // unchecked first
+      if (a.checked !== b.checked) return a.checked ? 1 : -1; // non cochés d'abord
       const an = (a.name || '').toLocaleLowerCase();
       const bn = (b.name || '').toLocaleLowerCase();
       if (an < bn) return -1;
@@ -44,7 +40,7 @@ export class ShoppingListComponent {
   groupedCurrentList = computed(() => {
     const list = this.shopping.currentList();
     const sortedList = [...list].sort((a, b) => {
-      if (a.checked !== b.checked) return a.checked ? 1 : -1; // unchecked first
+      if (a.checked !== b.checked) return a.checked ? 1 : -1; // non cochés d'abord
       const ac = this.getEntryCategory(a).toLocaleLowerCase();
       const bc = this.getEntryCategory(b).toLocaleLowerCase();
       if (ac < bc) return -1;
@@ -78,7 +74,7 @@ export class ShoppingListComponent {
   });
 
   private filteredCatalog = computed(() => {
-    const term = this.searchModel().search.toLowerCase().trim();
+    const term = this.search().toLowerCase().trim();
     const items = this.shopping.items();
     if (!term) return items;
     return items.filter((i) => i.name.toLowerCase().includes(term) || i.category?.toLowerCase().includes(term));
@@ -138,14 +134,12 @@ export class ShoppingListComponent {
   }
 
   addCatalogItem(): void {
-    submit(this.addItemForm, async () => {
-      const name = this.addItemModel().name;
-      const category = this.addItemModel().category;
-      if (!name.trim()) return;
-      this.shopping.addCatalogItem(name, category);
-      this.addItemModel.set({ name: '', category: '' });
-      this.addItemForm().reset();
-    });
+    const name = this.newItemName();
+    const category = this.newItemCategory();
+    if (!name.trim()) return;
+    this.shopping.addCatalogItem(name, category);
+    this.newItemName.set('');
+    this.newItemCategory.set('');
   }
 
   removeCatalogItem(itemId: string): void {
@@ -165,23 +159,21 @@ export class ShoppingListComponent {
     const item = this.shopping.items().find((i) => i.id === itemId);
     if (!item) return;
     this.editingId.set(itemId);
-    this.editItemModel.set({ name: item.name, category: item.category || '' });
-    this.editItemForm().reset();
+    this.editName.set(item.name);
+    this.editCategory.set(item.category || '');
   }
 
   cancelEdit(): void {
     this.editingId.set(null);
-    this.editItemModel.set({ name: '', category: '' });
-    this.editItemForm().reset();
+    this.editName.set('');
+    this.editCategory.set('');
   }
 
   saveEdit(): void {
-    submit(this.editItemForm, async () => {
-      const id = this.editingId();
-      if (!id) return;
-      this.shopping.updateCatalogItem(id, { name: this.editItemModel().name, category: this.editItemModel().category });
-      this.cancelEdit();
-    });
+    const id = this.editingId();
+    if (!id) return;
+    this.shopping.updateCatalogItem(id, { name: this.editName(), category: this.editCategory() });
+    this.cancelEdit();
   }
 
   inc(entryId: string): void {

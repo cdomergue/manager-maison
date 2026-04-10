@@ -40,6 +40,22 @@ export interface UpdateReminderNoteData {
   alertBeforeMinutes?: number;
 }
 
+// Types pour les Reactive Forms typés
+import { FormControl, FormGroup } from '@angular/forms';
+
+export type ReminderNoteForm = FormGroup<{
+  title: FormControl<string | null>;
+  content: FormControl<string | null>;
+  reminderDate: FormControl<string | null>;
+  reminderTime: FormControl<string | null>;
+  isRecurring: FormControl<boolean | null>;
+  recurrenceFrequency: FormControl<'daily' | 'weekly' | 'monthly' | null>;
+  recurrenceInterval: FormControl<number | null>;
+  recurrenceDaysOfWeek: FormControl<number[] | null>;
+  recurrenceEndDate: FormControl<string | null>;
+  alertBeforeMinutes: FormControl<number | null>;
+}>;
+
 // Helper pour formater la date de rappel
 export function formatReminderDateTime(note: ReminderNote): string {
   const date = new Date(`${note.reminderDate}T${note.reminderTime}`);

@@ -7,24 +7,25 @@
     <summary class="cursor-pointer select-none px-4 py-3 font-semibold text-gray-900 dark:text-white">
       Nouvelle recette
     </summary>
-    <form class="space-y-3 p-4 pt-2" (ngSubmit)="createRecipe()">
+    <form [formGroup]="newRecipeForm" class="space-y-3 p-4 pt-2" (ngSubmit)="createRecipe()">
+      @let titleControl = newRecipeForm.get("title");
       <!-- Titre -->
       <div>
         <label for="title-input" class="block text-sm text-gray-600 dark:text-gray-300 mb-1">Titre *</label>
         <input
           id="title-input"
           type="text"
-          [field]="newRecipeForm.title"
+          formControlName="title"
           class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
-          [ngClass]="{ 'border-red-500': newRecipeForm.title().invalid() && newRecipeForm.title().touched() }"
+          [ngClass]="{ 'border-red-500': titleControl?.invalid && titleControl?.touched }"
           placeholder="Nom de la recette"
         />
-        @if (newRecipeForm.title().invalid() && newRecipeForm.title().touched()) {
+        @if (titleControl?.invalid && titleControl?.touched) {
           <div class="text-red-500 text-sm mt-1">
-            @if (newRecipeForm.title().errors()[0]?.kind === "required") {
+            @if (titleControl?.errors?.["required"]) {
               <span>Le titre est requis</span>
             }
-            @if (newRecipeForm.title().errors()[0]?.kind === "minLength") {
+            @if (titleControl?.errors?.["minlength"]) {
               <span>Le titre doit contenir au moins 2 caractères</span>
             }
           </div>
@@ -38,7 +39,8 @@
           <input
             id="servings-input"
             type="number"
-            [field]="newRecipeForm.servings"
+            formControlName="servings"
+            min="1"
             class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
             placeholder="4"
           />
@@ -48,7 +50,7 @@
           <input
             id="category-input"
             type="text"
-            [field]="newRecipeForm.category"
+            formControlName="category"
             class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
             placeholder="Plat principal"
           />
@@ -63,7 +65,8 @@
           <input
             id="prep-time-input"
             type="number"
-            [field]="newRecipeForm.prepTime"
+            formControlName="prepTime"
+            min="0"
             class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
             placeholder="30"
           />
@@ -73,7 +76,8 @@
           <input
             id="cook-time-input"
             type="number"
-            [field]="newRecipeForm.cookTime"
+            formControlName="cookTime"
+            min="0"
             class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
             placeholder="45"
           />
@@ -85,17 +89,18 @@
         <div class="block text-sm text-gray-600 dark:text-gray-300 mb-1">Ingrédients</div>
 
         <!-- Ajouter un ingrédient -->
-        <div class="space-y-2 mb-2">
+        <div [formGroup]="ingredientForm" class="space-y-2 mb-2">
+          @let selectedItemControl = ingredientForm.get("selectedItemId");
+          @let quantityControl = ingredientForm.get("quantity");
+
           <app-autocomplete
             [options]="autocompleteOptions()"
-            [field]="ingredientForm.selectedItemId"
+            formControlName="selectedItemId"
             (optionSelected)="onIngredientSelected($event)"
             placeholder="Choisir un ingrédient..."
-            [ngClass]="{
-              'border-red-500': ingredientForm.selectedItemId().invalid() && ingredientForm.selectedItemId().touched(),
-            }"
+            [ngClass]="{ 'border-red-500': selectedItemControl?.invalid && selectedItemControl?.touched }"
           ></app-autocomplete>
-          @if (ingredientForm.selectedItemId().invalid() && ingredientForm.selectedItemId().touched()) {
+          @if (selectedItemControl?.invalid && selectedItemControl?.touched) {
             <div class="text-red-500 text-sm">
               <span>Veuillez sélectionner un ingrédient</span>
             </div>
@@ -104,17 +109,18 @@
           <div class="flex gap-2">
             <input
               type="number"
-              [field]="ingredientForm.quantity"
+              formControlName="quantity"
+              name="quantity"
+              min="0.1"
               step="0.1"
               class="w-16 px-1 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
-              [ngClass]="{
-                'border-red-500': ingredientForm.quantity().invalid() && ingredientForm.quantity().touched(),
-              }"
+              [ngClass]="{ 'border-red-500': quantityControl?.invalid && quantityControl?.touched }"
               placeholder="1"
             />
             <input
+              name="unit"
               type="text"
-              [field]="ingredientForm.unit"
+              formControlName="unit"
               class="w-20 px-1 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 text-sm"
               placeholder="kg"
             />
@@ -126,7 +132,7 @@
               Ajouter
             </button>
           </div>
-          @if (ingredientForm.quantity().invalid() && ingredientForm.quantity().touched()) {
+          @if (quantityControl?.invalid && quantityControl?.touched) {
             <div class="text-red-500 text-sm">
               <span>La quantité doit être supérieure à 0</span>
             </div>
@@ -173,7 +179,7 @@
       <div>
         <div class="block text-sm text-gray-600 dark:text-gray-300 mb-1">Instructions</div>
         <app-rich-text-editor
-          [field]="newRecipeForm.description"
+          formControlName="description"
           placeholder="Décrivez les étapes de préparation..."
           minHeight="150px"
         ></app-rich-text-editor>
@@ -181,7 +187,7 @@
 
       <button
         type="submit"
-        [disabled]="newRecipeForm().invalid() || newRecipeIngredients().length === 0"
+        [disabled]="newRecipeForm.invalid || newRecipeIngredients().length === 0"
         class="px-3 py-2 rounded bg-blue-600 dark:bg-blue-600 text-white hover:bg-blue-700 dark:hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
       >
         Créer la recette
@@ -207,13 +213,13 @@
         id="search"
         type="text"
         placeholder="Rechercher..."
-        [value]="searchTerm()"
-        (input)="searchTerm.set($any($event.target).value)"
+        [ngModel]="searchTerm()"
+        (ngModelChange)="searchTerm.set($event)"
         class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
       />
       <select
-        [value]="selectedCategory()"
-        (change)="selectedCategory.set($any($event.target).value)"
+        [ngModel]="selectedCategory()"
+        (ngModelChange)="selectedCategory.set($event)"
         class="w-full sm:w-auto px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
       >
         <option value="">Toutes catégories</option>
@@ -229,20 +235,23 @@
         <div class="border border-gray-200 dark:border-gray-700 rounded p-4 bg-white dark:bg-gray-800">
           @if (editingId() === recipe.id) {
             <!-- Mode édition -->
-            <form class="space-y-3">
+            <form [formGroup]="editRecipeForm" class="space-y-3">
+              @let editTitleControl = editRecipeForm.get("title");
+
               <input
                 type="text"
-                [field]="editRecipeForm.title"
+                name="title"
+                formControlName="title"
                 class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white font-medium"
-                [ngClass]="{ 'border-red-500': editRecipeForm.title().invalid() && editRecipeForm.title().touched() }"
+                [ngClass]="{ 'border-red-500': editTitleControl?.invalid && editTitleControl?.touched }"
                 placeholder="Titre de la recette"
               />
-              @if (editRecipeForm.title().invalid() && editRecipeForm.title().touched()) {
+              @if (editTitleControl?.invalid && editTitleControl?.touched) {
                 <div class="text-red-500 text-sm">
-                  @if (editRecipeForm.title().errors()[0]?.kind === "required") {
+                  @if (editTitleControl?.errors?.["required"]) {
                     <span>Le titre est requis</span>
                   }
-                  @if (editRecipeForm.title().errors()[0]?.kind === "minLength") {
+                  @if (editTitleControl?.errors?.["minlength"]) {
                     <span>Le titre doit contenir au moins 2 caractères</span>
                   }
                 </div>
@@ -251,13 +260,16 @@
               <div class="grid grid-cols-2 gap-2">
                 <input
                   type="number"
-                  [field]="editRecipeForm.servings"
+                  name="servings"
+                  formControlName="servings"
                   placeholder="Portions"
+                  min="1"
                   class="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
                 />
                 <input
                   type="text"
-                  [field]="editRecipeForm.category"
+                  name="category"
+                  formControlName="category"
                   placeholder="Catégorie"
                   class="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
                 />
@@ -266,14 +278,18 @@
               <div class="grid grid-cols-2 gap-2">
                 <input
                   type="number"
-                  [field]="editRecipeForm.prepTime"
+                  name="prepTime"
+                  formControlName="prepTime"
                   placeholder="Préparation (min)"
+                  min="0"
                   class="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
                 />
                 <input
                   type="number"
-                  [field]="editRecipeForm.cookTime"
+                  name="cookTime"
+                  formControlName="cookTime"
                   placeholder="Cuisson (min)"
+                  min="0"
                   class="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
                 />
               </div>
@@ -283,10 +299,10 @@
                 <div class="text-sm text-gray-600 dark:text-gray-300 mb-2">Ingrédients</div>
 
                 <!-- Ajouter un ingrédient -->
-                <div class="space-y-2 mb-2">
+                <div [formGroup]="ingredientForm" class="space-y-2 mb-2">
                   <app-autocomplete
                     [options]="autocompleteOptions()"
-                    [field]="ingredientForm.selectedItemId"
+                    formControlName="selectedItemId"
                     (optionSelected)="onIngredientSelected($event)"
                     placeholder="Choisir un ingrédient..."
                     inputClass="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
@@ -294,14 +310,17 @@
                   <div class="flex gap-2">
                     <input
                       type="number"
-                      [field]="ingredientForm.quantity"
+                      name="quantity"
+                      formControlName="quantity"
+                      min="0.1"
                       step="0.1"
                       class="w-16 px-1 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
                       placeholder="1"
                     />
                     <input
                       type="text"
-                      [field]="ingredientForm.unit"
+                      name="unit"
+                      formControlName="unit"
                       class="w-20 px-1 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
                       placeholder="kg"
                     />
@@ -353,7 +372,7 @@
               <div>
                 <div class="text-sm text-gray-600 dark:text-gray-300 mb-1">Instructions</div>
                 <app-rich-text-editor
-                  [field]="editRecipeForm.description"
+                  formControlName="description"
                   placeholder="Décrivez les étapes de préparation..."
                   minHeight="150px"
                 ></app-rich-text-editor>

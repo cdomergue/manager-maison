@@ -1,55 +1,62 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { form, Field, submit, required, FieldTree } from '@angular/forms/signals';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { NotesService } from '../../services/notes.service';
-
-interface NoteFormModel {
-  title: string;
-  content: string;
-}
+import { RichTextEditorComponent } from '../rich-text-editor/rich-text-editor.component';
+import { NoteForm } from '../../models/note.model';
 
 @Component({
   selector: 'app-notes',
-  imports: [CommonModule, Field],
+  imports: [CommonModule, ReactiveFormsModule, RichTextEditorComponent],
   styleUrls: ['./notes.component.css'],
   templateUrl: './notes.component.html',
 })
 export class NotesComponent {
   private notesService = inject(NotesService);
+  private fb = inject(FormBuilder);
 
-  private newNoteModel = signal<NoteFormModel>({ title: '', content: '' });
-  newNoteForm: FieldTree<NoteFormModel> = form(this.newNoteModel, (p) => {
-    required(p.title);
-  });
-
-  private editNoteModel = signal<NoteFormModel>({ title: '', content: '' });
-  editNoteForm: FieldTree<NoteFormModel> = form(this.editNoteModel, (p) => {
-    required(p.title);
-  });
+  // Reactive Forms typés
+  newNoteForm: NoteForm;
+  editNoteForm: NoteForm;
 
   editingId: string | null = null;
   notes = this.notesService.notes;
 
-  create(): void {
-    submit(this.newNoteForm, async () => {
-      const formValue = this.newNoteModel();
-      if (!formValue.title?.trim() && !formValue.content?.trim()) return;
-
-      this.notesService.create({
-        title: formValue.title?.trim() || '',
-        content: formValue.content || '',
-      });
-
-      this.newNoteModel.set({ title: '', content: '' });
-      this.newNoteForm().reset();
-
-      try {
-        const panel = document.querySelector('details') as HTMLDetailsElement | null;
-        if (panel) panel.open = false;
-      } catch {
-        // ignore
-      }
+  constructor() {
+    this.newNoteForm = this.fb.group({
+      title: ['', Validators.required],
+      content: [''],
     });
+
+    this.editNoteForm = this.fb.group({
+      title: ['', Validators.required],
+      content: [''],
+    });
+  }
+
+  create(): void {
+    if (this.newNoteForm.invalid) {
+      this.newNoteForm.markAllAsTouched();
+      return;
+    }
+
+    const formValue = this.newNoteForm.value;
+    if (!formValue.title?.trim() && !formValue.content?.trim()) return;
+
+    this.notesService.create({
+      title: formValue.title?.trim() || '',
+      content: formValue.content || '',
+    });
+
+    this.newNoteForm.reset();
+
+    // Fermer l'expansion panel si présent
+    try {
+      const panel = document.querySelector('details') as HTMLDetailsElement | null;
+      if (panel) panel.open = false;
+    } catch {
+      // ignore
+    }
   }
 
   remove(id: string): void {
@@ -62,24 +69,28 @@ export class NotesComponent {
 
   startEdit(id: string, title: string, content: string): void {
     this.editingId = id;
-    this.editNoteModel.set({ title, content });
-    this.editNoteForm().reset();
+    this.editNoteForm.patchValue({
+      title: title,
+      content: content,
+    });
   }
 
   save(id: string): void {
-    submit(this.editNoteForm, async () => {
-      const formValue = this.editNoteModel();
-      this.notesService.update(id, {
-        title: formValue.title,
-        content: formValue.content,
-      });
-      this.cancel();
+    if (this.editNoteForm.invalid) {
+      this.editNoteForm.markAllAsTouched();
+      return;
+    }
+
+    const formValue = this.editNoteForm.value;
+    this.notesService.update(id, {
+      title: formValue.title!,
+      content: formValue.content!,
     });
+    this.cancel();
   }
 
   cancel(): void {
     this.editingId = null;
-    this.editNoteModel.set({ title: '', content: '' });
-    this.editNoteForm().reset();
+    this.editNoteForm.reset();
   }
 }
