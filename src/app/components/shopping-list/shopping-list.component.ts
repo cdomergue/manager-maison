@@ -117,11 +117,58 @@ export class ShoppingListComponent {
     return groups;
   });
 
+  showCategorySuggestions = signal(false);
+  showEditCategorySuggestions = signal(false);
+  selectingNewCategory = false;
+  selectingEditCategory = false;
+
   uniqueCategories = computed(() => {
     const items = this.shopping.items();
     const categories = new Set(items.map((i) => i.category).filter((c): c is string => !!c && c.trim() !== ''));
     return Array.from(categories).sort();
   });
+
+  filteredNewItemCategories = computed(() => {
+    const val = this.newItemCategory().toLowerCase().trim();
+    const categories = this.uniqueCategories();
+    if (!val) return categories;
+    return categories.filter((c) => c.toLowerCase().includes(val));
+  });
+
+  filteredEditCategories = computed(() => {
+    const val = this.editCategory().toLowerCase().trim();
+    const categories = this.uniqueCategories();
+    if (!val) return categories;
+    return categories.filter((c) => c.toLowerCase().includes(val));
+  });
+
+  onNewCategoryBlur(): void {
+    if (this.selectingNewCategory) {
+      this.selectingNewCategory = false;
+      return;
+    }
+    this.showCategorySuggestions.set(false);
+  }
+
+  onEditCategoryBlur(): void {
+    if (this.selectingEditCategory) {
+      this.selectingEditCategory = false;
+      return;
+    }
+    this.showEditCategorySuggestions.set(false);
+  }
+
+  selectNewCategory(cat: string): void {
+    this.newItemCategory.set(cat);
+    this.showCategorySuggestions.set(false);
+    this.selectingNewCategory = false;
+  }
+
+  selectEditCategory(cat: string): void {
+    this.editCategory.set(cat);
+    this.showEditCategorySuggestions.set(false);
+    this.selectingEditCategory = false;
+  }
 
   constructor() {
     effect((onCleanup) => {

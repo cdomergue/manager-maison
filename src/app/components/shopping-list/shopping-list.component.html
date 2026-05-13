@@ -115,20 +115,40 @@
         (ngModelChange)="newItemName.set($event)"
         class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
       />
-      <input
-        type="text"
-        name="category"
-        placeholder="Catégorie (optionnel)"
-        list="category-suggestions"
-        [ngModel]="newItemCategory()"
-        (ngModelChange)="newItemCategory.set($event)"
-        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
-      />
-      <datalist id="category-suggestions">
-        @for (category of uniqueCategories(); track category) {
-          <option [value]="category"></option>
+      <div class="relative">
+        <input
+          type="text"
+          name="category"
+          placeholder="Catégorie (optionnel)"
+          autocomplete="off"
+          [ngModel]="newItemCategory()"
+          (ngModelChange)="newItemCategory.set($event)"
+          (focus)="showCategorySuggestions.set(true)"
+          (blur)="onNewCategoryBlur()"
+          class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+        />
+        @if (showCategorySuggestions() && filteredNewItemCategories().length > 0) {
+          <ul
+            (touchstart)="selectingNewCategory = true"
+            (mousedown)="selectingNewCategory = true"
+            class="absolute z-10 w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded shadow-lg max-h-48 overflow-y-auto mt-1"
+          >
+            @for (cat of filteredNewItemCategories(); track cat) {
+              <li
+                tabindex="0"
+                role="option"
+                aria-selected="false"
+                (click)="selectNewCategory(cat)"
+                (keydown.enter)="selectNewCategory(cat)"
+                (keydown.space)="selectNewCategory(cat)"
+                class="px-3 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-900 dark:text-white"
+              >
+                {{ cat }}
+              </li>
+            }
+          </ul>
         }
-      </datalist>
+      </div>
       <button
         (click)="addCatalogItem()"
         class="w-full px-3 py-2 bg-blue-600 dark:bg-blue-600 text-white rounded hover:bg-blue-700 dark:hover:bg-blue-700 transition-colors"
@@ -173,14 +193,40 @@
                           (ngModelChange)="editName.set($event)"
                           class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
                         />
-                        <input
-                          type="text"
-                          name="category"
-                          placeholder="Catégorie (optionnel)"
-                          [ngModel]="editCategory()"
-                          (ngModelChange)="editCategory.set($event)"
-                          class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
-                        />
+                        <div class="relative">
+                          <input
+                            type="text"
+                            name="category"
+                            placeholder="Catégorie (optionnel)"
+                            autocomplete="off"
+                            [ngModel]="editCategory()"
+                            (ngModelChange)="editCategory.set($event)"
+                            (focus)="showEditCategorySuggestions.set(true)"
+                            (blur)="onEditCategoryBlur()"
+                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+                          />
+                          @if (showEditCategorySuggestions() && filteredEditCategories().length > 0) {
+                            <ul
+                              (touchstart)="selectingEditCategory = true"
+                              (mousedown)="selectingEditCategory = true"
+                              class="absolute z-10 w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded shadow-lg max-h-48 overflow-y-auto mt-1"
+                            >
+                              @for (cat of filteredEditCategories(); track cat) {
+                                <li
+                                  tabindex="0"
+                                  role="option"
+                                  aria-selected="false"
+                                  (click)="selectEditCategory(cat)"
+                                  (keydown.enter)="selectEditCategory(cat)"
+                                  (keydown.space)="selectEditCategory(cat)"
+                                  class="px-3 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-900 dark:text-white"
+                                >
+                                  {{ cat }}
+                                </li>
+                              }
+                            </ul>
+                          }
+                        </div>
                       </div>
                     } @else {
                       <div>
