@@ -1,11 +1,12 @@
 const types = [
-  "breast-left",
-  "breast-right",
+  "breastfeeding",
   "bottle-breast-milk",
   "bottle-formula",
   "diaper",
   "vomit",
   "regurgitation",
+  "care",
+  "bath",
   "other",
 ];
 const diapers = ["nothing", "urine", "stool", "abundant-stool", "urine-stool", "urine-abundant-stool"];
@@ -30,7 +31,7 @@ function validateBabyEvent(body) {
   }
   const quantity = body.type.startsWith("bottle-")
     ? "quantityMl"
-    : body.type.startsWith("breast-")
+    : body.type === "breastfeeding"
       ? "durationMinutes"
       : null;
   if (quantity && body[quantity] !== undefined && body[quantity] !== null) {

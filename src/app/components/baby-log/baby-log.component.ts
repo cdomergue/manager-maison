@@ -17,7 +17,7 @@ export class BabyLogComponent implements OnInit {
   readonly saving = signal(false);
   readonly message = signal('');
   readonly saveError = signal('');
-  type: BabyType = 'breast-left';
+  type: BabyType = 'breastfeeding';
   diaper: DiaperType = 'nothing';
   occurredAt = this.localNow();
   quantityMl: number | null = null;
@@ -47,7 +47,7 @@ export class BabyLogComponent implements OnInit {
     const date = new Date(this.occurredAt);
     const amount = this.type.startsWith('bottle-')
       ? this.quantityMl
-      : this.type.startsWith('breast-')
+      : this.type === 'breastfeeding'
         ? this.durationMinutes
         : null;
     if (
@@ -63,7 +63,7 @@ export class BabyLogComponent implements OnInit {
     const input: BabyEventInput = { type: this.type, occurredAt: date.toISOString(), note: this.note.trim() };
     if (this.type === 'diaper') input.diaper = this.diaper;
     if (this.type.startsWith('bottle-') && this.quantityMl !== null) input.quantityMl = this.quantityMl;
-    if (this.type.startsWith('breast-') && this.durationMinutes !== null) input.durationMinutes = this.durationMinutes;
+    if (this.type === 'breastfeeding' && this.durationMinutes !== null) input.durationMinutes = this.durationMinutes;
     this.saving.set(true);
     try {
       await this.log.create(input);

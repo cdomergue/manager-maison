@@ -1,11 +1,12 @@
 export const BABY_TYPES = [
-  { value: 'breast-left', label: 'Tétée · sein gauche' },
-  { value: 'breast-right', label: 'Tétée · sein droit' },
+  { value: 'breastfeeding', label: 'Tétée' },
   { value: 'bottle-breast-milk', label: 'Biberon · lait maternel' },
   { value: 'bottle-formula', label: 'Biberon · lait maternisé' },
   { value: 'diaper', label: 'Changement de couche' },
   { value: 'vomit', label: 'Vomissement' },
   { value: 'regurgitation', label: 'Régurgitation' },
+  { value: 'care', label: 'Soin' },
+  { value: 'bath', label: 'Bain' },
   { value: 'other', label: 'Divers' },
 ] as const;
 export const DIAPER_TYPES = [

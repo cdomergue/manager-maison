@@ -129,6 +129,8 @@ L’onglet `/bb` partage les événements bébé avec les personnes ayant accès
 Les dates sont stockées en UTC et affichées en heure locale, du plus récent au plus ancien.
 Les quantités de biberon (ml), durées de tétée (minutes) et notes sont facultatives ;
 le texte est obligatoire pour « Divers ». Vomissement et régurgitation sont distincts.
+« Soin » et « Bain » disposent de la date et de la note communes. Une seule option « Tétée »
+est proposée, sans distinction de côté.
 
 Les routes `GET/POST /api/baby-events` utilisent l’accès commun existant de l’API.
 La table DynamoDB `BabyEventsTable`, ses permissions et les fonctions Lambda sont déclarées

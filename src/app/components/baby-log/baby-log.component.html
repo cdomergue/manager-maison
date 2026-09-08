@@ -22,7 +22,7 @@
       <button type="button" (click)="occurredAt = localNow()" class="text-blue-600 dark:text-blue-400 py-2">
         Mettre à l’heure actuelle
       </button>
-      @if (type.startsWith("breast-")) {
+      @if (type === "breastfeeding") {
         <label class="block" for="baby-duration">Durée en minutes (facultative)</label>
         <input
           id="baby-duration"

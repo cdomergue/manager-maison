@@ -20,8 +20,43 @@ describe('BabyLogComponent', () => {
     await component.save();
     const input = create.calls.mostRecent().args[0];
     expect(input.occurredAt).toBe(new Date('2026-09-07T14:25').toISOString());
+    expect(input.type).toBe('breastfeeding');
     expect(input.durationMinutes).toBeUndefined();
     expect(component.message()).toContain('enregistré');
+  });
+
+  it('offers one feeding choice', () => {
+    expect(component.types.filter((item) => item.label === 'Tétée').length).toBe(1);
+    expect(
+      component.types.some(
+        (item) => item.value === ('breast-left' as string) || item.value === ('breast-right' as string),
+      ),
+    ).toBeFalse();
+    expect(component.label('breastfeeding')).toBe('Tétée');
+  });
+
+  it('saves a feeding with optional duration', async () => {
+    component.durationMinutes = 12;
+    await component.save();
+    expect(create.calls.mostRecent().args[0].type).toBe('breastfeeding');
+    expect(create.calls.mostRecent().args[0].durationMinutes).toBe(12);
+  });
+
+  it('saves distinct care and bath events with common fields only', async () => {
+    for (const type of ['care', 'bath'] as const) {
+      component.type = type;
+      component.note = 'Après le repas';
+      component.durationMinutes = 12;
+      component.quantityMl = 80;
+      await component.save();
+      const input = create.calls.mostRecent().args[0];
+      expect(input.type).toBe(type);
+      expect(input.note).toBe('Après le repas');
+      expect(input.durationMinutes).toBeUndefined();
+      expect(input.quantityMl).toBeUndefined();
+    }
+    expect(component.label('care')).toBe('Soin');
+    expect(component.label('bath')).toBe('Bain');
   });
 
   it('omits hidden fields after changing event type', async () => {
@@ -38,7 +73,7 @@ describe('BabyLogComponent', () => {
     component.note = '  ';
     await component.save();
     expect(create).not.toHaveBeenCalled();
-    component.type = 'breast-left';
+    component.type = 'breastfeeding';
     component.durationMinutes = -2;
     await component.save();
     expect(create).not.toHaveBeenCalled();

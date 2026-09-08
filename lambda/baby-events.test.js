@@ -7,12 +7,13 @@ const occurredAt = "2026-09-08T10:00:00.000Z";
 
 test("accepts all event types without optional amounts", () => {
   for (const type of [
-    "breast-left",
-    "breast-right",
+    "breastfeeding",
     "bottle-breast-milk",
     "bottle-formula",
     "vomit",
     "regurgitation",
+    "care",
+    "bath",
   ]) {
     assert.deepEqual(validateBabyEvent({ type, occurredAt }), { type, occurredAt });
   }
@@ -25,7 +26,7 @@ test("accepts all event types without optional amounts", () => {
 test("normalizes timestamps and stores only relevant amounts", () => {
   assert.equal(
     validateBabyEvent({
-      type: "breast-right",
+      type: "breastfeeding",
       occurredAt: "2026-09-08T12:00:00+02:00",
       durationMinutes: 12,
       quantityMl: 50,
@@ -112,7 +113,7 @@ test("API persists an event and lists every page in event-time order for another
   });
   const created = await api.createBabyEvent({
     headers: { ...headers, "X-User-Id": "one" },
-    body: JSON.stringify({ type: "breast-left", occurredAt, durationMinutes: 8 }),
+    body: JSON.stringify({ type: "breastfeeding", occurredAt, durationMinutes: 8 }),
   });
   assert.equal(created.statusCode, 201);
   assert.equal(persisted.durationMinutes, 8);
@@ -137,4 +138,17 @@ test("API distinguishes invalid requests from storage failures", async () => {
     (await api.createBabyEvent({ headers, body: JSON.stringify({ type: "vomit", occurredAt }) })).statusCode,
     500,
   );
+});
+
+test("accepts feeding with optional duration", () => {
+  for (const type of ["breastfeeding"]) {
+    assert.deepEqual(validateBabyEvent({ type, occurredAt, durationMinutes: 12 }), {
+      type,
+      occurredAt,
+      durationMinutes: 12,
+    });
+    for (const durationMinutes of [0, -1, "12", Infinity]) {
+      assert.throws(() => validateBabyEvent({ type, occurredAt, durationMinutes }));
+    }
+  }
 });
