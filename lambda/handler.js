@@ -1,5 +1,7 @@
 const AWS = require("aws-sdk");
 const webpush = require("web-push");
+const { validateBabyEvent } = require("./baby-events");
+const BABY_EVENTS_TABLE_NAME = process.env.BABY_EVENTS_TABLE_NAME || "gestion-maison-baby-events";
 
 // Modules partagés packagés
 const {
@@ -1077,4 +1079,40 @@ exports.sendNotification = async (event) => {
   }
 
   return { status: "Success" };
+};
+
+exports.getBabyEvents = async (event) => {
+  const authError = authenticate(event);
+  if (authError) return authError;
+  try {
+    const items = [];
+    let cursor;
+    do {
+      const page = await dynamodb.scan({ TableName: BABY_EVENTS_TABLE_NAME, ExclusiveStartKey: cursor, ConsistentRead: true }).promise();
+      items.push(...(page.Items || []));
+      cursor = page.LastEvaluatedKey;
+    } while (cursor);
+    items.sort((a, b) => b.occurredAt.localeCompare(a.occurredAt));
+    return response(200, items);
+  } catch {
+    return response(500, { error: "Impossible de charger le carnet BB" });
+  }
+};
+
+exports.createBabyEvent = async (event) => {
+  const authError = authenticate(event);
+  if (authError) return authError;
+  let data;
+  try {
+    data = validateBabyEvent(JSON.parse(event.body || "{}"));
+  } catch {
+    return response(400, { error: "Événement BB invalide" });
+  }
+  try {
+    const item = { ...data, id: generateId(), createdAt: new Date().toISOString() };
+    await dynamodb.put({ TableName: BABY_EVENTS_TABLE_NAME, Item: item }).promise();
+    return response(201, item);
+  } catch {
+    return response(500, { error: "Impossible d’enregistrer l’événement BB" });
+  }
 };

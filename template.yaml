@@ -5,12 +5,13 @@ Description: "Gestion de la Maison - API Backend"
 Globals:
   Function:
     Timeout: 30
-    Runtime: nodejs20.x
+    Runtime: nodejs22.x
     Environment:
       Variables:
         CATEGORIES_TABLE_NAME: !Ref CategoriesTable
         SHOPPING_ITEMS_TABLE_NAME: !Ref ShoppingItemsTable
         SHOPPING_LIST_TABLE_NAME: !Ref ShoppingListTable
+        BABY_EVENTS_TABLE_NAME: !Ref BabyEventsTable
         NOTES_TABLE_NAME: !Ref NotesTable
         RECIPES_TABLE_NAME: !Ref RecipesTable
         REMINDER_NOTES_TABLE_NAME: !Ref ReminderNotesTable
@@ -38,6 +39,20 @@ Parameters:
 
 Resources:
   # Tables DynamoDB
+  BabyEventsTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      TableName: gestion-maison-baby-events
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
+
   NotesTable:
     Type: AWS::DynamoDB::Table
     Properties:
@@ -156,6 +171,38 @@ Resources:
             RestApiId: !Ref Api
             Path: /api/status
             Method: get
+
+  GetBabyEventsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda/
+      Handler: handler.getBabyEvents
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref BabyEventsTable
+      Events:
+        GetBabyEvents:
+          Type: Api
+          Properties:
+            RestApiId: !Ref Api
+            Path: /api/baby-events
+            Method: get
+
+  CreateBabyEventsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda/
+      Handler: handler.createBabyEvent
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref BabyEventsTable
+      Events:
+        CreateBabyEvents:
+          Type: Api
+          Properties:
+            RestApiId: !Ref Api
+            Path: /api/baby-events
+            Method: post
 
   # ========== NOTES FUNCTIONS ==========
   GetNotesFunction:

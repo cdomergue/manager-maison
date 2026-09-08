@@ -4,7 +4,7 @@
   "description": "AWS Lambda functions for Gestion de la Maison API",
   "main": "handler.js",
   "scripts": {
-    "test": "echo \"No tests specified\""
+    "test": "node --test *.test.js"
   },
   "dependencies": {
     "aws-sdk": "^2.1691.0",

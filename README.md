@@ -122,3 +122,20 @@ L'application utilise un système de notifications push pour les rappels de tâc
 2. Le Service Worker génère un token d'abonnement (PushSubscription).
 3. Ce token est envoyé au backend et stocké dans DynamoDB (`NOTIFICATION_TOKENS_TABLE_NAME`).
 4. La Lambda vérifie périodiquement les rappels à envoyer et utilise ces tokens pour pusher les notifications.
+
+### Carnet BB
+
+L’onglet `/bb` partage les événements bébé avec les personnes ayant accès à la maison.
+Les dates sont stockées en UTC et affichées en heure locale, du plus récent au plus ancien.
+Les quantités de biberon (ml), durées de tétée (minutes) et notes sont facultatives ;
+le texte est obligatoire pour « Divers ». Vomissement et régurgitation sont distincts.
+
+Les routes `GET/POST /api/baby-events` utilisent l’accès commun existant de l’API.
+La table DynamoDB `BabyEventsTable`, ses permissions et les fonctions Lambda sont déclarées
+avec les autres ressources dans `template.yaml`. Son contenu est conservé en cas de suppression de la pile.
+L’historique chargé est mis en cache localement pour consultation ; les ajouts nécessitent une connexion,
+et une erreur d’enregistrement conserve le formulaire. Utiliser « Actualiser » pour les ajouts des autres appareils.
+La fonctionnalité nécessite une mise à jour du backend SAM et du frontend pour être disponible en production.
+
+Tests ciblés : `npm test --prefix lambda` et
+`npm test -- --watch=false --browsers=ChromeHeadless --include='src/app/**/*baby-log*.spec.ts'`.

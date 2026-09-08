@@ -1,0 +1,127 @@
+<section class="max-w-3xl mx-auto px-4 py-6 text-gray-900 dark:text-gray-100">
+  <h2 class="text-2xl font-bold">BB · Carnet de bord</h2>
+  <p class="mt-1 mb-6 text-gray-600 dark:text-gray-300">Le quotidien de bébé, partagé avec la maison.</p>
+  <form (ngSubmit)="save()" class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 space-y-4">
+    <fieldset [disabled]="saving() || log.loading()" class="space-y-4">
+      <legend class="font-semibold mb-3">Ajouter un événement</legend>
+      <label class="block" for="baby-type">Événement</label>
+      <select id="baby-type" name="type" [(ngModel)]="type" class="bb-input">
+        @for (item of types; track item.value) {
+          <option [value]="item.value">{{ item.label }}</option>
+        }
+      </select>
+      <label class="block" for="baby-date">Date et heure</label>
+      <input
+        id="baby-date"
+        name="occurredAt"
+        type="datetime-local"
+        required
+        [(ngModel)]="occurredAt"
+        class="bb-input"
+      />
+      <button type="button" (click)="occurredAt = localNow()" class="text-blue-600 dark:text-blue-400 py-2">
+        Mettre à l’heure actuelle
+      </button>
+      @if (type.startsWith("breast-")) {
+        <label class="block" for="baby-duration">Durée en minutes (facultative)</label>
+        <input
+          id="baby-duration"
+          name="duration"
+          type="number"
+          min="0.1"
+          step="any"
+          inputmode="decimal"
+          [(ngModel)]="durationMinutes"
+          class="bb-input"
+        />
+      }
+      @if (type.startsWith("bottle-")) {
+        <label class="block" for="baby-quantity">Quantité en ml (facultative)</label>
+        <input
+          id="baby-quantity"
+          name="quantity"
+          type="number"
+          min="0.1"
+          step="any"
+          inputmode="decimal"
+          [(ngModel)]="quantityMl"
+          class="bb-input"
+        />
+      }
+      @if (type === "diaper") {
+        <label class="block" for="baby-diaper">Contenu de la couche</label>
+        <select id="baby-diaper" name="diaper" [(ngModel)]="diaper" class="bb-input">
+          @for (item of diapers; track item.value) {
+            <option [value]="item.value">{{ item.label }}</option>
+          }
+        </select>
+      }
+      <label class="block" for="baby-note">{{
+        type === "other" ? "Texte libre (requis)" : "Note (facultative)"
+      }}</label>
+      <textarea
+        id="baby-note"
+        name="note"
+        [(ngModel)]="note"
+        [required]="type === 'other'"
+        maxlength="2000"
+        rows="3"
+        class="bb-input"
+      ></textarea>
+      <button type="submit" class="w-full rounded-md bg-blue-600 text-white px-4 py-3 disabled:opacity-50">
+        {{ saving() ? "Enregistrement…" : "Enregistrer" }}
+      </button>
+    </fieldset>
+    @if (saveError()) {
+      <p role="alert" class="text-red-600 dark:text-red-400">{{ saveError() }}</p>
+    }
+    <p role="status" class="text-green-700 dark:text-green-400">{{ message() }}</p>
+    <p class="text-sm text-gray-500 dark:text-gray-400">
+      Une connexion est nécessaire pour enregistrer dans le carnet partagé.
+    </p>
+  </form>
+  <div class="flex items-center justify-between gap-3 mt-8 mb-3">
+    <h3 class="text-xl font-semibold">Historique</h3>
+    <button
+      type="button"
+      (click)="log.refresh()"
+      [disabled]="log.loading() || saving()"
+      class="px-3 py-3 rounded-md border border-gray-400 disabled:opacity-50"
+    >
+      {{ log.loading() ? "Chargement…" : "Actualiser" }}
+    </button>
+  </div>
+  <p class="text-sm mb-3">Du plus récent au plus ancien · heures locales</p>
+  @if (log.error()) {
+    <p role="alert" class="mb-3 text-amber-700 dark:text-amber-300">{{ log.error() }}</p>
+  }
+  @if (log.cached() && log.events().length) {
+    <p class="mb-3 text-sm">Copie locale · actualisez pour retrouver les derniers événements de la maison.</p>
+  }
+  <ol class="space-y-3" [attr.aria-busy]="log.loading()">
+    @for (event of log.events(); track event.id) {
+      <li class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+        <time [attr.datetime]="event.occurredAt" class="text-sm text-gray-600 dark:text-gray-300">{{
+          event.occurredAt | date: "dd/MM/yyyy à HH:mm"
+        }}</time>
+        <p class="font-semibold mt-1">{{ label(event.type) }}</p>
+        @if (event.diaper) {
+          <p>{{ diaperLabel(event.diaper) }}</p>
+        }
+        @if (event.quantityMl !== undefined) {
+          <p>{{ event.quantityMl }} ml</p>
+        }
+        @if (event.durationMinutes !== undefined) {
+          <p>{{ event.durationMinutes }} min</p>
+        }
+        @if (event.note) {
+          <p class="mt-2 whitespace-pre-wrap break-words">{{ event.note }}</p>
+        }
+      </li>
+    } @empty {
+      @if (!log.loading() && !log.error()) {
+        <li class="py-6 text-gray-500 dark:text-gray-400">Aucun événement pour le moment.</li>
+      }
+    }
+  </ol>
+</section>
